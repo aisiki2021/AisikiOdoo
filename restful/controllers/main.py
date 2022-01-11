@@ -103,6 +103,11 @@ class APIController(http.Controller):
                             base_url, headers=headers, data=data)
 
         """
+        fields = payload.get("fields")
+        if not fields:
+            fields = []
+        else:
+            fields = fields.split(",")
         payload = request.httprequest.data.decode()
         payload = json.loads(payload)
         model = request.env[self._model].search([("model", "=", model)], limit=1)
@@ -122,7 +127,7 @@ class APIController(http.Controller):
                 request.env.cr.rollback()
                 return invalid_response("params", e)
             else:
-                data = resource.read()
+                data = resource.read(fields=fields)
                 if resource:
                     return valid_response(data)
                 else:
@@ -184,6 +189,9 @@ class APIController(http.Controller):
     def patch(self, model=None, id=None, action=None, **payload):
         """."""
         args = []
+
+        payload = request.httprequest.data.decode()
+        args = ast.literal_eval(payload)
         try:
             _id = int(id)
         except Exception as e:
@@ -193,7 +201,7 @@ class APIController(http.Controller):
             _callable = action in [method for method in dir(record) if callable(getattr(record, method))]
             if record and _callable:
                 # action is a dynamic variable.
-                getattr(record, action)(*args) if args else getattr(record, action)()
+                res = getattr(record, action)(*args) if args else getattr(record, action)()
             else:
                 return invalid_response(
                     "invalid object or method",
@@ -204,4 +212,4 @@ class APIController(http.Controller):
         except Exception as e:
             return invalid_response("exception", e, 503)
         else:
-            return valid_response("record %s has been successfully update" % record.id)
+            return valid_response(res)
