@@ -8,6 +8,7 @@ class ChangePassword(Datamodel):
 
     oldpassword = fields.String(required=True, allow_none=False)
     newpassword = fields.String(required=True, allow_none=False)
+    verify_token = fields.String(required=True, allow_none=False)
 
 
 class LoginDataModel(Datamodel):
