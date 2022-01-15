@@ -25,6 +25,7 @@ class SessionAuthenticationService(Component):
     _usage = "authentication"
     _collection = "aisiki.authenticate"
 
+
     @restapi.method(
         [(["/login"], "POST")], auth="public", input_param=Datamodel("login.datamodel"),
     )
@@ -44,18 +45,48 @@ class SessionAuthenticationService(Component):
         }
         return result
 
-    @restapi.method(
-        [(["/logout"], "POST")], auth="user",
-    )
-    def logout(self):
-        request.session.logout(keep_db=True)
-        return {"message": "Successful logout"}
+    # @restapi.method(
+    #     [(["/logout"], "POST")], auth="user",
+    # )
+    # def logout(self):
+    #     request.session.logout(keep_db=True)
+    #     return {"message": "Successful logout"}
 
     @restapi.method(
         [(["/changepassword"], "POST")], auth="user", input_param=Datamodel("changepassword.datamodel"),
     )
     def changepassword(self, payload):
-        # request.session.logout(keep_db=True)
-        print('!!!!!!!!!!!!!!', payload)
+        print(request.httprequest.headers, '!!!!!!!!!!!!!!', payload)
         return {"message": "Successful logout"}
-# action_reset_password
+
+
+    # def to_openapi(self, **params):
+    #     """
+    #     Return the description of this REST service as an OpenAPI json document
+    #     :return: json document
+    #     """
+    #     api_spec = super(SessionAuthenticationService, self).to_openapi(**params)
+    #     api_spec.update({
+    #             "components":
+    #                 {
+    #                     "securitySchemes": {
+    #                         "BearerAuth": {
+    #                             "type": "http",
+    #                             "scheme": "bearer",
+    #                             "bearerFormat": "JWT"
+    #                         },
+    #                         "ApiKeyAuth": {
+    #                             "type": "apiKey",
+    #                             "in": "header",
+    #                             "name": "api_key",
+    #                         }
+    #                     }
+    #                 },
+    #             "security": [{
+    #                 "BearerAuth": [],
+    #                 "ApiKeyAuth": []
+    #             }]
+    #         })
+              
+    #     print('!!!!!!!!!!!!!!!!!!!!11', api_spec)
+    #     return api_spec
