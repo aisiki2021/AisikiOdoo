@@ -17,7 +17,10 @@
         "contacts",
         "base_geolocalize",
         "base_rest",
+        "base_rest_datamodel",
+        "component",
     ],
+    "external_dependencies": {"python": ["jsondiff"]},
     "data": [
         # 'security/ir.model.access.csv',
         "views/views.xml",
