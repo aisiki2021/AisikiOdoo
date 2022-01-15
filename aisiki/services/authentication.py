@@ -7,6 +7,8 @@ from odoo.service import security
 from odoo.addons.base_rest import restapi
 from odoo.addons.component.core import Component
 
+from odoo.addons.base_rest_datamodel.restapi import Datamodel
+
 
 def _rotate_session(httprequest):
     if httprequest.session.rotate:
@@ -19,12 +21,14 @@ def _rotate_session(httprequest):
 
 class SessionAuthenticationService(Component):
     _inherit = "base.rest.service"
-    _name = "session.authenticate.service"
-    _usage = "auth"
-    _collection = "session.rest.services"
+    _name = "aisiki.authenticate.service"
+    _usage = "authentication"
+    _collection = "aisiki.authenticate"
 
-    @restapi.method([(["/login"], "POST")], auth="public")
-    def authenticate(self):
+    @restapi.method(
+        [(["/login"], "POST")], auth="public", input_param=Datamodel("login.datamodel"),
+    )
+    def authenticate(self, body):
         params = request.params
         db_name = params.get("db", db_monodb())
         request.session.authenticate(db_name, params["login"], params["password"])
@@ -40,7 +44,18 @@ class SessionAuthenticationService(Component):
         }
         return result
 
-    @restapi.method([(["/logout"], "POST")], auth="user")
+    @restapi.method(
+        [(["/logout"], "POST")], auth="user",
+    )
     def logout(self):
         request.session.logout(keep_db=True)
         return {"message": "Successful logout"}
+
+    @restapi.method(
+        [(["/changepassword"], "POST")], auth="user", input_param=Datamodel("changepassword.datamodel"),
+    )
+    def changepassword(self, payload):
+        # request.session.logout(keep_db=True)
+        print('!!!!!!!!!!!!!!', payload)
+        return {"message": "Successful logout"}
+# action_reset_password
