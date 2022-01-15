@@ -4,11 +4,11 @@ from odoo.addons.datamodel.core import Datamodel
 
 
 class ChangePassword(Datamodel):
-    _name = "changepassword.datamodel"
+    _name = "change.password.datamodel"
 
-    oldpassword = fields.String(required=True, allow_none=False)
-    newpassword = fields.String(required=True, allow_none=False)
-    verify_token = fields.String(required=True, allow_none=False)
+    old_passwd = fields.String(required=True, allow_none=False)
+    new_passwd = fields.String(required=True, allow_none=False)
+    # verify_token = fields.String(required=True, allow_none=False)
 
 
 class LoginDataModel(Datamodel):
