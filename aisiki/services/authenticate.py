@@ -66,10 +66,14 @@ class SessionAuthenticationService(Component):
         email = payload.email
         response = self.env.datamodels["getout.password.datamodel"]
         response = response()
-        user = request.env["res.users"].with_user(1).search([("login", "=", email.strip())], limit=1)
+        user = (
+            request.env["res.users"]
+            .with_user(1)
+            .search([("login", "=", email.strip())], limit=1)
+        )
         response.password_reset_url = user.password_reset_url
         response.email = request.env.user.email or request.env.user.login
-        
+
         return response
 
     @restapi.method(
