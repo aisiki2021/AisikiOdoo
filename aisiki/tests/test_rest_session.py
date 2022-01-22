@@ -39,7 +39,9 @@ class TestSessionRestAPI(HttpCase):
         self.authenticate(self.user.login, self.password)
         self.assertEqual(self.session.login, self.user.login)
         url = "http://{}:{}{}".format(HOST, PORT, "/session/auth/logout")
-        response = self.opener.post(url, headers={"X-Openerp-Session-Id": self.session.sid})
+        response = self.opener.post(
+            url, headers={"X-Openerp-Session-Id": self.session.sid}
+        )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.headers["Content-Type"], "application/json")
         session = root.session_store.get(self.session.sid)

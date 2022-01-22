@@ -50,7 +50,9 @@ class DatamodelBuilder(models.AbstractModel):
         datamodels_registry.ready = True
 
     def _init_global_registry(self):
-        datamodels_registry = DatamodelRegistry(cachesize=self._datamodels_registry_cache_size)
+        datamodels_registry = DatamodelRegistry(
+            cachesize=self._datamodels_registry_cache_size
+        )
         _datamodel_databases[self.env.cr.dbname] = datamodels_registry
         return datamodels_registry
 
@@ -88,5 +90,7 @@ class DatamodelBuilder(models.AbstractModel):
         :param registry: the registry in which we want to put the Datamodel
         :type registry: :py:class:`~.core.DatamodelRegistry`
         """
-        datamodels_registry = datamodels_registry or _datamodel_databases[self.env.cr.dbname]
+        datamodels_registry = (
+            datamodels_registry or _datamodel_databases[self.env.cr.dbname]
+        )
         datamodels_registry.load_datamodels(module)

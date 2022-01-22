@@ -83,7 +83,12 @@ class TestOpenAPIGenerator(TransactionRestServiceRegistryCase):
             # The path contains parameters
             self.assertDictEqual(
                 path.get("parameters", [{}])[0],
-                {"in": "path", "name": "id", "required": True, "schema": {"type": "integer", "format": "int32"},},
+                {
+                    "in": "path",
+                    "name": "id",
+                    "required": True,
+                    "schema": {"type": "integer", "format": "int32"},
+                },
             )
 
     def test_02(self):
@@ -101,7 +106,9 @@ class TestOpenAPIGenerator(TransactionRestServiceRegistryCase):
             _collection = self._collection_name
             _description = "Sercice description"
 
-            @restapi.method([(["/<int:id>/update_name/<string:name>"], "POST")], auth="public")
+            @restapi.method(
+                [(["/<int:id>/update_name/<string:name>"], "POST")], auth="public"
+            )
             def update_name(self, _id, _name):
                 """update_name"""
 
@@ -123,10 +130,22 @@ class TestOpenAPIGenerator(TransactionRestServiceRegistryCase):
             else:
                 name_param = p
         self.assertDictEqual(
-            name_param, {"in": "path", "name": "name", "required": True, "schema": {"type": "string"},},
+            name_param,
+            {
+                "in": "path",
+                "name": "name",
+                "required": True,
+                "schema": {"type": "string"},
+            },
         )
         self.assertDictEqual(
-            id_param, {"in": "path", "name": "id", "required": True, "schema": {"type": "integer", "format": "int32"},},
+            id_param,
+            {
+                "in": "path",
+                "name": "id",
+                "required": True,
+                "schema": {"type": "integer", "format": "int32"},
+            },
         )
 
     def test_03(self):
@@ -155,7 +174,9 @@ class TestOpenAPIGenerator(TransactionRestServiceRegistryCase):
             _collection = self._collection_name
             _description = "Sercice description"
 
-            @restapi.method([(["/<int:id>/update_name/<string:name>"], "POST")], auth="public")
+            @restapi.method(
+                [(["/<int:id>/update_name/<string:name>"], "POST")], auth="public"
+            )
             def update_name(self, _id, _name):
                 """update_name"""
 

@@ -26,7 +26,9 @@ class RestMethodParamPlugin(BasePlugin):
     def operation_helper(self, path=None, operations=None, **kwargs):
         routing = kwargs.get("routing")
         if not routing:
-            super(RestMethodParamPlugin, self).operation_helper(path, operations, **kwargs)
+            super(RestMethodParamPlugin, self).operation_helper(
+                path, operations, **kwargs
+            )
         if not operations:
             return
         for method, params in operations.items():
@@ -45,7 +47,9 @@ class RestMethodParamPlugin(BasePlugin):
         if input_param and isinstance(input_param, RestMethodParam):
             if method == "get":
                 # get quey params from RequestMethodParam object
-                parameters.extend(input_param.to_openapi_query_parameters(self._service))
+                parameters.extend(
+                    input_param.to_openapi_query_parameters(self._service)
+                )
             else:
                 # get requestBody from RequestMethodParam object
                 request_body = params.get("requestBody", {})
