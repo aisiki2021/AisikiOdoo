@@ -5,7 +5,11 @@ import logging
 import re
 
 from odoo import http
-from odoo.addons.restful.common import extract_arguments, invalid_response, valid_response
+from odoo.addons.restful.common import (
+    extract_arguments,
+    invalid_response,
+    valid_response,
+)
 from odoo.exceptions import AccessError
 from odoo.http import request
 
@@ -20,13 +24,24 @@ def validate_token(func):
         """."""
         access_token = request.httprequest.headers.get("access_token")
         if not access_token:
-            return invalid_response("access_token_not_found", "missing access token in request header", 401)
+            return invalid_response(
+                "access_token_not_found", "missing access token in request header", 401
+            )
         access_token_data = (
-            request.env["api.access_token"].sudo().search([("token", "=", access_token)], order="id DESC", limit=1)
+            request.env["api.access_token"]
+            .sudo()
+            .search([("token", "=", access_token)], order="id DESC", limit=1)
         )
 
-        if access_token_data.find_one_or_create_token(user_id=access_token_data.user_id.id) != access_token:
-            return invalid_response("access_token", "token seems to have expired or invalid", 401)
+        if (
+            access_token_data.find_one_or_create_token(
+                user_id=access_token_data.user_id.id
+            )
+            != access_token
+        ):
+            return invalid_response(
+                "access_token", "token seems to have expired or invalid", 401
+            )
 
         request.session.uid = access_token_data.user_id.id
         request.uid = access_token_data.user_id.id
@@ -53,20 +68,29 @@ class APIController(http.Controller):
             if model:
                 domain, fields, offset, limit, order = extract_arguments(**payload)
                 data = request.env[model.model].search_read(
-                    domain=domain, fields=fields, offset=offset, limit=limit, order=order,
+                    domain=domain,
+                    fields=fields,
+                    offset=offset,
+                    limit=limit,
+                    order=order,
                 )
 
                 if id:
                     domain = [("id", "=", int(id))]
                     data = request.env[model.model].search_read(
-                        domain=domain, fields=fields, offset=offset, limit=limit, order=order,
+                        domain=domain,
+                        fields=fields,
+                        offset=offset,
+                        limit=limit,
+                        order=order,
                     )
                 if data:
                     return valid_response(data)
                 else:
                     return valid_response(data)
             return invalid_response(
-                "invalid object model", "The model %s is not available in the registry." % ioc_name,
+                "invalid object model",
+                "The model %s is not available in the registry." % ioc_name,
             )
         except AccessError as e:
 
@@ -132,7 +156,10 @@ class APIController(http.Controller):
                     return valid_response(data)
                 else:
                     return valid_response(data)
-        return invalid_response("invalid object model", "The model %s is not available in the registry." % model,)
+        return invalid_response(
+            "invalid object model",
+            "The model %s is not available in the registry." % model,
+        )
 
     @validate_token
     @http.route(_routes, type="http", auth="none", methods=["PUT"], csrf=False)
@@ -144,11 +171,17 @@ class APIController(http.Controller):
         try:
             _id = int(id)
         except Exception as e:
-            return invalid_response("invalid object id", "invalid literal %s for id with base " % id)
-        _model = request.env[self._model].sudo().search([("model", "=", model)], limit=1)
+            return invalid_response(
+                "invalid object id", "invalid literal %s for id with base " % id
+            )
+        _model = (
+            request.env[self._model].sudo().search([("model", "=", model)], limit=1)
+        )
         if not _model:
             return invalid_response(
-                "invalid object model", "The model %s is not available in the registry." % model, 404,
+                "invalid object model",
+                "The model %s is not available in the registry." % model,
+                404,
             )
         try:
             record = request.env[_model.model].sudo().browse(_id)
@@ -171,13 +204,19 @@ class APIController(http.Controller):
         try:
             _id = int(id)
         except Exception as e:
-            return invalid_response("invalid object id", "invalid literal %s for id with base " % id)
+            return invalid_response(
+                "invalid object id", "invalid literal %s for id with base " % id
+            )
         try:
             record = request.env[model].sudo().search([("id", "=", _id)])
             if record:
                 record.unlink()
             else:
-                return invalid_response("missing_record", "record object with id %s could not be found" % _id, 404,)
+                return invalid_response(
+                    "missing_record",
+                    "record object with id %s could not be found" % _id,
+                    404,
+                )
         except Exception as e:
             request.env.cr.rollback()
             return invalid_response("exception", e.name, 503)
@@ -195,13 +234,21 @@ class APIController(http.Controller):
         try:
             _id = int(id)
         except Exception as e:
-            return invalid_response("invalid object id", "invalid literal %s for id with base" % id)
+            return invalid_response(
+                "invalid object id", "invalid literal %s for id with base" % id
+            )
         try:
             record = request.env[model].sudo().search([("id", "=", _id)], limit=1)
-            _callable = action in [method for method in dir(record) if callable(getattr(record, method))]
+            _callable = action in [
+                method for method in dir(record) if callable(getattr(record, method))
+            ]
             if record and _callable:
                 # action is a dynamic variable.
-                res = getattr(record, action)(*args) if args else getattr(record, action)()
+                res = (
+                    getattr(record, action)(*args)
+                    if args
+                    else getattr(record, action)()
+                )
             else:
                 return invalid_response(
                     "invalid object or method",

@@ -23,7 +23,11 @@ class BaseRestServiceAPISpec(APISpec):
             title="%s REST services" % self._service._usage,
             version="",
             openapi_version="3.0.0",
-            info={"description": textwrap.dedent(getattr(self._service, "_description", "") or "")},
+            info={
+                "description": textwrap.dedent(
+                    getattr(self._service, "_description", "") or ""
+                )
+            },
             servers=self._get_servers(),
             plugins=self._get_plugins(),
         )
@@ -38,7 +42,16 @@ class BaseRestServiceAPISpec(APISpec):
                 collection_path = path
                 break
         base_url = env["ir.config_parameter"].sudo().get_param("web.base.url")
-        return [{"url": "%s/%s/%s" % (base_url.strip("/"), collection_path.strip("/"), self._service._usage,)}]
+        return [
+            {
+                "url": "%s/%s/%s"
+                % (
+                    base_url.strip("/"),
+                    collection_path.strip("/"),
+                    self._service._usage,
+                )
+            }
+        ]
 
     def _get_plugins(self):
         return [
@@ -53,7 +66,9 @@ class BaseRestServiceAPISpec(APISpec):
         for paths, method in routing["routes"]:
             for path in paths:
                 self.path(
-                    path, operations={method.lower(): {"summary": description}}, routing=routing,
+                    path,
+                    operations={method.lower(): {"summary": description}},
+                    routing=routing,
                 )
 
     def generate_paths(self):

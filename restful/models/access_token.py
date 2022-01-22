@@ -26,7 +26,11 @@ class APIAccessToken(models.Model):
         if not user_id:
             user_id = self.env.user.id
 
-        access_token = self.env["api.access_token"].sudo().search([("user_id", "=", user_id)], order="id DESC", limit=1)
+        access_token = (
+            self.env["api.access_token"]
+            .sudo()
+            .search([("user_id", "=", user_id)], order="id DESC", limit=1)
+        )
         if not access_token and create:
             vals = {
                 "user_id": user_id,

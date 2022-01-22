@@ -14,7 +14,9 @@ _logger = logging.getLogger(__name__)
 class AccessToken(http.Controller):
     """."""
 
-    @http.route("/api/auth/token", methods=["GET"], type="http", auth="none", csrf=False)
+    @http.route(
+        "/api/auth/token", methods=["GET"], type="http", auth="none", csrf=False
+    )
     def token(self, **post):
         """The token URL to be used for getting the access_token:
 
@@ -59,7 +61,9 @@ class AccessToken(http.Controller):
             if not _credentials_includes_in_headers:
                 # Empty 'db' or 'username' or 'password:
                 return invalid_response(
-                    "missing error", "either of the following are missing [db, username,password]", 403,
+                    "missing error",
+                    "either of the following are missing [db, username,password]",
+                    403,
                 )
         # Login in odoo database:
         try:
@@ -108,7 +112,9 @@ class AccessToken(http.Controller):
             ),
         )
 
-    @http.route(["/api/auth/token"], methods=["DELETE"], type="http", auth="none", csrf=False)
+    @http.route(
+        ["/api/auth/token"], methods=["DELETE"], type="http", auth="none", csrf=False
+    )
     def delete(self, **post):
         """Delete a given token"""
         token = request.env["api.access_token"]
@@ -121,4 +127,11 @@ class AccessToken(http.Controller):
         for token in access_token:
             token.unlink()
         # Successful response:
-        return valid_response([{"message": "access token %s successfully deleted" % (access_token,), "delete": True}])
+        return valid_response(
+            [
+                {
+                    "message": "access token %s successfully deleted" % (access_token,),
+                    "delete": True,
+                }
+            ]
+        )
