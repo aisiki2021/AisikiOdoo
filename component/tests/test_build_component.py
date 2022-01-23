@@ -92,7 +92,8 @@ class TestBuildComponent(TransactionComponentRegistryCase):
         Component3._build_component(self.comp_registry)
         Component4._build_component(self.comp_registry)
         self.assertEqual(
-            (Component1, self.comp_registry["base"]), self.comp_registry["component1"].__bases__,
+            (Component1, self.comp_registry["base"]),
+            self.comp_registry["component1"].__bases__,
         )
         self.assertEqual(
             (Component2, self.comp_registry["component1"], self.comp_registry["base"]),
@@ -218,7 +219,12 @@ class TestBuildComponent(TransactionComponentRegistryCase):
         Component2bis._build_component(self.comp_registry)
 
         self.assertEqual(
-            (Component2bis, Component2, self.comp_registry["component1"], self.comp_registry["base"],),
+            (
+                Component2bis,
+                Component2,
+                self.comp_registry["component1"],
+                self.comp_registry["base"],
+            ),
             self.comp_registry["component2"].__bases__,
         )
 

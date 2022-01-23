@@ -19,6 +19,7 @@
         "base_rest",
         "base_rest_datamodel",
         "component",
+        "auth_signup",
     ],
     "external_dependencies": {"python": ["jsondiff"]},
     "data": [

@@ -96,7 +96,9 @@ class BaseRestService(AbstractComponent):
         routing = getattr(method, "routing", None)
         if not routing:
             _logger.warning(
-                "Method %s is not a public method of service %s", method_name, self._name,
+                "Method %s is not a public method of service %s",
+                method_name,
+                self._name,
             )
             raise NotFound()
         input_param = routing["input_param"]
@@ -124,7 +126,10 @@ class BaseRestService(AbstractComponent):
         output_param = routing["output_param"]
         if not output_param:
             _logger.warning(
-                "DEPRECATED: You must define an output schema for method %s " "in service %s", method_name, self._name,
+                "DEPRECATED: You must define an output schema for method %s "
+                "in service %s",
+                method_name,
+                self._name,
             )
             return result
         return output_param.to_response(self, result)
@@ -188,9 +193,15 @@ class BaseRestService(AbstractComponent):
     def _get_openapi_default_responses(self):
         return {
             "400": {"description": "One of the given parameter is not valid"},
-            "401": {"description": "The user is not authorized. Authentication " "is required"},
+            "401": {
+                "description": "The user is not authorized. Authentication "
+                "is required"
+            },
             "404": {"description": "Requested resource not found"},
-            "403": {"description": "You don't have the permission to access the " "requested resource."},
+            "403": {
+                "description": "You don't have the permission to access the "
+                "requested resource."
+            },
         }
 
     @property
