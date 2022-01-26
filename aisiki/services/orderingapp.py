@@ -5,24 +5,54 @@ from odoo.addons.base_rest import restapi
 from odoo.http import db_monodb, request, root
 from odoo.addons.base_rest_datamodel.restapi import Datamodel
 
+import datetime
+import json
+from odoo import fields
 
-class PartnerService(Component):
+
+from .authenticate import _rotate_session
+
+
+class OrderingApp(Component):
     _inherit = "base.rest.service"
-    _name = "procurement"
-    _usage = "procurement"
-    _collection = "procurement"
+    _name = "orderingapp"
+    _usage = "orderingapp"
+    _collection = "orderingapp"
     _description = """
-        Procurement Services
-        Access to the procurement services
+        Ordering App
+        
     """
 
     @restapi.method(
-        [(["/signup"], "POST")],
+        [(["/login"], "POST")],
         auth="public",
-        input_param=Datamodel("procurement.signup.datamodel.in"),
-        output_param=Datamodel("procurement.signup.datamodel.out"),
+        input_param=Datamodel("orderingapp.login.datamodel.in"),
+        output_param=Datamodel("orderingapp.login.datamodel.out"),
     )
-    def signup(self, payload):
+    def login(self, payload):
+        params = request.params
+        db_name = params.get("db", db_monodb())
+        request.session.authenticate(db_name, params["phone"], params["password"])
+        result = request.env["ir.http"].session_info()
+        _rotate_session(request)
+        request.session.rotate = False
+        expiration = datetime.datetime.utcnow() + datetime.timedelta(days=7)
+        return self.env.datamodels["orderingapp.login.datamodel.out"](
+            session_id=request.session.sid,
+            expires_at=fields.Datetime.to_string(expiration),
+            uid=result.get("uid"),
+            username=result.get("username"),
+            name=result.get("name"),
+            partner_id=result.get("partner_id"),
+        )
+
+    @restapi.method(
+        [(["/register"], "POST")],
+        auth="public",
+        input_param=Datamodel("orderingapp.inregister.datamodel.in"),
+        output_param=Datamodel("orderingapp.register.datamodel.out"),
+    )
+    def register(self, payload):
         """
         Register a new customer.
         """
@@ -39,37 +69,36 @@ class PartnerService(Component):
                 .signup(values)
             )
         except Exception as e:
-            return self.env.datamodels["procurement.signup.datamodel.out"](
+            return self.env.datamodels["orderingapp.signup.datamodel.out"](
                 message=str(e), error=True
             )
         request.env["res.users"].reset_password(user[1])
-        return self.env.datamodels["procurement.signup.datamodel.out"](
+        return self.env.datamodels["orderingapp.signup.datamodel.out"](
             email=user[1], error=False
         )
-
 
     @restapi.method(
         [(["/verify_token"], "POST")],
         auth="public",
-        input_param=Datamodel("procurement.token.datamodel.in"),
-        # output_param=Datamodel("procurement.token.datamodel.out"),
+        input_param=Datamodel("orderingapp.token.datamodel.in"),
+        # output_param=Datamodel("orderingapp.token.datamodel.out"),
     )
     def verify_token(self, payload):
         """
         Verify registration token.
         """
-        
-        token =  payload.token
-        
+
+        token = payload.token
+
         try:
             user = request.env["res.users"].signup(values, token)
-            
+
         except Exception as e:
-            return self.env.datamodels["procurement.token.datamodel.out"](
+            return self.env.datamodels["orderingapp.token.datamodel.out"](
                 message=str(e), error=True
             )
- 
-        return self.env.datamodels["procurement.token.datamodel.in"](
+
+        return self.env.datamodels["orderingapp.token.datamodel.in"](
             email=user[1], error=False
         )
 
