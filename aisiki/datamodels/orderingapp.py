@@ -62,9 +62,6 @@ class IndividualRegisterOut(Datamodel):
     food_items = fields.List(fields.Integer(), required=False, allow_none=False)
 
 
-
-
-
 class CorporateRegisterIn(Datamodel):
     _name = "corporate.register.datamodel.in"
 
@@ -86,3 +83,9 @@ class CorporateRegisterOut(Datamodel):
     referral_code = fields.String(required=True, allow_none=False)
     food_items = fields.List(fields.Integer(), required=False, allow_none=False)
 
+
+class Fooditems(Datamodel):
+    _name = "fooditems.datamodel.out"
+
+    id = fields.Integer(required=False, allow_none=False)
+    name = fields.String(required=False, allow_none=False)
