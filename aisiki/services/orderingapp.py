@@ -47,59 +47,82 @@ class OrderingApp(Component):
         )
 
     @restapi.method(
-        [(["/register"], "POST")],
+        [(["/register/corporate"], "POST")],
         auth="public",
-        input_param=Datamodel("orderingapp.inregister.datamodel.in"),
-        output_param=Datamodel("orderingapp.register.datamodel.out"),
+        input_param=Datamodel("corporate.register.datamodel.in"),
+        output_param=Datamodel("corporate.register.datamodel.out"),
     )
-    def register(self, payload):
-        """
-        Register a new customer.
-        """
+    def corporate(self, payload):
         values = {
-            "name": payload.store_name,
-            "login": payload.email,
-            "email": payload.email,
+            "name": payload.name,
+            "login": payload.phone,
             "password": payload.password,
+            "partner_longitude": payload.longitude,
+            "partner_latitude": payload.latitude,
+            "password": payload.password,
+            "referral_code": payload.referral_code,
         }
         try:
-            user = (
-                request.env["res.users"]
-                .with_context(no_reset_password=False)
-                .signup(values)
-            )
+            user = request.env["res.users"].with_user(1)._signup_create_user(values)
+
         except Exception as e:
-            return self.env.datamodels["orderingapp.signup.datamodel.out"](
+            return self.env.datamodels["datamodel.error.out"](
                 message=str(e), error=True
             )
-        request.env["res.users"].reset_password(user[1])
-        return self.env.datamodels["orderingapp.signup.datamodel.out"](
-            email=user[1], error=False
+        return self.env.datamodels["corporate.register.datamodel.out"](
+            name=user.name,
+            phone=user.login,
+            latitude=user.partner_longitude,
+            longitude=user.partner_latitude,
+            referral_code=user.referral_code,
         )
 
     @restapi.method(
-        [(["/verify_token"], "POST")],
+        [(["/register/individual"], "POST")],
         auth="public",
-        input_param=Datamodel("orderingapp.token.datamodel.in"),
-        # output_param=Datamodel("orderingapp.token.datamodel.out"),
+        input_param=Datamodel("individual.register.datamodel.in"),
+        output_param=Datamodel("individual.register.datamodel.out"),
     )
-    def verify_token(self, payload):
-        """
-        Verify registration token.
-        """
-
-        token = payload.token
-
+    def individual(self, payload):
+        values = {
+            "name": payload.name,
+            "login": payload.phone,
+            "password": payload.password,
+            "partner_longitude": payload.longitude,
+            "partner_latitude": payload.latitude,
+            "password": payload.password,
+            "referral_code": payload.referral_code,
+        }
         try:
-            user = request.env["res.users"].signup(values, token)
+            user = request.env["res.users"].with_user(1)._signup_create_user(values)
 
         except Exception as e:
-            return self.env.datamodels["orderingapp.token.datamodel.out"](
+            return self.env.datamodels["datamodel.error.out"](
                 message=str(e), error=True
             )
+        return self.env.datamodels["individual.register.datamodel.out"](
+            name=user.name,
+            phone=user.login,
+            latitude=user.partner_longitude,
+            longitude=user.partner_latitude,
+            referral_code=user.referral_code,
+        )
 
-        return self.env.datamodels["orderingapp.token.datamodel.in"](
-            email=user[1], error=False
+    @restapi.method(
+        [(["/forgotpassword"], "GET")],
+        auth="public",
+        input_param=Datamodel("forgotpassword.datamodel.in"),
+        output_param=Datamodel("forgotpassword.datamodel.out"),
+    )
+    def forgotpassword(self, payload):
+        phone = payload.phone.strip()
+        user = (
+            request.env["res.users"]
+            .with_user(1)
+            .search([("login", "=", phone)], limit=1)
+        )
+        return self.env.datamodels["forgotpassword.datamodel.out"](
+            password_reset_url=user.password_reset_url
         )
 
     # def search(self, name):
@@ -146,9 +169,6 @@ class OrderingApp(Component):
 
     # # The following method are 'private' and should be never never NEVER call
     # # from the controller.
-
-    def _get(self, _id):
-        return self.env["res.partner"].browse(_id)
 
     # def _prepare_params(self, params):
     #     for key in ["country", "state"]:
