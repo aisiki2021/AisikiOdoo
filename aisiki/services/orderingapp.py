@@ -125,6 +125,22 @@ class OrderingApp(Component):
             password_reset_url=user.password_reset_url
         )
 
+    @restapi.method(
+        [(["/fooditems"], "GET")],
+        auth="public",
+        output_param=Datamodel("fooditems.datamodel.out", is_list=True),
+    )
+    def fooditems(self):
+        res = []
+        products = request.env["product.product"].with_user(1).search([], limit=20)
+        for product in products:
+            res.append(
+                self.env.datamodels["fooditems.datamodel.out"](
+                    id=product.id, name=product.name
+                )
+            )
+        return res
+
     # def search(self, name):
     #     """
     #     Searh partner by name
