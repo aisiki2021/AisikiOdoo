@@ -61,6 +61,9 @@ class OrderingApp(Component):
             "partner_latitude": payload.latitude,
             "password": payload.password,
             "referral_code": payload.referral_code,
+            "contact_person": payload.contact_person,
+            "business_category": payload.business_category,
+            "number_of_offices": payload.number_of_offices,
         }
         try:
             user = request.env["res.users"].with_user(1)._signup_create_user(values)
@@ -69,12 +72,14 @@ class OrderingApp(Component):
             return self.env.datamodels["datamodel.error.out"](
                 message=str(e), error=True
             )
+
         return self.env.datamodels["corporate.register.datamodel.out"](
             name=user.name,
             phone=user.login,
             latitude=user.partner_longitude,
             longitude=user.partner_latitude,
             referral_code=user.referral_code,
+            contact_person=user.contact_person,
         )
 
     @restapi.method(
@@ -92,6 +97,7 @@ class OrderingApp(Component):
             "partner_latitude": payload.latitude,
             "password": payload.password,
             "referral_code": payload.referral_code,
+            "company_type": "person",
         }
         try:
             user = request.env["res.users"].with_user(1)._signup_create_user(values)
@@ -132,135 +138,47 @@ class OrderingApp(Component):
     )
     def fooditems(self):
         res = []
-        products = request.env["product.product"].with_user(1).search([], limit=20)
+        products = (
+            request.env["product.product"]
+            .with_user(1)
+            .search([], limit=200, order="aisiki_product_type")
+        )
         for product in products:
             res.append(
                 self.env.datamodels["fooditems.datamodel.out"](
-                    id=product.id, name=product.name
+                    id=product.id,
+                    name=product.name,
+                    image_url=product.image_url,
+                    type=product.aisiki_product_type or "",
+                    qty_available=product.qty_available,
+                    price=product.lst_price,
+                    internal_ref=product.default_code or "",
+                    barcode=product.barcode or "",
+                    virtual_available=product.virtual_available,
                 )
             )
         return res
 
-    # def search(self, name):
-    #     """
-    #     Searh partner by name
-    #     """
-    #     partners = self.env["res.partner"].name_search(name)
-    #     partners = self.env["res.partner"].browse([i[0] for i in partners])
-    #     rows = []
-    #     res = {"count": len(partners), "rows": rows}
-    #     for partner in partners:
-    #         rows.append(self._to_json(partner))
-    #     return res
+    @restapi.method(
+        [(["/walletbalance"], "POST")],
+        auth="user",
+        output_param=Datamodel("wallet.balance.datamodel.out"),
+    )
+    def walletbalance(self):
+        total_due = request.env.user.partner_id.total_due
+        return self.env.datamodels["wallet.balance.datamodel.out"](balance=total_due)
 
-    # # pylint:disable=method-required-super
-    # def create(self, **params):
-    #     """
-    #     Create a new partner
-    #     """
-    #     partner = self.env["res.partner"].create(self._prepare_params(params))
-    #     return self._to_json(partner)
+    @restapi.method(
+        [(["/cart"], "POST")],
+        auth="user",
+        input_param=Datamodel("cart.datamodel.in"),
+        output_param=Datamodel("cart.datamodel.out"),
+    )
+    def cart(self):
+        total_due = request.env.user.partner_id.total_due
+        return self.env.datamodels["cart.datamodel.out"](balance=total_due)
 
-    # def update(self, _id, **params):
-    #     """
-    #     Update partner informations
-    #     """
-    #     partner = self._get(_id)
-    #     partner.write(self._prepare_params(params))
-    #     return self._to_json(partner)
-
-    # def archive(self, _id, **params):
-    #     """
-    #     Archive the given partner. This method is an empty method, IOW it
-    #     don't update the partner. This method is part of the demo data to
-    #     illustrate that historically it's not mandatory to defined a schema
-    #     describing the content of the response returned by a method.
-    #     This kind of definition is DEPRECATED and will no more supported in
-    #     the future.
-    #     :param _id:
-    #     :param params:
-    #     :return:
-    #     """
-    #     return {"response": "Method archive called with id %s" % _id}
-
-    # # The following method are 'private' and should be never never NEVER call
-    # # from the controller.
-
-    # def _prepare_params(self, params):
-    #     for key in ["country", "state"]:
-    #         if key in params:
-    #             val = params.pop(key)
-    #             if val.get("id"):
-    #                 params["%s_id" % key] = val["id"]
-    #     return params
-
-    # # Validator
-    # def _validator_return_get(self):
-    #     res = self._validator_create()
-    #     res.update({"id": {"type": "integer", "required": True, "empty": False}})
-    #     return res
-
-    # def _validator_search(self):
-    #     return {"name": {"type": "string", "nullable": False, "required": True}}
-
-    # def _validator_return_search(self):
-    #     return {
-    #         "count": {"type": "integer", "required": True},
-    #         "rows": {
-    #             "type": "list",
-    #             "required": True,
-    #             "schema": {"type": "dict", "schema": self._validator_return_get()},
-    #         },
-    #     }
-
-    # def _validator_create(self):
-    #     res = {
-    #         "name": {"type": "string", "required": True, "empty": False},
-    #         "street": {"type": "string", "required": True, "empty": False},
-    #         "street2": {"type": "string", "nullable": True},
-    #         "zip": {"type": "string", "required": True, "empty": False},
-    #         "city": {"type": "string", "required": True, "empty": False},
-    #         "phone": {"type": "string", "nullable": True, "empty": False},
-    #         "state": {
-    #             "type": "dict",
-    #             "schema": {
-    #                 "id": {"type": "integer", "coerce": to_int, "nullable": True},
-    #                 "name": {"type": "string"},
-    #             },
-    #         },
-    #         "country": {
-    #             "type": "dict",
-    #             "schema": {
-    #                 "id": {
-    #                     "type": "integer",
-    #                     "coerce": to_int,
-    #                     "required": True,
-    #                     "nullable": False,
-    #                 },
-    #                 "name": {"type": "string"},
-    #             },
-    #         },
-    #         "is_company": {"coerce": to_bool, "type": "boolean"},
-    #     }
-    #     return res
-
-    # def _validator_return_create(self):
-    #     return self._validator_return_get()
-
-    # def _validator_update(self):
-    #     res = self._validator_create()
-    #     for key in res:
-    #         if "required" in res[key]:
-    #             del res[key]["required"]
-    #     return res
-
-    # def _validator_return_update(self):
-    #     return self._validator_return_get()
-
-    # def _validator_archive(self):
-    #     return {}
-
-    def _to_json(self, partner):
+    def _partner_to_json(self, partner):
         res = {
             "id": partner.id,
             "name": partner.name,
