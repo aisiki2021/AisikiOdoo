@@ -1,5 +1,6 @@
 from marshmallow import fields
 from odoo.addons.datamodel.core import Datamodel
+from odoo.addons.datamodel.fields import NestedModel
 
 
 class DatamodelErrorOut(Datamodel):
@@ -91,6 +92,12 @@ class CorporateRegisterOut(Datamodel):
     food_items = fields.List(fields.Integer(), required=False, allow_none=False)
 
 
+class FooditemIn(Datamodel):
+    _name = "fooditems.datamodel.in"
+
+    type = fields.String(required=False, allow_none=True)
+
+
 class Fooditems(Datamodel):
     _name = "fooditems.datamodel.out"
 
@@ -111,14 +118,72 @@ class WalletBalance(Datamodel):
     balance = fields.Decimal(required=True, allow_none=False)
 
 
+class CartItems(Datamodel):
+    _name = "cart.datamodel.items"
+
+    product_id = fields.Integer(required=True, allow_none=False)
+    quantity = fields.Integer(required=True, allow_none=False)
+    discount = fields.Integer(required=True, allow_none=False)
+    price_unit = fields.Decimal(required=True, allow_none=False)
+
 
 class CartIn(Datamodel):
     _name = "cart.datamodel.in"
 
-    balance = fields.Decimal(required=True, allow_none=False)
+    items = fields.List(NestedModel("cart.datamodel.items"))
 
 
 class CartOut(Datamodel):
     _name = "cart.datamodel.out"
 
-    balance = fields.Decimal(required=True, allow_none=False)
+    partner_id = fields.Integer(required=True, allow_none=False)
+    order_id = fields.Integer(required=True, allow_none=False)
+    items = fields.List(fields.Dict())
+    amount_total = fields.Decimal(required=True, allow_none=False)
+    state = fields.String(required=False, allow_none=False)
+
+
+class AddWalletBalance(Datamodel):
+    _name = "wallet.addbalance.datamodel.in"
+
+    amount = fields.Decimal(required=True, allow_none=False)
+    name = fields.String(required=True, allow_none=False)
+
+
+class PaymentDtamodelIn(Datamodel):
+    _name = "payment.datamodel.in"
+
+    method = fields.String(required=True, allow_none=False)
+    order_id = fields.Integer(required=True, allow_none=False)
+
+
+class PartnerInfo(Datamodel):
+    _name = "profile.datamodel"
+
+    id = fields.Integer(required=True, allow_none=False)
+    name = fields.String(required=True, allow_none=False)
+    street = fields.String(required=True, allow_none=False)
+    phone = fields.String(required=True, allow_none=True)
+    latitude = fields.Float(required=True, allow_none=True)
+    longitude = fields.Float(required=True, allow_none=True)
+
+
+class PartnerUpdateInfo(Datamodel):
+    _name = "profile.datamodel.update"
+
+    id = fields.Integer(required=True, allow_none=False)
+    name = fields.String(required=True, allow_none=False)
+    street = fields.String(required=True, allow_none=False)
+    phone = fields.String(required=True, allow_none=True)
+    latitude = fields.Float(required=True, allow_none=True)
+    longitude = fields.Float(required=True, allow_none=True)
+
+
+class PartnerUpdateInfo(Datamodel):
+    _name = "profile.datamodel.update1"
+
+    name = fields.String(required=True, allow_none=False)
+    street = fields.String(required=True, allow_none=False)
+    phone = fields.String(required=True, allow_none=True)
+    latitude = fields.Float(required=True, allow_none=True)
+    longitude = fields.Float(required=True, allow_none=True)

@@ -7,7 +7,7 @@
     "author": "My Company",
     "website": "http://www.yourcompany.com",
     "category": "Uncategorized",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "depends": [
         "base",
         "sale_management",
@@ -19,6 +19,7 @@
         "base_rest",
         "base_rest_datamodel",
         "component",
+        "website_sale",
         "auth_signup",
     ],
     "external_dependencies": {"python": ["jsondiff"]},
