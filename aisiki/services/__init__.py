@@ -1,2 +1,2 @@
-from . import procurement
+from . import orderingapp
 from . import authenticate

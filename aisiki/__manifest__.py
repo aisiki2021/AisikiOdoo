@@ -7,7 +7,7 @@
     "author": "My Company",
     "website": "http://www.yourcompany.com",
     "category": "Uncategorized",
-    "version": "0.1",
+    "version": "1.0.3",
     "depends": [
         "base",
         "sale_management",
@@ -19,12 +19,13 @@
         "base_rest",
         "base_rest_datamodel",
         "component",
+        "website_sale",
         "auth_signup",
     ],
     "external_dependencies": {"python": ["jsondiff"]},
     "data": [
         # 'security/ir.model.access.csv',
-        "views/views.xml",
-        "views/templates.xml",
+        "views/product.xml",
+        "views/res_partner.xml",
     ],
 }
