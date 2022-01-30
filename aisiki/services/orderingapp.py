@@ -132,11 +132,11 @@ class OrderingApp(Component):
         )
 
     @restapi.method(
-        [(["/fooditems"], "GET")],
+        [(["/products"], "GET")],
         auth="public",
         output_param=Datamodel("fooditems.datamodel.out", is_list=True),
     )
-    def fooditems(self):
+    def product(self):
         res = []
         products = (
             request.env["product.product"]
@@ -160,13 +160,90 @@ class OrderingApp(Component):
         return res
 
     @restapi.method(
-        [(["/walletbalance"], "POST")],
+        [(["/getbalance"], "GET")],
         auth="user",
         output_param=Datamodel("wallet.balance.datamodel.out"),
     )
-    def walletbalance(self):
-        total_due = request.env.user.partner_id.total_due
+    def getbalance(self):
+        """Get wallet balance"""
+
+        total_due = abs(request.env.user.partner_id.total_due)
         return self.env.datamodels["wallet.balance.datamodel.out"](balance=total_due)
+
+
+    @restapi.method(
+        [(["/addbalance"], "POST")],
+        auth="user",
+        input_param=Datamodel("wallet.addbalance.datamodel.in"),
+        output_param=Datamodel("wallet.balance.datamodel.out"),
+    )
+    def postbalance(self, payload):
+        """Add wallet balance"""
+        wallet = (
+            request.env["account.journal"]
+            .with_user(1)
+            .search([("name", "ilike", payload.name)], limit=1)
+        )
+
+        payment = request.env["account.payment"].with_user(1)
+
+        payment_type = (
+            request.env["account.payment.method"]
+            .with_user(1)
+            .search(
+                [("code", "=", "manual"), ("payment_type", "=", payment_type)], limit=1
+            )
+        )
+
+        payload = {
+            "payment_type": "inbound",
+            "partner_type": "customer",
+            "journal_id": wallet.id,
+            "partner_id": request.env.user.partner_id.id,
+            "amount": payload.amount,
+            "payment_method_id": payment_type.id,
+        }
+        payment.create(payload).action_post()
+        total_due = abs(request.env.user.partner_id.total_due)
+        return self.env.datamodels["wallet.balance.datamodel.out"](balance=total_due)
+
+    @restapi.method(
+        [(["/payment"], "POST")],
+        auth="user",
+        input_param=Datamodel("payment.datamodel.in"),
+        output_param=Datamodel("cart.datamodel.out"),
+    )
+    def payment(self, payload):
+        items = []
+        partner_id = request.env.user.partner_id.id
+        order = (
+            request.env["sale.order"]
+            .with_user(1)
+            .search(
+                [("partner_id", "=", partner_id), ("id", "=", payload.order_id)],
+                limit=1,
+            )
+        )
+        for line in order.order_line:
+            items.append(
+                {
+                    "product_id": line.product_id.id,
+                    "price_unit": line.price_unit,
+                    "product_uom_qty": line.product_uom_qty,
+                    "discount": line.discount,
+                },
+            )
+
+        order._create_payment_transaction({"acquirer_id": 6, "state": "done"})
+        order.action_confirm()
+
+        return self.env.datamodels["cart.datamodel.out"](
+            partner_id=order.partner_id.id,
+            items=items,
+            amount_total=order.amount_total,
+            order_id=order.id,
+            state=order.state,
+        )
 
     @restapi.method(
         [(["/cart"], "POST")],
@@ -174,25 +251,103 @@ class OrderingApp(Component):
         input_param=Datamodel("cart.datamodel.in"),
         output_param=Datamodel("cart.datamodel.out"),
     )
-    def cart(self):
-        total_due = request.env.user.partner_id.total_due
-        return self.env.datamodels["cart.datamodel.out"](balance=total_due)
-
-    def _partner_to_json(self, partner):
-        res = {
-            "id": partner.id,
-            "name": partner.name,
-            "street": partner.street,
-            "street2": partner.street2 or "",
-            "zip": partner.zip,
-            "city": partner.city,
-            "phone": partner.city,
-        }
-        if partner.country_id:
-            res["country"] = {
-                "id": partner.country_id.id,
-                "name": partner.country_id.name,
+    def cart(self, payload):
+        items = []
+        partner_id = request.env.user.partner_id.id
+        order = (
+            request.env["sale.order"]
+            .with_user(1)
+            .search([("partner_id", "=", partner_id)], limit=1)
+        )
+        if not order:
+            for line in payload.items:
+                items.append(
+                    (
+                        0,
+                        0,
+                        {
+                            "product_id": line.product_id,
+                            "price_unit": line.price_unit,
+                            "product_uom_qty": line.quantity,
+                            "discount": line.discount,
+                        },
+                    )
+                )
+            payload = {
+                "partner_id": partner_id,
+                "order_line": items,
             }
-        if partner.state_id:
-            res["state"] = {"id": partner.state_id.id, "name": partner.state_id.name}
-        return res
+            order = request.env["sale.order"].with_user(1).create(payload)
+        else:
+            order.order_line.unlink()
+            for line in payload.items:
+                payload = {
+                    "order_id": order.id,
+                    "product_id": line.product_id,
+                    "price_unit": line.price_unit,
+                    "product_uom_qty": line.quantity,
+                    "discount": line.discount,
+                }
+                request.env["sale.order.line"].with_user(1).create(payload)
+
+            items = [
+                {
+                    "product_id": line.product_id.id,
+                    "quantity": line.product_uom_qty,
+                    "discount": line.discount,
+                    "price_unit": line.price_unit,
+                    "subtotal": line.price_subtotal,
+                }
+                for line in order.order_line
+            ]
+
+        return self.env.datamodels["cart.datamodel.out"](
+            partner_id=order.partner_id.id,
+            items=items,
+            amount_total=order.amount_total,
+            order_id=order.id,
+        )
+
+    @restapi.method(
+        [(["/profile"], "GET")],
+        auth="user",
+        output_param=Datamodel("profile.datamodel"),
+    )
+    def profile(self):
+        partner_id = request.env.user.partner_id
+        res = {
+            "id": partner_id.id,
+            "name": partner_id.name,
+            "street": partner_id.street or "",
+            "phone": partner_id.phone or "",
+            "latitude": partner_id.partner_latitude or 0.0,
+            "longitude": partner_id.partner_longitude or 0.0,
+        }
+        return self.env.datamodels["profile.datamodel"](**res)
+
+    @restapi.method(
+        [(["/updateprofile"], "PUT")],
+        auth="user",
+        input_param=Datamodel("profile.datamodel.update1"),
+        output_param=Datamodel("profile.datamodel.update"),
+    )
+    def updateprofile(self, payload):
+        partner_id = request.env.user.partner_id
+        partner_id.write(
+            {
+                "name": payload.name,
+                "street": payload.street,
+                "phone": payload.phone,
+                "partner_latitude": payload.latitude,
+                "partner_longitude": payload.longitude,
+            }
+        )
+        res = {
+            "id": partner_id.name,
+            "name": partner_id.name,
+            "street": partner_id.street,
+            "phone": partner_id.phone,
+            "latitude": partner_id.partner_latitude,
+            "longitude": partner_id.partner_longitude,
+        }
+        return self.env.datamodels["profile.datamodel.update"](**res)
