@@ -134,14 +134,20 @@ class OrderingApp(Component):
     @restapi.method(
         [(["/products"], "GET")],
         auth="public",
+        input_param=Datamodel("fooditems.datamodel.in"),
         output_param=Datamodel("fooditems.datamodel.out", is_list=True),
     )
-    def product(self):
+    def product(self, payload):
+        """Types are fresh and fmcg"""
         res = []
+        aisiki_product_type = payload.type
+        domain = []
+        if aisiki_product_type:
+            domain = [("aisiki_product_type", "=", aisiki_product_type)]
         products = (
             request.env["product.product"]
             .with_user(1)
-            .search([], limit=200, order="aisiki_product_type")
+            .search(domain, limit=80, order="aisiki_product_type")
         )
         for product in products:
             res.append(
@@ -169,7 +175,6 @@ class OrderingApp(Component):
 
         total_due = abs(request.env.user.partner_id.total_due)
         return self.env.datamodels["wallet.balance.datamodel.out"](balance=total_due)
-
 
     @restapi.method(
         [(["/addbalance"], "POST")],

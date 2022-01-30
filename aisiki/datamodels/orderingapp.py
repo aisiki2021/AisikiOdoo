@@ -92,6 +92,12 @@ class CorporateRegisterOut(Datamodel):
     food_items = fields.List(fields.Integer(), required=False, allow_none=False)
 
 
+class FooditemIn(Datamodel):
+    _name = "fooditems.datamodel.in"
+
+    type = fields.String(required=False, allow_none=True)
+
+
 class Fooditems(Datamodel):
     _name = "fooditems.datamodel.out"
 

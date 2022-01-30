@@ -21,7 +21,7 @@ class ProductTemplate(models.Model):
     _inherit = "product.template"
 
     aisiki_product_type = fields.Selection(
-        selection=[("fresh", "Fresh Food"), ("fmcg", "FMCG")], string="Product Type"
+        selection=[("fresh", "Fresh Food"), ("fmcg", "FMCG")], string="Aisiki Type"
     )
 
     image_url = fields.Char(string="Image URL", compute="_compute_image_url_link")
