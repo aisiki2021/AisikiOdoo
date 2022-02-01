@@ -52,15 +52,15 @@ class IndividualRegisterIn(Datamodel):
     food_items = fields.List(fields.Integer(), required=False, allow_none=False)
 
 
-class IndividualRegisterOut(Datamodel):
+class IndividualRegisterDatamodelOut(Datamodel):
     _name = "individual.register.datamodel.out"
 
-    name = fields.String(required=True, allow_none=False)
-    phone = fields.String(required=True, allow_none=False)
-    latitude = fields.Float(required=True, allow_none=False)
-    longitude = fields.Float(required=True, allow_none=False)
-    referral_code = fields.String(required=True, allow_none=False)
-    food_items = fields.List(fields.Integer(), required=False, allow_none=False)
+    name = fields.String(required=False, allow_none=False)
+    phone = fields.String(required=False, allow_none=False)
+    latitude = fields.Float(required=False, allow_none=False)
+    longitude = fields.Float(required=False, allow_none=False)
+    referral_code = fields.String(required=False, allow_none=False)
+    food_items = fields.List(fields.Integer(), required=False, allow_none=True)
 
 
 class CorporateRegisterIn(Datamodel):
