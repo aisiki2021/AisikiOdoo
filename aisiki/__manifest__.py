@@ -7,7 +7,7 @@
     "author": "My Company",
     "website": "http://www.yourcompany.com",
     "category": "Uncategorized",
-    "version": "1.0.4",
+    "version": "1.0.5",
     "depends": [
         "base",
         "sale_management",
