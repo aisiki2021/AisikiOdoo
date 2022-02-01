@@ -99,6 +99,8 @@ class OrderingApp(Component):
             "referral_code": payload.referral_code,
             "company_type": "person",
         }
+        # food_items
+
         try:
             user = request.env["res.users"].with_user(1)._signup_create_user(values)
 
@@ -106,6 +108,7 @@ class OrderingApp(Component):
             return self.env.datamodels["datamodel.error.out"](
                 message=str(e), error=True
             )
+
         return self.env.datamodels["individual.register.datamodel.out"](
             name=user.name,
             phone=user.login,
