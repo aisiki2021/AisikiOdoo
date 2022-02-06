@@ -7,7 +7,7 @@
     "author": "My Company",
     "website": "http://www.yourcompany.com",
     "category": "Uncategorized",
-    "version": "1.0.5",
+    "version": "1.0.6",
     "depends": [
         "base",
         "sale_management",
@@ -26,6 +26,7 @@
     "data": [
         # 'security/ir.model.access.csv',
         "views/product.xml",
+        "views/res_users.xml",
         "views/res_partner.xml",
     ],
 }

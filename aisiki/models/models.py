@@ -5,6 +5,7 @@ class Users(models.Model):
     _inherit = "res.users"
 
     password_reset_url = fields.Char(related="signup_url", string="Password Reset URL")
+    isagent = fields.Boolean(string="Is Agent")
     referral_code = fields.Char(string="Referral Code")
 
 
@@ -15,6 +16,8 @@ class ResPartner(models.Model):
     contact_person = fields.Char(string="Contact Person")
     business_category = fields.Char(string="Business Category")
     number_of_offices = fields.Char(string="Number of Offices")
+    isagent = fields.Boolean(string="Is Agent", related="user_id.isagent", store=True)
+
 
 
 class ProductTemplate(models.Model):
