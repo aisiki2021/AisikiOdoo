@@ -49,115 +49,84 @@ class SingupIn(Datamodel):
     city = fields.String(required=True, allow_none=False)
     idnumber = fields.String(required=True, allow_none=False)
     referral_code = fields.String(required=True, allow_none=False)
-    toc = fields.Boolean(required=False, allow_none=True)
-    idtype = fields.String(required=False, allow_none=True)
-   
+    toc = fields.Boolean(required=False, allow_none=False)
+    idtype = fields.String(required=False, allow_none=False)
+    agentid = fields.String(required=True, allow_none=False)
+    email = fields.Email(required=False, allow_none=True)
+
 
 class SingupOut(Datamodel):
     _name = "signup.saleforce.datamode.out"
 
-    first_name = fields.String(required=True, allow_none=False)
-    last_name = fields.String(required=True, allow_none=False)
-    phone = fields.String(required=True, allow_none=False)
-    city = fields.String(required=True, allow_none=False)
-    idnumber = fields.String(required=True, allow_none=False)
-    referral_code = fields.String(required=True, allow_none=False)
+    name = fields.String(required=False, allow_none=True)
+    phone = fields.String(required=False, allow_none=True)
+    city = fields.String(required=False, allow_none=True)
+    idnumber = fields.String(required=False, allow_none=True)
+    referral_code = fields.String(required=False, allow_none=True)
     toc = fields.Boolean(required=False, allow_none=True)
     idtype = fields.String(required=False, allow_none=True)
+    agentid = fields.String(required=False, allow_none=True)
+    email = fields.Email(required=False, allow_none=True)
 
 
-# class FooditemIn(Datamodel):
-#     _name = "fooditems.datamodel.in"
+class CreateVendor(Datamodel):
+    _name = "create.vendor.datamode.in"
 
-#     type = fields.String(required=False, allow_none=True)
-
-
-# class Fooditems(Datamodel):
-#     _name = "fooditems.datamodel.out"
-
-#     id = fields.Integer(required=False, allow_none=False)
-#     name = fields.String(required=False, allow_none=False)
-#     type = fields.String(required=False, allow_none=True)
-#     image_url = fields.Url(required=False, allow_none=False)
-#     qty_available = fields.Integer(required=True, allow_none=False)
-#     price = fields.Decimal(required=True, allow_none=False)
-#     internal_ref = fields.String(required=True, allow_none=False)
-#     barcode = fields.String(required=True, allow_none=False)
-#     virtual_available = fields.Integer(required=True, allow_none=False)
+    name = fields.String(required=True, allow_none=False)
+    phone = fields.String(required=True, allow_none=True)
+    latitude = fields.Float(required=True, allow_none=False)
+    longitude = fields.Float(required=True, allow_none=False)
+    business_type = fields.String(required=True, allow_none=False)
+    purchase_frequency = fields.Float(required=False, allow_none=True)
+    image = fields.Raw(required=False, allow_none=True)
+    email = fields.Email(required=False, allow_none=True)
 
 
-# class WalletBalance(Datamodel):
-#     _name = "wallet.balance.datamodel.out"
+class CreateVendorOut(Datamodel):
+    _name = "create.vendor.datamode.out"
 
-#     balance = fields.Decimal(required=True, allow_none=False)
-
-
-# class CartItems(Datamodel):
-#     _name = "cart.datamodel.items"
-
-#     product_id = fields.Integer(required=True, allow_none=False)
-#     quantity = fields.Integer(required=True, allow_none=False)
-#     discount = fields.Integer(required=True, allow_none=False)
-#     price_unit = fields.Decimal(required=True, allow_none=False)
+    name = fields.String(required=False, allow_none=True)
+    phone = fields.String(required=False, allow_none=True)
+    latitude = fields.Float(required=False, allow_none=True)
+    longitude = fields.Float(required=False, allow_none=True)
+    business_type = fields.String(required=False, allow_none=True)
+    purchase_frequency = fields.Float(required=False, allow_none=True)
+    image = fields.Raw(required=False, allow_none=True)
+    email = fields.Email(required=False, allow_none=True)
 
 
-# class CartIn(Datamodel):
-#     _name = "cart.datamodel.in"
+class OrderOut(Datamodel):
+    _name = "orders.datamodel.out"
 
-#     items = fields.List(NestedModel("cart.datamodel.items"))
-
-
-# class CartOut(Datamodel):
-#     _name = "cart.datamodel.out"
-
-#     partner_id = fields.Integer(required=True, allow_none=False)
-#     order_id = fields.Integer(required=True, allow_none=False)
-#     items = fields.List(fields.Dict())
-#     amount_total = fields.Decimal(required=True, allow_none=False)
-#     state = fields.String(required=False, allow_none=False)
-
-
-# class AddWalletBalance(Datamodel):
-#     _name = "wallet.addbalance.datamodel.in"
-
-#     amount = fields.Decimal(required=True, allow_none=False)
-#     name = fields.String(required=True, allow_none=False)
+    id = fields.Integer(required=True)
+    name = fields.String(required=True)
+    state = fields.String(required=True)
+    customer = fields.String(required=True)
+    phone = fields.String(required=True)
+    date_order = fields.String(required=True)
+    amount_total = fields.Decimal(required=True)
+    amount_untaxed = fields.Decimal(required=True)
+    items = fields.List(
+        NestedModel("cart.datamodel.items"), required=False, allow_none=False
+    )
+    total_order = fields.Integer(required=True)
 
 
-# class PaymentDtamodelIn(Datamodel):
-#     _name = "payment.datamodel.in"
-
-#     method = fields.String(required=True, allow_none=False)
-#     order_id = fields.Integer(required=True, allow_none=False)
+class OrderIn(Datamodel):
+    _name = "orders.datamodel.in"
 
 
-# class PartnerInfo(Datamodel):
-#     _name = "profile.datamodel"
-
-#     id = fields.Integer(required=True, allow_none=False)
-#     name = fields.String(required=True, allow_none=False)
-#     street = fields.String(required=True, allow_none=False)
-#     phone = fields.String(required=True, allow_none=True)
-#     latitude = fields.Float(required=True, allow_none=True)
-#     longitude = fields.Float(required=True, allow_none=True)
+    limit = fields.String(required=False, missing=80)
+    offset = fields.String(required=False, missing=0)
 
 
-# class PartnerUpdateInfo(Datamodel):
-#     _name = "profile.datamodel.update"
+class PartnerInfo(Datamodel):
+    _name = "vendor.datamodel.out"
 
-#     id = fields.Integer(required=True, allow_none=False)
-#     name = fields.String(required=True, allow_none=False)
-#     street = fields.String(required=True, allow_none=False)
-#     phone = fields.String(required=True, allow_none=True)
-#     latitude = fields.Float(required=True, allow_none=True)
-#     longitude = fields.Float(required=True, allow_none=True)
-
-
-# class PartnerUpdateInfo(Datamodel):
-#     _name = "profile.datamodel.update1"
-
-#     name = fields.String(required=True, allow_none=False)
-#     street = fields.String(required=True, allow_none=False)
-#     phone = fields.String(required=True, allow_none=True)
-#     latitude = fields.Float(required=True, allow_none=True)
-#     longitude = fields.Float(required=True, allow_none=True)
+    id = fields.Integer(required=True, allow_none=False)
+    name = fields.String(required=True, allow_none=False)
+    street = fields.String(required=True, allow_none=False)
+    phone = fields.String(required=True, allow_none=True)
+    latitude = fields.Float(required=True, allow_none=True)
+    longitude = fields.Float(required=True, allow_none=True)
+    create_date =  fields.String(required=True, allow_none=True)

@@ -23,8 +23,6 @@ class OrderingApp(Component):
         
     """
 
-
-
     @restapi.method(
         [(["/authentication"], "POST")],
         auth="public",
@@ -46,9 +44,7 @@ class OrderingApp(Component):
             agentid=result.get("username"),
             name=result.get("name"),
             partner_id=result.get("partner_id"),
-
         )
-
 
     @restapi.method(
         [(["/forgotpassword"], "GET")],
@@ -75,105 +71,196 @@ class OrderingApp(Component):
     )
     def singup(self, payload):
         values = {
-            "name": payload.name,
-            "login": payload.phone,
-            "password": payload.password,
-            "partner_longitude": payload.longitude,
-            "partner_latitude": payload.latitude,
-            "password": payload.password,
+            "name": payload.first_name + " " + payload.last_name,
             "referral_code": payload.referral_code,
-            "contact_person": payload.contact_person,
-            "business_category": payload.business_category,
-            "number_of_offices": payload.number_of_offices,
+            "phone": payload.phone,
+            "city": payload.city,
+            "idnumber": payload.idnumber,
+            "toc": payload.toc,
+            "idtype": payload.idtype,
+            "login": payload.agentid,
+            "email": payload.email,
         }
+
         try:
             user = request.env["res.users"].with_user(1)._signup_create_user(values)
+            user.write({"city": payload.city, "isagent": True})
+            return self.env.datamodels["signup.saleforce.datamode.out"](
+                name=user.name or "",
+                phone=user.phone or "",
+                city=user.city or "",
+                agentid=user.login or "",
+                referral_code=user.referral_code,
+                idnumber=user.idnumber,
+                toc=user.toc,
+                idtype=user.idtype,
+                email=user.email or "",
+            )
 
         except Exception as e:
-            pass
-            # return self.env.datamodels["datamodel.error.out"](
-            #     message=str(e), error=True
-            # )
 
-        return self.env.datamodels["signup.saleforce.datamode.out"](
-            name=user.name,
-            phone=user.login,
-            latitude=user.partner_longitude,
-            longitude=user.partner_latitude,
-            referral_code=user.referral_code,
-            contact_person=user.contact_person,
+            return self.env.datamodels["datamodel.error.out"](
+                message=str(e), error=True
+            )
+
+    @restapi.method(
+        [(["/create.vendor"], "POST")],
+        auth="user",
+        input_param=Datamodel("create.vendor.datamode.in"),
+        output_param=Datamodel("create.vendor.datamode.out"),
+    )
+    def vendor(self, payload):
+        values = {
+            "name": payload.name,
+            "purchase_frequency": payload.purchase_frequency,
+            "partner_longitude": payload.longitude,
+            "partner_latitude": payload.latitude,
+            "phone": payload.phone,
+            "email": payload.email,
+            "business_type": payload.business_type,
+            "parent_id": request.env.user.partner_id.id,
+        }
+
+        try:
+            vendor = request.env["res.partner"].with_user(1).create(values)
+            return self.env.datamodels["create.vendor.datamode.in"](
+                name=vendor.name,
+                phone=vendor.phone,
+                latitude=vendor.partner_longitude or 0.0,
+                longitude=vendor.partner_latitude or 0.0,
+                purchase_frequency=vendor.purchase_frequency or 0,
+                email=vendor.email,
+                business_type=vendor.business_type or "",
+            )
+
+        except Exception as e:
+            return self.env.datamodels["datamodel.error.out"](
+                message=str(e), error=True
+            )
+
+    @restapi.method(
+        [(["/orders.total"], "GET")],
+        auth="user",
+        input_param=Datamodel("orders.datamodel.in"),
+        output_param=Datamodel("orders.datamodel.out", is_list=True),
+    )
+    def total_order(self, payload):
+        """."""
+        res = []
+        ids = request.env.user.partner_id.child_ids.ids
+        ids.append(request.env.user.partner_id.id)
+        domain = [('partner_id', 'in', ids)]
+        limit = payload.limit or 80
+        offset = payload.offset or 0
+        if limit:
+            limit = int(limit)
+        if offset:
+            offset =  int(offset)
+        orders = (
+            request.env["sale.order"]
+            .with_user(1)
+            .search(domain, limit=limit, order="create_date", offset=offset)
         )
+        total_order = (
+            request.env["sale.order"]
+            .with_user(1)
+            .search_count(domain)
+        )
+        for order in orders:
+            res.append(
+                self.env.datamodels["orders.datamodel.out"](
+                    total_order=total_order,
+                    id=order.id,
+                    name=order.name,
+                    state=order.state,
+                    customer=order.partner_id.name,
+                    phone=order.partner_id.phone,
+                    date_order=str(order.date_order) or str(order.create_date),
+                    amount_total=order.amount_total,
+                    amount_untaxed=order.amount_untaxed,
+                    items=[
+                        {
+                            "product_id": item.product_id.id,
+                            "quantity": item.product_uom_qty,
+                            "price_unit": item.price_unit,
+                            "discount": item.discount,
+                            "name": item.name,
+                        }
+                        for item in order.order_line
+                    ],
+                )
+            )
+        return res
 
-    # @restapi.method(
-    #     [(["/register/individual"], "POST")],
-    #     auth="public",
-    #     input_param=Datamodel("individual.register.datamodel.in"),
-    #     output_param=Datamodel("individual.register.datamodel.out"),
-    # )
-    # def individual(self, payload):
-    #     values = {
-    #         "name": payload.name,
-    #         "login": payload.phone,
-    #         "password": payload.password,
-    #         "partner_longitude": payload.longitude,
-    #         "partner_latitude": payload.latitude,
-    #         "password": payload.password,
-    #         "referral_code": payload.referral_code,
-    #         "company_type": "person",
-    #     }
-    #     # food_items
+    @restapi.method(
+        [(["/orders/<int:order_id>"], "GET")],
+        auth="user",
+        # input_param=Datamodel("orders.datamodel.in"),
+        output_param=Datamodel("orders.datamodel.out", is_list=True),
+    )
+    def getorder(self, order_id=None):
+        """."""
+        res = []
+        ids = request.env.user.partner_id.child_ids.ids
+        ids.append(request.env.user.partner_id.id)
+        domain = [('partner_id', 'in', ids)]
+        orders = (
+            request.env["sale.order"]
+            .with_user(1)
+            .search(domain,order="create_date")
+        )
+        total_order = (
+            request.env["sale.order"]
+            .with_user(1)
+            .search_count(domain)
+        )
+        for order in orders:
+            res.append(
+                self.env.datamodels["orders.datamodel.out"](
+                    total_order=total_order,
+                    id=order.id,
+                    name=order.name,
+                    state=order.state,
+                    customer=order.partner_id.name,
+                    phone=order.partner_id.phone,
+                    date_order=str(order.date_order) or str(order.create_date),
+                    amount_total=order.amount_total,
+                    amount_untaxed=order.amount_untaxed,
+                    items=[
+                        {
+                            "product_id": item.product_id.id,
+                            "quantity": item.product_uom_qty,
+                            "price_unit": item.price_unit,
+                            "discount": item.discount,
+                            "name": item.name,
+                        }
+                        for item in order.order_line
+                    ],
+                )
+            )
+        return res
 
-    #     try:
-    #         user = request.env["res.users"].with_user(1)._signup_create_user(values)
 
-    #     except Exception as e:
-    #         return self.env.datamodels["datamodel.error.out"](
-    #             message=str(e), error=True
-    #         )
-
-    #     return self.env.datamodels["individual.register.datamodel.out"](
-    #         name=user.name,
-    #         phone=user.login,
-    #         latitude=user.partner_longitude,
-    #         longitude=user.partner_latitude,
-    #         referral_code=user.referral_code,
-    #     )
-
-
-
-    # @restapi.method(
-    #     [(["/products"], "GET")],
-    #     auth="public",
-    #     input_param=Datamodel("fooditems.datamodel.in"),
-    #     output_param=Datamodel("fooditems.datamodel.out", is_list=True),
-    # )
-    # def product(self, payload):
-    #     """Types are fresh and fmcg"""
-    #     res = []
-    #     aisiki_product_type = payload.type
-    #     domain = []
-    #     if aisiki_product_type:
-    #         domain = [("aisiki_product_type", "=", aisiki_product_type)]
-    #     products = (
-    #         request.env["product.product"]
-    #         .with_user(1)
-    #         .search(domain, limit=80, order="aisiki_product_type")
-    #     )
-    #     for product in products:
-    #         res.append(
-    #             self.env.datamodels["fooditems.datamodel.out"](
-    #                 id=product.id,
-    #                 name=product.name,
-    #                 image_url=product.image_url,
-    #                 type=product.aisiki_product_type or "",
-    #                 qty_available=product.qty_available,
-    #                 price=product.lst_price,
-    #                 internal_ref=product.default_code or "",
-    #                 barcode=product.barcode or "",
-    #                 virtual_available=product.virtual_available,
-    #             )
-    #         )
-    #     return res
+    @restapi.method(
+        [(["/vendor"], "GET")],
+        auth="user",
+        output_param=Datamodel("vendor.datamodel.out", is_list=True),
+    )
+    def vendor_list(self):
+        result = []
+        partner_id = request.env.user.partner_id
+        for partner_id in partner_id.child_ids:
+            res = {
+                "id": partner_id.id,
+                "name": partner_id.name,
+                "street": partner_id.street or "",
+                "phone": partner_id.phone or "",
+                "latitude": partner_id.partner_latitude or 0.0,
+                "longitude": partner_id.partner_longitude or 0.0,
+                "create_date": str(partner_id.create_date),
+            }
+            result.append(self.env.datamodels["vendor.datamodel.out"](**res))
+        return result
 
     # @restapi.method(
     #     [(["/getbalance"], "GET")],
@@ -323,22 +410,6 @@ class OrderingApp(Component):
     #         order_id=order.id,
     #     )
 
-    # @restapi.method(
-    #     [(["/profile"], "GET")],
-    #     auth="user",
-    #     output_param=Datamodel("profile.datamodel"),
-    # )
-    # def profile(self):
-    #     partner_id = request.env.user.partner_id
-    #     res = {
-    #         "id": partner_id.id,
-    #         "name": partner_id.name,
-    #         "street": partner_id.street or "",
-    #         "phone": partner_id.phone or "",
-    #         "latitude": partner_id.partner_latitude or 0.0,
-    #         "longitude": partner_id.partner_longitude or 0.0,
-    #     }
-    #     return self.env.datamodels["profile.datamodel"](**res)
 
     # @restapi.method(
     #     [(["/updateprofile"], "PUT")],
