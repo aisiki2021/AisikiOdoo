@@ -4,10 +4,10 @@
     "description": """
         Aisiki API Documentation
     """,
-    "author": "My Company",
+    "author": "Babatope Ajepe",
     "website": "http://www.yourcompany.com",
     "category": "Uncategorized",
-    "version": "1.0.7",
+    "version": "1.0.8",
     "depends": [
         "base",
         "sale_management",
