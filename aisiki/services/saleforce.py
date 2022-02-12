@@ -9,7 +9,7 @@ import datetime
 import json
 from odoo import fields
 
-
+from odoo.tools.misc import flatten
 from .authenticate import _rotate_session
 
 
@@ -118,7 +118,7 @@ class OrderingApp(Component):
             "phone": payload.phone,
             "email": payload.email,
             "business_type": payload.business_type,
-            "parent_id": request.env.user.partner_id.id,
+            "agent_ids": [(6, 0, [request.env.user.partner_id.id])]
         }
 
         try:
@@ -231,15 +231,18 @@ class OrderingApp(Component):
         return res
 
     @restapi.method(
-        [(["/getvendor"], "GET")],
+        [(["/getvendors"], "GET")],
         auth="user",
-        input_param=Datamodel("create.orders.datamodel.in"),
         output_param=Datamodel("vendor.datamodel.out", is_list=True),
     )
-    def vendor_list(self):
+    def getvendors(self):
         result = []
         partner_id = request.env.user.partner_id
-        for partner_id in partner_id.child_ids:
+        cr =  request.env.cr
+        cr.execute("SELECT partner_id FROM partner_agent_rel WHERE agent_id=%s", tuple([partner_id.id]))
+        partner_ids =  flatten(cr.fetchall())
+        partner_ids = request.env['res.partner'].with_user(1).browse(partner_ids) if partner_ids else partner_ids
+        for partner_id in partner_ids:
             res = {
                 "id": partner_id.id,
                 "name": partner_id.name,
