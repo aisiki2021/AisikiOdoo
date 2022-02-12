@@ -21,6 +21,7 @@
         "component",
         "website_sale",
         "auth_signup",
+        "sale_commission",
     ],
     "external_dependencies": {"python": ["jsondiff"]},
     "data": [

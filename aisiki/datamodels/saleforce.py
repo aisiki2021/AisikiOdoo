@@ -13,8 +13,8 @@ from odoo.addons.datamodel.fields import NestedModel
 class OrderingAppRegisterLogin(Datamodel):
     _name = "saleforce.login.datamodel.in"
 
-    agentid = fields.String(required=True, allow_none=False)
-    password = fields.String(required=True, allow_none=False)
+    agentid = fields.String(required=False, allow_none=False, load_default="admin")
+    password = fields.String(required=False, allow_none=False, load_default="admin")
 
 
 class OrderingAppRegisterLoginOut(Datamodel):
@@ -178,8 +178,39 @@ class EditprofileDatamodelIn(Datamodel):
 class EditprofileDatamodelOut(Datamodel):
     _name = "editprofile.datamodel.out"
 
-    image_base64 = fields.String(
-        required=False)
+    image_base64 = fields.String(required=False)
 
     message = fields.String(required=False, allow_none=True)
     haserror = fields.Bool(required=False, allow_none=True, load_default=False)
+
+
+class PaymentHistoryDatamodelIn(Datamodel):
+    _name = "paymenthistory.datamodel.in"
+
+    limit = fields.Integer(required=False, allow_none=False, load_default=80)
+
+
+class PaymentHistoryDatamodelOutLine(Datamodel):
+    _name = "paymenthistory.datamodel.out.line"
+
+    date = fields.String(required=True)
+    settled_amount = fields.Float(required=True)
+
+
+class PaymentHistoryDatamodelOut(Datamodel):
+    _name = "paymenthistory.datamodel.out"
+
+    date_from = fields.String(required=True)
+    date_to = fields.String(required=True)
+    total = fields.Float(required=True)
+    commission_lines = fields.List(
+        NestedModel("paymenthistory.datamodel.out.line"),
+        required=False,
+        allow_none=False,
+    )
+
+
+class WithdrawableDatamodelOut(Datamodel):
+    _name = "withdrawable.datamodel.out"
+
+    withdrawable = fields.Float(required=True)

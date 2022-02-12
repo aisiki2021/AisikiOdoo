@@ -13,9 +13,7 @@ class SaleOrder(models.Model):
             record.commission_total = sum(record.mapped("order_line.agent_ids.amount"))
 
     commission_total = fields.Float(
-        string="Commissions",
-        compute="_compute_commission_total",
-        store=True,
+        string="Commissions", compute="_compute_commission_total", store=True,
     )
 
     def recompute_lines_agents(self):
