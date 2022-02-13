@@ -125,6 +125,7 @@ class CartItems(Datamodel):
     quantity = fields.Integer(required=True, allow_none=False)
     discount = fields.Integer(required=True, allow_none=False)
     price_unit = fields.Decimal(required=True, allow_none=False)
+    name = fields.String(required=False, allow_none=True)
 
 
 class CartIn(Datamodel):

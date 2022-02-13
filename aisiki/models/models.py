@@ -6,6 +6,10 @@ class Users(models.Model):
 
     password_reset_url = fields.Char(related="signup_url", string="Password Reset URL")
     referral_code = fields.Char(string="Referral Code")
+    city = fields.Char()
+    idnumber = fields.Char()
+    toc = fields.Char()
+    idtype = fields.Char()
 
 
 class ResPartner(models.Model):
@@ -15,6 +19,15 @@ class ResPartner(models.Model):
     contact_person = fields.Char(string="Contact Person")
     business_category = fields.Char(string="Business Category")
     number_of_offices = fields.Char(string="Number of Offices")
+    referral_code = fields.Char(
+        string="Referral Code", related="user_id.referral_code", store=True
+    )
+    city = fields.Char(related="user_id.city")
+    idnumber = fields.Char(related="user_id.idnumber", store=True)
+    toc = fields.Char(related="user_id.toc", store=True)
+    idtype = fields.Char(related="user_id.idtype", store=True)
+    business_type = fields.Char()
+    purchase_frequency = fields.Float()
 
 
 class ProductTemplate(models.Model):

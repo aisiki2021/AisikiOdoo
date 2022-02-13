@@ -4,10 +4,10 @@
     "description": """
         Aisiki API Documentation
     """,
-    "author": "My Company",
+    "author": "Babatope Ajepe",
     "website": "http://www.yourcompany.com",
     "category": "Uncategorized",
-    "version": "1.0.5",
+    "version": "1.1.1",
     "depends": [
         "base",
         "sale_management",
@@ -21,6 +21,7 @@
         "component",
         "website_sale",
         "auth_signup",
+        "sale_commission",
     ],
     "external_dependencies": {"python": ["jsondiff"]},
     "data": [
