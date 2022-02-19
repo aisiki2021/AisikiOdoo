@@ -14,3 +14,8 @@ class OrderingAppController(main.RestController):
 class SaleForceAppController(main.RestController):
     _root_path = "/sf/"
     _collection_name = "saleforce"
+
+
+class ProductCatalogController(main.RestController):
+    _root_path = "/prod/"
+    _collection_name = "catlog"
