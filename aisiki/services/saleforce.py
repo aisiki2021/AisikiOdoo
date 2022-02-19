@@ -118,7 +118,7 @@ class OrderingApp(Component):
             "phone": payload.phone,
             "email": payload.email,
             "business_type": payload.business_type,
-            "agent_ids": [(6, 0, [request.env.user.partner_id.id])]
+            "agent_ids": [(6, 0, [request.env.user.partner_id.id])],
         }
 
         try:
@@ -238,10 +238,17 @@ class OrderingApp(Component):
     def getvendors(self):
         result = []
         partner_id = request.env.user.partner_id
-        cr =  request.env.cr
-        cr.execute("SELECT partner_id FROM partner_agent_rel WHERE agent_id=%s", tuple([partner_id.id]))
-        partner_ids =  flatten(cr.fetchall())
-        partner_ids = request.env['res.partner'].with_user(1).browse(partner_ids) if partner_ids else partner_ids
+        cr = request.env.cr
+        cr.execute(
+            "SELECT partner_id FROM partner_agent_rel WHERE agent_id=%s",
+            tuple([partner_id.id]),
+        )
+        partner_ids = flatten(cr.fetchall())
+        partner_ids = (
+            request.env["res.partner"].with_user(1).browse(partner_ids)
+            if partner_ids
+            else partner_ids
+        )
         for partner_id in partner_ids:
             res = {
                 "id": partner_id.id,
