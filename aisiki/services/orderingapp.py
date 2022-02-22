@@ -16,20 +16,22 @@ from .authenticate import _rotate_session
 class OrderingApp(Component):
     _inherit = "base.rest.service"
     _name = "orderingapp"
-    _usage = "orderingapp"
+    _usage = "OrderingApp"
     _collection = "orderingapp"
     _description = """
         Ordering App
         
     """
 
+
     @restapi.method(
         [(["/login"], "POST")],
         auth="public",
         input_param=Datamodel("orderingapp.login.datamodel.in"),
-        output_param=Datamodel("orderingapp.login.datamodel.out"),
+        output_param=Datamodel("orderingapp.login.datamodel.out"), tags=['Authentication']
     )
     def login(self, payload):
+        """@auth """
         params = request.params
         db_name = params.get("db", db_monodb())
         request.session.authenticate(db_name, params["phone"], params["password"])
