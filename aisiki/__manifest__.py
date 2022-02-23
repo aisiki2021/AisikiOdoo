@@ -7,7 +7,7 @@
     "author": "Babatope Ajepe",
     "website": "http://www.yourcompany.com",
     "category": "Uncategorized",
-    "version": "1.2.1",
+    "version": "1.3",
     "depends": [
         "base",
         "sale_management",
