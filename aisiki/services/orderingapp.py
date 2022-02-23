@@ -9,53 +9,70 @@ import datetime
 import json
 from odoo import fields
 
+from odoo.exceptions import (
+    AccessDenied,
+    AccessError,
+    MissingError,
+    UserError,
+    ValidationError,
+)
 
 from .authenticate import _rotate_session
+
+import werkzeug
 
 
 class OrderingApp(Component):
     _inherit = "base.rest.service"
     _name = "orderingapp"
-    _usage = "orderingapp"
+    _usage = "OrderingApp"
     _collection = "orderingapp"
     _description = """
         Ordering App
         
     """
 
+
     @restapi.method(
         [(["/login"], "POST")],
         auth="public",
-        input_param=Datamodel("orderingapp.login.datamodel.in"),
-        output_param=Datamodel("orderingapp.login.datamodel.out"),
+        input_param=Datamodel("orderingapp.login.datamodel.in"), tags=['Authentication']
     )
     def login(self, payload):
         params = request.params
         db_name = params.get("db", db_monodb())
-        request.session.authenticate(db_name, params["phone"], params["password"])
-        result = request.env["ir.http"].session_info()
-        _rotate_session(request)
-        request.session.rotate = False
-        expiration = datetime.datetime.utcnow() + datetime.timedelta(days=7)
-        return self.env.datamodels["orderingapp.login.datamodel.out"](
-            session_id=request.session.sid,
-            expires_at=fields.Datetime.to_string(expiration),
-            uid=result.get("uid"),
-            username=result.get("username"),
-            name=result.get("name"),
-            partner_id=result.get("partner_id"),
-        )
+        try:
+            request.session.authenticate(db_name, params["phone"], params["password"])
+            result = request.env["ir.http"].session_info()
+            _rotate_session(request)
+            request.session.rotate = False
+            expiration = datetime.datetime.utcnow() + datetime.timedelta(days=7)
+            return {
+            'session_id':request.session.sid,
+            'expires_at':fields.Datetime.to_string(expiration),
+            'uid':result.get("uid"),
+            'username':result.get("username"),
+            'name':result.get("name"),
+            'partner_id':result.get("partner_id"),
+        }
+        except Exception as e:
+            data = json.dumps({'error': str(e)})
+            resp = request.make_response(data)
+            resp.status_code = 400
+            return resp
+        
 
     @restapi.method(
-        [(["/register/corporate"], "POST")],
+        [(["/register"], "POST")],
         auth="public",
-        input_param=Datamodel("corporate.register.datamodel.in"),
-        output_param=Datamodel("corporate.register.datamodel.out"),
+        input_param=Datamodel("register.datamodel.in"),
+         tags=['Authentication']
     )
-    def corporate(self, payload):
+    def register(self, payload):
         values = {
             "name": payload.name,
-            "login": payload.phone,
+            "login": payload.login,
+            "phone": payload.phone,
             "password": payload.password,
             "partner_longitude": payload.longitude,
             "partner_latitude": payload.latitude,
@@ -64,64 +81,26 @@ class OrderingApp(Component):
             "contact_person": payload.contact_person,
             "business_category": payload.business_category,
             "number_of_offices": payload.number_of_offices,
+            'company_type': 'company' if payload.is_corporate else 'person',
         }
         try:
             user = request.env["res.users"].with_user(1)._signup_create_user(values)
+            return user.read(fields=['name', 'phone', 'login', 'partner_longitude', 'partner_latitude', 'contact_person', 'company_type'])
 
         except Exception as e:
-            return self.env.datamodels["datamodel.error.out"](
-                message=str(e), error=True
-            )
+            data = json.dumps({'error': str(e)})
+            resp = request.make_response(data)
+            resp.status_code = 400
+            return resp
+        
 
-        return self.env.datamodels["corporate.register.datamodel.out"](
-            name=user.name,
-            phone=user.login,
-            latitude=user.partner_longitude,
-            longitude=user.partner_latitude,
-            referral_code=user.referral_code,
-            contact_person=user.contact_person,
-        )
 
     @restapi.method(
-        [(["/register/individual"], "POST")],
-        auth="public",
-        input_param=Datamodel("individual.register.datamodel.in"),
-        output_param=Datamodel("individual.register.datamodel.out"),
-    )
-    def individual(self, payload):
-        values = {
-            "name": payload.name,
-            "login": payload.phone,
-            "password": payload.password,
-            "partner_longitude": payload.longitude,
-            "partner_latitude": payload.latitude,
-            "password": payload.password,
-            "referral_code": payload.referral_code,
-            "company_type": "person",
-        }
-        # food_items
-
-        try:
-            user = request.env["res.users"].with_user(1)._signup_create_user(values)
-
-        except Exception as e:
-            return self.env.datamodels["datamodel.error.out"](
-                message=str(e), error=True
-            )
-
-        return self.env.datamodels["individual.register.datamodel.out"](
-            name=user.name,
-            phone=user.login,
-            latitude=user.partner_longitude,
-            longitude=user.partner_latitude,
-            referral_code=user.referral_code,
-        )
-
-    @restapi.method(
-        [(["/forgotpassword"], "GET")],
+        [(["/passwordforgot"], "GET")],
         auth="public",
         input_param=Datamodel("forgotpassword.datamodel.in"),
         output_param=Datamodel("forgotpassword.datamodel.out"),
+        tags=['Authentication']
     )
     def forgotpassword(self, payload):
         phone = payload.phone.strip()
@@ -133,6 +112,28 @@ class OrderingApp(Component):
         return self.env.datamodels["forgotpassword.datamodel.out"](
             password_reset_url=user.password_reset_url
         )
+
+    @restapi.method(
+        [(["/passwordchange"], "GET")],
+        auth="public",
+        input_param=Datamodel("get.password.datamodel"),
+        output_param=Datamodel("getout.password.datamodel"),
+         tags=['Authentication']
+    )
+    def get_change_password(self, payload):
+        """Send change password email to the customer"""
+        email = payload.email
+        response = self.env.datamodels["getout.password.datamodel"]
+        response = response()
+        user = (
+            request.env["res.users"]
+            .with_user(1)
+            .search([("login", "=", email.strip())], limit=1)
+        )
+        response.password_reset_url = user.password_reset_url
+        response.email = request.env.user.email or request.env.user.login
+
+        return response
 
     @restapi.method(
         [(["/products"], "GET")],

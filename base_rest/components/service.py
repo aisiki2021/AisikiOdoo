@@ -185,6 +185,7 @@ class BaseRestService(AbstractComponent):
         """
         api_spec = self._get_api_spec(**params)
         api_spec.generate_paths()
+        # print(api_spec.to_yaml())
         return api_spec.to_dict()
 
     def _get_openapi_default_parameters(self):
