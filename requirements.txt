@@ -5,3 +5,4 @@ apispec>=4.0.0
 marshmallow
 marshmallow-objects>=2.0.0
 jsondiff
+pypaystack

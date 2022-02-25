@@ -40,25 +40,26 @@ class ForgotPasswordDatamodelOut(Datamodel):
     password_reset_url = fields.String(required=False, allow_none=True)
 
 
-
-
-
 class CorporateRegisterIn(Datamodel):
     _name = "register.datamodel.in"
 
-    name = fields.String(required=False, allow_none=False, load_default="Babatope Ajepe")
-    contact_person = fields.String(required=False, allow_none=False, load_default="Esanju Babatunde")
+    name = fields.String(
+        required=False, allow_none=False, load_default="Babatope Ajepe"
+    )
+    contact_person = fields.String(
+        required=False, allow_none=False, load_default="Esanju Babatunde"
+    )
     business_category = fields.Integer(required=False, allow_none=False, load_default=1)
     password = fields.String(required=False, allow_none=False, load_default="password")
     number_of_offices = fields.Integer(required=False, allow_none=False, load_default=1)
-    phone = fields.String(required=False, allow_none=False, load_default='0908865544')
-    login = fields.String(required=False, allow_none=False, load_default='0908865544')
+    phone = fields.String(required=False, allow_none=False, load_default="0908865544")
+    login = fields.String(required=False, allow_none=False, load_default="0908865544")
     latitude = fields.Float(required=False, allow_none=False, load_default=6.601838)
     longitude = fields.Float(required=False, allow_none=False, load_default=3.351486)
     referral_code = fields.String(required=True, allow_none=False)
     logo = fields.String(required=False, allow_none=True)
     food_items = fields.List(fields.Integer(), required=False, allow_none=False)
-    is_corporate =  fields.Boolean(load_default=True)
+    is_corporate = fields.Boolean(load_default=True)
 
 
 class CorporateRegisterOut(Datamodel):
@@ -75,23 +76,25 @@ class CorporateRegisterOut(Datamodel):
 
 
 class FooditemIn(Datamodel):
-    _name = "fooditems.datamodel.in"
+    _name = "product.datamodel.in"
 
     type = fields.String(required=False, allow_none=True)
+    limit = fields.String(required=False, allow_none=True, load_default=80)
+    offset = fields.String(required=False, allow_none=True, load_default=0)
 
 
-class Fooditems(Datamodel):
-    _name = "fooditems.datamodel.out"
+# class Fooditems(Datamodel):
+#     _name = "product.datamodel.out"
 
-    id = fields.Integer(required=False, allow_none=False)
-    name = fields.String(required=False, allow_none=False)
-    type = fields.String(required=False, allow_none=True)
-    image_url = fields.Url(required=False, allow_none=False)
-    qty_available = fields.Integer(required=True, allow_none=False)
-    price = fields.Decimal(required=True, allow_none=False)
-    internal_ref = fields.String(required=True, allow_none=False)
-    barcode = fields.String(required=True, allow_none=False)
-    virtual_available = fields.Integer(required=True, allow_none=False)
+#     id = fields.Integer(required=False, allow_none=False)
+#     name = fields.String(required=False, allow_none=False)
+#     type = fields.String(required=False, allow_none=True)
+#     image_url = fields.Url(required=False, allow_none=False)
+#     qty_available = fields.Integer(required=True, allow_none=False)
+#     price = fields.Decimal(required=True, allow_none=False)
+#     internal_ref = fields.String(required=True, allow_none=False)
+#     barcode = fields.String(required=True, allow_none=False)
+#     virtual_available = fields.Integer(required=True, allow_none=False)
 
 
 class WalletBalance(Datamodel):
@@ -103,11 +106,11 @@ class WalletBalance(Datamodel):
 class CartItems(Datamodel):
     _name = "cart.datamodel.items"
 
-    product_id = fields.Integer(required=True, allow_none=False)
-    quantity = fields.Integer(required=True, allow_none=False)
-    discount = fields.Integer(required=True, allow_none=False)
-    price_unit = fields.Decimal(required=True, allow_none=False)
-    name = fields.String(required=False, allow_none=True)
+    product_id = fields.Integer(required=False, allow_none=False, load_default=18)
+    quantity = fields.Integer(required=False, allow_none=False, load_default=5)
+    discount = fields.Integer(required=False, allow_none=False, load_default=10)
+    price_unit = fields.Float(required=False, allow_none=False, load_default=700)
+    name = fields.String(required=False, allow_none=True, load_default="Default Order Description")
 
 
 class CartIn(Datamodel):
@@ -115,15 +118,6 @@ class CartIn(Datamodel):
 
     items = fields.List(NestedModel("cart.datamodel.items"))
 
-
-class CartOut(Datamodel):
-    _name = "cart.datamodel.out"
-
-    partner_id = fields.Integer(required=True, allow_none=False)
-    order_id = fields.Integer(required=True, allow_none=False)
-    items = fields.List(fields.Dict())
-    amount_total = fields.Decimal(required=True, allow_none=False)
-    state = fields.String(required=False, allow_none=False)
 
 
 class AddWalletBalance(Datamodel):
