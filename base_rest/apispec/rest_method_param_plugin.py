@@ -38,6 +38,8 @@ class RestMethodParamPlugin(BasePlugin):
             responses = self._generate_responses(routing, method, params)
             if responses:
                 params["responses"] = responses
+            if routing.get("tags", None):
+                params["tags"] = routing.get("tags")
 
     def _generate_pamareters(self, routing, method, params):
         parameters = params.get("parameters", [])

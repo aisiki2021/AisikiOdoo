@@ -7,7 +7,7 @@
     "author": "Babatope Ajepe",
     "website": "http://www.yourcompany.com",
     "category": "Uncategorized",
-    "version": "1.2.1",
+    "version": "1.3",
     "depends": [
         "base",
         "sale_management",
@@ -22,6 +22,7 @@
         "website_sale",
         "auth_signup",
         "sale_commission",
+        "go_sales_order_delivery_status",
     ],
     "external_dependencies": {"python": ["jsondiff"]},
     "data": [
