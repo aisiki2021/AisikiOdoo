@@ -539,11 +539,15 @@ class OrderingApp(Component):
             .with_user(1)
             .search([("partner_id", "=", partner_id), ('state', '=', 'draft'), ('id', '=', order_id)], limit=1)
         )
-        print(payment_ref, '!!!!!!!!!!!!!!!!!!!!!!!!!!!', order_id, order)
-        # order.unlink()
-        # resp = request.make_response({})
-        # resp.status_code = 204
-        # return resp
+        transaction = Transaction(authorization_key="sk_test_6613ae6de9e50d198ba22637e6df1fecf3611610")
+        response = transaction.verify(payment_ref)
+        state = 'error'
+        if response[3]['status'] == 'success':
+            state = 'done'
+            order.action_confirm()
+        order._create_payment_transaction({'acquirer_id': 14, 'acquirer_reference': response[3]['reference'], 'state': 'done', 'state_message': response[3]})
+        return response[3]
+   
         
 
         
