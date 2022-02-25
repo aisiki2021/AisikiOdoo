@@ -22,6 +22,7 @@
         "website_sale",
         "auth_signup",
         "sale_commission",
+        "go_sales_order_delivery_status",
     ],
     "external_dependencies": {"python": ["jsondiff"]},
     "data": [

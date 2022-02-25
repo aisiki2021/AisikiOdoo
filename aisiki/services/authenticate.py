@@ -82,7 +82,7 @@ class SessionAuthenticationService(Component):
         input_param=Datamodel("input.password.datamodel"),
     )
     def post_change_password(self, payload):
-        """This is call to force password reset without token verification"""
+        """This is call to force password reset without token verification."""
         old_passwd = payload.old_passwd
         new_passwd = payload.new_passwd
         res = request.env.user.change_password(old_passwd, new_passwd)
