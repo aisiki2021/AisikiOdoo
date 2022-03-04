@@ -336,14 +336,15 @@ class OrderingApp(Component):
         return res
 
     @restapi.method(
-        [(["/orders/<string:status>/status"], "GET")],
-        auth="user",
-        tags=["Order"],
+        [(["/orders/<string:status>/status"], "GET")], auth="user", tags=["Order"],
     )
     def orders_by_status(self, status, id):
         """status: [nothing] | [to_deliver] | [partial] | [delivered] | [processing] """
         res = {}
-        domain = [("partner_id", "=", request.env.user.partner_id.id), ('delivery_status', '=', status)]
+        domain = [
+            ("partner_id", "=", request.env.user.partner_id.id),
+            ("delivery_status", "=", status),
+        ]
         fields = ["name", "date_order", "delivery_status"]
         orders = (
             request.env["sale.order"]
@@ -355,14 +356,16 @@ class OrderingApp(Component):
         return res
 
     @restapi.method(
-        [(["/track/order/<int:id>"], "GET")],
-        auth="user",
-        tags=["Order"],
+        [(["/track/order/<int:id>"], "GET")], auth="user", tags=["Order"],
     )
     def orders_track(self, id):
         res = {}
-        domain = [("partner_id", "=", request.env.user.partner_id.id), ('id', '=', id)]
-        fields = ["name", "delivery_status", "date_order",]
+        domain = [("partner_id", "=", request.env.user.partner_id.id), ("id", "=", id)]
+        fields = [
+            "name",
+            "delivery_status",
+            "date_order",
+        ]
         orders = (
             request.env["sale.order"]
             .with_user(1)
@@ -496,9 +499,7 @@ class OrderingApp(Component):
     #     )
 
     @restapi.method(
-        [(["/cart/<int:order_id>"], ["DELETE"])],
-        auth="user",
-        tags=['Cart']
+        [(["/cart/<int:order_id>"], ["DELETE"])], auth="user", tags=["Cart"]
     )
     def delete(self, order_id):
         items = []
@@ -506,57 +507,87 @@ class OrderingApp(Component):
         order = (
             request.env["sale.order"]
             .with_user(1)
-            .search([("partner_id", "=", partner_id), ('state', '=', 'draft'), ('id', '=', order_id)], limit=1)
+            .search(
+                [
+                    ("partner_id", "=", partner_id),
+                    ("state", "=", "draft"),
+                    ("id", "=", order_id),
+                ],
+                limit=1,
+            )
         )
         order.unlink()
         resp = request.make_response({})
         resp.status_code = 204
         return resp
 
-    @restapi.method(
-        [(["/pay/<int:order_id>"], ["GET"])],
-        auth="user",
-        tags=['Cart']
-    )
+    @restapi.method([(["/pay/<int:order_id>"], ["GET"])], auth="user", tags=["Cart"])
     def pay(self, order_id):
         """Get checkout payment link."""
-        transaction = Transaction(authorization_key="sk_test_6613ae6de9e50d198ba22637e6df1fecf3611610")
+        transaction = Transaction(
+            authorization_key="sk_test_6613ae6de9e50d198ba22637e6df1fecf3611610"
+        )
         partner_id = request.env.user.partner_id.id
-        order = request.env["sale.order"].with_user(1).search([("partner_id", "=", partner_id), ('state', '=', 'draft'), ('id', '=', order_id)], limit=1)
+        order = (
+            request.env["sale.order"]
+            .with_user(1)
+            .search(
+                [
+                    ("partner_id", "=", partner_id),
+                    ("state", "=", "draft"),
+                    ("id", "=", order_id),
+                ],
+                limit=1,
+            )
+        )
 
-        initialize = transaction.initialize('ajepebabatope@gmail.com', order.amount_total * 100)
+        initialize = transaction.initialize(
+            "ajepebabatope@gmail.com", order.amount_total * 100
+        )
         return initialize
 
     @restapi.method(
         [(["/checkout/<string:payment_ref>/order/<int:order_id>"], ["POST"])],
         auth="user",
-        tags=['Cart']
+        tags=["Cart"],
     )
     def checkout(self, payment_ref, order_id):
         partner_id = request.env.user.partner_id.id
         order = (
             request.env["sale.order"]
             .with_user(1)
-            .search([("partner_id", "=", partner_id), ('state', '=', 'draft'), ('id', '=', order_id)], limit=1)
+            .search(
+                [
+                    ("partner_id", "=", partner_id),
+                    ("state", "=", "draft"),
+                    ("id", "=", order_id),
+                ],
+                limit=1,
+            )
         )
-        transaction = Transaction(authorization_key="sk_test_6613ae6de9e50d198ba22637e6df1fecf3611610")
+        transaction = Transaction(
+            authorization_key="sk_test_6613ae6de9e50d198ba22637e6df1fecf3611610"
+        )
         response = transaction.verify(payment_ref)
-        state = 'error'
-        if response[3]['status'] == 'success':
-            state = 'done'
+        state = "error"
+        if response[3]["status"] == "success":
+            state = "done"
             order.action_confirm()
-        order._create_payment_transaction({'acquirer_id': 14, 'acquirer_reference': response[3]['reference'], 'state': 'done', 'state_message': response[3]})
+        order._create_payment_transaction(
+            {
+                "acquirer_id": 14,
+                "acquirer_reference": response[3]["reference"],
+                "state": "done",
+                "state_message": response[3],
+            }
+        )
         return response[3]
-   
-        
-
-        
 
     @restapi.method(
         [(["/cart"], ["POST", "PUT"])],
         auth="user",
         input_param=Datamodel("cart.datamodel.in"),
-        tags=['Cart']
+        tags=["Cart"],
     )
     def cart(self, payload):
         items = []
@@ -564,7 +595,7 @@ class OrderingApp(Component):
         order = (
             request.env["sale.order"]
             .with_user(1)
-            .search([("partner_id", "=", partner_id), ('state', '=', 'draft')], limit=1)
+            .search([("partner_id", "=", partner_id), ("state", "=", "draft")], limit=1)
         )
         if not order:
             for line in payload.items:
@@ -609,21 +640,20 @@ class OrderingApp(Component):
             ]
 
         return {
-                "name": order.name,
-                "amount_total": order.amount_total,
-                "state": order.state,
-                "delivery_status": order.delivery_status,
-                "customer": order.partner_id.name,
-                "date_order": order.date_order,
-                "items": [
-                    {
-                        "product_id": line.product_id.id,
-                        "description": line.name,
-                        "quantity": line.product_uom_qty,
-                        "price_unit": line.price_unit,
-                        "subtotal": line.price_subtotal,
-                    }
-                    for line in order.order_line
-                ],
-            }
-            
+            "name": order.name,
+            "amount_total": order.amount_total,
+            "state": order.state,
+            "delivery_status": order.delivery_status,
+            "customer": order.partner_id.name,
+            "date_order": order.date_order,
+            "items": [
+                {
+                    "product_id": line.product_id.id,
+                    "description": line.name,
+                    "quantity": line.product_uom_qty,
+                    "price_unit": line.price_unit,
+                    "subtotal": line.price_subtotal,
+                }
+                for line in order.order_line
+            ],
+        }
