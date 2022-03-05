@@ -10,6 +10,11 @@ class Users(models.Model):
     idnumber = fields.Char()
     toc = fields.Char()
     idtype = fields.Char()
+    registration_stage = fields.Selection(
+        selection=[("not_verified", "Not Verified"), ("verified", "Verify")],
+        string="Registration Stage",
+        default="not_verified",
+    )
 
 
 class ResPartner(models.Model):

@@ -3,6 +3,12 @@ from odoo.addons.datamodel.core import Datamodel
 from odoo.addons.datamodel.fields import NestedModel
 
 
+class DataModelOTP(Datamodel):
+    _name = "otp.datamodel.in"
+    phone = fields.String(required=True, allow_none=False)
+    otp = fields.String(required=True, allow_none=False)
+
+
 class DatamodelErrorOut(Datamodel):
     _name = "datamodel.error.out"
 
