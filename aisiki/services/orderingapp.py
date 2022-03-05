@@ -22,6 +22,10 @@ from .authenticate import _rotate_session
 import werkzeug
 
 from pypaystack import Transaction
+import pyotp
+
+secret = "JBSWY3DPEHPK3PXP"
+totp = pyotp.TOTP(secret, interval=900)
 
 
 class OrderingApp(Component):
@@ -44,8 +48,11 @@ class OrderingApp(Component):
         params = request.params
         db_name = params.get("db", db_monodb())
         try:
-            request.session.authenticate(db_name, params["phone"], params["password"])
+            uid = request.session.authenticate(
+                db_name, params["phone"], params["password"]
+            )
             result = request.env["ir.http"].session_info()
+            user = request.env["res.users"].with_user(1).browse(uid)
             _rotate_session(request)
             request.session.rotate = False
             expiration = datetime.datetime.utcnow() + datetime.timedelta(days=7)
@@ -56,6 +63,81 @@ class OrderingApp(Component):
                 "username": result.get("username"),
                 "name": result.get("name"),
                 "partner_id": result.get("partner_id"),
+                "registration_stage": user.registration_stage,
+            }
+        except Exception as e:
+            data = json.dumps({"error": str(e)})
+            resp = request.make_response(data)
+            resp.status_code = 400
+            return resp
+
+    @restapi.method(
+        [(["/otp/<string:phone>"], "GET")], auth="public", tags=["Authentication"],
+    )
+    def otp_get(self, phone):
+        phone = phone.strip()
+        user = (
+            request.env["res.users"]
+            .with_user(1)
+            .search([("login", "=", phone)], limit=1)
+        )
+        if not user:
+            data = json.dumps({"error": "phone number not found"})
+            resp = request.make_response(data)
+            resp.status_code = 400
+            return resp
+
+        sms = (
+            request.env["sms.sms"]
+            .with_user(1)
+            .create(
+                {
+                    "body": "Aisiki Verification Code: %s" % (totp.now(),),
+                    "number": phone,
+                }
+            )
+            .aisiki_send()
+        )
+        return sms
+
+    @restapi.method(
+        [(["/otp_verify"], "POST")],
+        auth="public",
+        input_param=Datamodel("otp.datamodel.in"),
+        tags=["Authentication"],
+    )
+    def otp_verify(self, payload):
+        try:
+            phone = payload.phone.strip()
+            otp = payload.otp.strip()
+            user = (
+                request.env["res.users"]
+                .with_user(1)
+                .search([("login", "=", phone)], limit=1)
+            )
+            if not user:
+                data = json.dumps({"error": "phone number not found"})
+                resp = request.make_response(data)
+                resp.status_code = 400
+                return resp
+            verify = totp.verify(otp)
+            if not verify:
+                data = json.dumps({"error": "OTP verification failed"})
+                resp = request.make_response(data)
+                resp.status_code = 400
+                return resp
+            request.uid = user.id
+            _rotate_session(request)
+            request.session.rotate = False
+            expiration = datetime.datetime.utcnow() + datetime.timedelta(days=7)
+            user.write({"registration_stage": "verified"})
+            return {
+                "session_id": request.session.sid,
+                "expires_at": fields.Datetime.to_string(expiration),
+                "uid": user.id,
+                "username": user.login,
+                "name": user.name,
+                "registration_stage": user.registration_stage,
             }
         except Exception as e:
             data = json.dumps({"error": str(e)})
@@ -95,8 +177,9 @@ class OrderingApp(Component):
                     "partner_latitude",
                     "contact_person",
                     "company_type",
+                    "registration_stage",
                 ]
-            )
+            )[0]
 
         except Exception as e:
             data = json.dumps({"error": str(e)})
@@ -336,14 +419,15 @@ class OrderingApp(Component):
         return res
 
     @restapi.method(
-        [(["/orders/<string:status>/status"], "GET")],
-        auth="user",
-        tags=["Order"],
+        [(["/orders/<string:status>/status"], "GET")], auth="user", tags=["Order"],
     )
     def orders_by_status(self, status, id):
         """status: [nothing] | [to_deliver] | [partial] | [delivered] | [processing] """
         res = {}
-        domain = [("partner_id", "=", request.env.user.partner_id.id), ('delivery_status', '=', status)]
+        domain = [
+            ("partner_id", "=", request.env.user.partner_id.id),
+            ("delivery_status", "=", status),
+        ]
         fields = ["name", "date_order", "delivery_status"]
         orders = (
             request.env["sale.order"]
@@ -355,14 +439,16 @@ class OrderingApp(Component):
         return res
 
     @restapi.method(
-        [(["/track/order/<int:id>"], "GET")],
-        auth="user",
-        tags=["Order"],
+        [(["/track/order/<int:id>"], "GET")], auth="user", tags=["Order"],
     )
     def orders_track(self, id):
         res = {}
-        domain = [("partner_id", "=", request.env.user.partner_id.id), ('id', '=', id)]
-        fields = ["name", "delivery_status", "date_order",]
+        domain = [("partner_id", "=", request.env.user.partner_id.id), ("id", "=", id)]
+        fields = [
+            "name",
+            "delivery_status",
+            "date_order",
+        ]
         orders = (
             request.env["sale.order"]
             .with_user(1)
@@ -496,9 +582,7 @@ class OrderingApp(Component):
     #     )
 
     @restapi.method(
-        [(["/cart/<int:order_id>"], ["DELETE"])],
-        auth="user",
-        tags=['Cart']
+        [(["/cart/<int:order_id>"], ["DELETE"])], auth="user", tags=["Cart"]
     )
     def delete(self, order_id):
         items = []
@@ -506,57 +590,87 @@ class OrderingApp(Component):
         order = (
             request.env["sale.order"]
             .with_user(1)
-            .search([("partner_id", "=", partner_id), ('state', '=', 'draft'), ('id', '=', order_id)], limit=1)
+            .search(
+                [
+                    ("partner_id", "=", partner_id),
+                    ("state", "=", "draft"),
+                    ("id", "=", order_id),
+                ],
+                limit=1,
+            )
         )
         order.unlink()
         resp = request.make_response({})
         resp.status_code = 204
         return resp
 
-    @restapi.method(
-        [(["/pay/<int:order_id>"], ["GET"])],
-        auth="user",
-        tags=['Cart']
-    )
+    @restapi.method([(["/pay/<int:order_id>"], ["GET"])], auth="user", tags=["Cart"])
     def pay(self, order_id):
         """Get checkout payment link."""
-        transaction = Transaction(authorization_key="sk_test_6613ae6de9e50d198ba22637e6df1fecf3611610")
+        transaction = Transaction(
+            authorization_key="sk_test_6613ae6de9e50d198ba22637e6df1fecf3611610"
+        )
         partner_id = request.env.user.partner_id.id
-        order = request.env["sale.order"].with_user(1).search([("partner_id", "=", partner_id), ('state', '=', 'draft'), ('id', '=', order_id)], limit=1)
+        order = (
+            request.env["sale.order"]
+            .with_user(1)
+            .search(
+                [
+                    ("partner_id", "=", partner_id),
+                    ("state", "=", "draft"),
+                    ("id", "=", order_id),
+                ],
+                limit=1,
+            )
+        )
 
-        initialize = transaction.initialize('ajepebabatope@gmail.com', order.amount_total * 100)
+        initialize = transaction.initialize(
+            "ajepebabatope@gmail.com", order.amount_total * 100
+        )
         return initialize
 
     @restapi.method(
         [(["/checkout/<string:payment_ref>/order/<int:order_id>"], ["POST"])],
         auth="user",
-        tags=['Cart']
+        tags=["Cart"],
     )
     def checkout(self, payment_ref, order_id):
         partner_id = request.env.user.partner_id.id
         order = (
             request.env["sale.order"]
             .with_user(1)
-            .search([("partner_id", "=", partner_id), ('state', '=', 'draft'), ('id', '=', order_id)], limit=1)
+            .search(
+                [
+                    ("partner_id", "=", partner_id),
+                    ("state", "=", "draft"),
+                    ("id", "=", order_id),
+                ],
+                limit=1,
+            )
         )
-        transaction = Transaction(authorization_key="sk_test_6613ae6de9e50d198ba22637e6df1fecf3611610")
+        transaction = Transaction(
+            authorization_key="sk_test_6613ae6de9e50d198ba22637e6df1fecf3611610"
+        )
         response = transaction.verify(payment_ref)
-        state = 'error'
-        if response[3]['status'] == 'success':
-            state = 'done'
+        state = "error"
+        if response[3]["status"] == "success":
+            state = "done"
             order.action_confirm()
-        order._create_payment_transaction({'acquirer_id': 14, 'acquirer_reference': response[3]['reference'], 'state': 'done', 'state_message': response[3]})
+        order._create_payment_transaction(
+            {
+                "acquirer_id": 14,
+                "acquirer_reference": response[3]["reference"],
+                "state": "done",
+                "state_message": response[3],
+            }
+        )
         return response[3]
-   
-        
-
-        
 
     @restapi.method(
         [(["/cart"], ["POST", "PUT"])],
         auth="user",
         input_param=Datamodel("cart.datamodel.in"),
-        tags=['Cart']
+        tags=["Cart"],
     )
     def cart(self, payload):
         items = []
@@ -564,7 +678,7 @@ class OrderingApp(Component):
         order = (
             request.env["sale.order"]
             .with_user(1)
-            .search([("partner_id", "=", partner_id), ('state', '=', 'draft')], limit=1)
+            .search([("partner_id", "=", partner_id), ("state", "=", "draft")], limit=1)
         )
         if not order:
             for line in payload.items:
@@ -609,21 +723,20 @@ class OrderingApp(Component):
             ]
 
         return {
-                "name": order.name,
-                "amount_total": order.amount_total,
-                "state": order.state,
-                "delivery_status": order.delivery_status,
-                "customer": order.partner_id.name,
-                "date_order": order.date_order,
-                "items": [
-                    {
-                        "product_id": line.product_id.id,
-                        "description": line.name,
-                        "quantity": line.product_uom_qty,
-                        "price_unit": line.price_unit,
-                        "subtotal": line.price_subtotal,
-                    }
-                    for line in order.order_line
-                ],
-            }
-            
+            "name": order.name,
+            "amount_total": order.amount_total,
+            "state": order.state,
+            "delivery_status": order.delivery_status,
+            "customer": order.partner_id.name,
+            "date_order": order.date_order,
+            "items": [
+                {
+                    "product_id": line.product_id.id,
+                    "description": line.name,
+                    "quantity": line.product_uom_qty,
+                    "price_unit": line.price_unit,
+                    "subtotal": line.price_subtotal,
+                }
+                for line in order.order_line
+            ],
+        }

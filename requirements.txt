@@ -6,3 +6,4 @@ marshmallow
 marshmallow-objects>=2.0.0
 jsondiff
 pypaystack
+pyotp
