@@ -22,6 +22,10 @@ from .authenticate import _rotate_session
 import werkzeug
 
 from pypaystack import Transaction
+import pyotp
+
+secret = "JBSWY3DPEHPK3PXP"
+totp = pyotp.TOTP(secret, interval=900)
 
 
 class OrderingApp(Component):
@@ -44,8 +48,11 @@ class OrderingApp(Component):
         params = request.params
         db_name = params.get("db", db_monodb())
         try:
-            request.session.authenticate(db_name, params["phone"], params["password"])
+            uid = request.session.authenticate(
+                db_name, params["phone"], params["password"]
+            )
             result = request.env["ir.http"].session_info()
+            user = request.env["res.users"].with_user(1).browse(uid)
             _rotate_session(request)
             request.session.rotate = False
             expiration = datetime.datetime.utcnow() + datetime.timedelta(days=7)
@@ -56,6 +63,81 @@ class OrderingApp(Component):
                 "username": result.get("username"),
                 "name": result.get("name"),
                 "partner_id": result.get("partner_id"),
+                "registration_stage": user.registration_stage,
+            }
+        except Exception as e:
+            data = json.dumps({"error": str(e)})
+            resp = request.make_response(data)
+            resp.status_code = 400
+            return resp
+
+    @restapi.method(
+        [(["/otp/<string:phone>"], "GET")], auth="public", tags=["Authentication"],
+    )
+    def otp_get(self, phone):
+        phone = phone.strip()
+        user = (
+            request.env["res.users"]
+            .with_user(1)
+            .search([("login", "=", phone)], limit=1)
+        )
+        if not user:
+            data = json.dumps({"error": "phone number not found"})
+            resp = request.make_response(data)
+            resp.status_code = 400
+            return resp
+
+        sms = (
+            request.env["sms.sms"]
+            .with_user(1)
+            .create(
+                {
+                    "body": "Aisiki Verification Code: %s" % (totp.now(),),
+                    "number": phone,
+                }
+            )
+            .aisiki_send()
+        )
+        return sms
+
+    @restapi.method(
+        [(["/otp_verify"], "POST")],
+        auth="public",
+        input_param=Datamodel("otp.datamodel.in"),
+        tags=["Authentication"],
+    )
+    def otp_verify(self, payload):
+        try:
+            phone = payload.phone.strip()
+            otp = payload.otp.strip()
+            user = (
+                request.env["res.users"]
+                .with_user(1)
+                .search([("login", "=", phone)], limit=1)
+            )
+            if not user:
+                data = json.dumps({"error": "phone number not found"})
+                resp = request.make_response(data)
+                resp.status_code = 400
+                return resp
+            verify = totp.verify(otp)
+            if not verify:
+                data = json.dumps({"error": "OTP verification failed"})
+                resp = request.make_response(data)
+                resp.status_code = 400
+                return resp
+            request.uid = user.id
+            _rotate_session(request)
+            request.session.rotate = False
+            expiration = datetime.datetime.utcnow() + datetime.timedelta(days=7)
+            user.write({"registration_stage": "verified"})
+            return {
+                "session_id": request.session.sid,
+                "expires_at": fields.Datetime.to_string(expiration),
+                "uid": user.id,
+                "username": user.login,
+                "name": user.name,
+                "registration_stage": user.registration_stage,
             }
         except Exception as e:
             data = json.dumps({"error": str(e)})
@@ -95,6 +177,7 @@ class OrderingApp(Component):
                     "partner_latitude",
                     "contact_person",
                     "company_type",
+                    "registration_stage",
                 ]
             )[0]
 

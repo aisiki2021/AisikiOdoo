@@ -33,23 +33,22 @@ class AisikiSMS(models.Model):
         api_key = param_obj.sudo().get_param("aisiki.api.key")
         payload = {
             "SMS": {
-                "auth": {
-                    "username": username,
-                    "apikey": api_key,
-                },
+                "auth": {"username": username, "apikey": api_key,},
                 "message": {
                     "sender": "AISIKI",
                     "messagetext": self.body,
                     "flash": "0",
                 },
-                "recipients": {
-                    "gsm": [
-                        {"msidn": self.number, "msgid": self.id},
-                    ]
-                },
+                "recipients": {"gsm": [{"msidn": self.number, "msgid": self.id},]},
                 "dndsender": 1,
             }
         }
         response = requests.post(url, json=payload).json()
-        self.write({'state': 'sent' if response['response']['status'].lower() == 'success' else 'error'})
-
+        self.write(
+            {
+                "state": "sent"
+                if response["response"]["status"].lower() == "success"
+                else "error"
+            }
+        )
+        return response
