@@ -497,19 +497,33 @@ class OrderingApp(Component):
         return res
 
     @restapi.method(
-        [(["/getbalance"], "GET")],
+        [(["/balance"], "GET")],
         auth="user",
+        tags=["Wallet"],
         output_param=Datamodel("wallet.balance.datamodel.out"),
     )
     def getbalance(self):
-        """Get wallet balance"""
-
+        print(dir(request.env.user))
         total_due = abs(request.env.user.partner_id.total_due)
         return self.env.datamodels["wallet.balance.datamodel.out"](balance=total_due)
+
+    @restapi.method([(["/balances"], "GET")], auth="user", tags=["Wallet"])
+    def getbalances(self):
+        partner_id = request.env.user.partner_id.id
+        payments = (
+            request.env["account.payment"]
+            .with_user(1)
+            .search_read(
+                [("partner_id", "=", partner_id)],
+                fields=["payment_type", "amount", "date", "name"],
+            )
+        )
+        return payments
 
     @restapi.method(
         [(["/addbalance"], "POST")],
         auth="user",
+        tags=["Wallet"],
         input_param=Datamodel("wallet.addbalance.datamodel.in"),
         output_param=Datamodel("wallet.balance.datamodel.out"),
     )

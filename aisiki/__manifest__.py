@@ -7,7 +7,7 @@
     "author": "Babatope Ajepe",
     "website": "http://www.yourcompany.com",
     "category": "Uncategorized",
-    "version": "1.6",
+    "version": "1.7",
     "depends": [
         "base",
         "sms",
