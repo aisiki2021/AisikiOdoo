@@ -96,7 +96,7 @@ class OrderingApp(Component):
                     "contact_person",
                     "company_type",
                 ]
-            )
+            )[0]
 
         except Exception as e:
             data = json.dumps({"error": str(e)})
