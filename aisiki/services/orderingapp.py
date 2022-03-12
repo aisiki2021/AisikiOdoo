@@ -92,7 +92,7 @@ class OrderingApp(Component):
             .with_user(1)
             .create(
                 {
-                    "body": "Aisiki Verification Code: %s" % (totp.now(),),
+                    "body": "Your Aisiki verification code is %s." % (totp.now(),),
                     "number": phone,
                 }
             )
@@ -497,51 +497,94 @@ class OrderingApp(Component):
         return res
 
     @restapi.method(
-        [(["/getbalance"], "GET")],
+        [(["/balance"], "GET")],
         auth="user",
+        tags=["Wallet"],
         output_param=Datamodel("wallet.balance.datamodel.out"),
     )
     def getbalance(self):
-        """Get wallet balance"""
-
+        print(dir(request.env.user))
         total_due = abs(request.env.user.partner_id.total_due)
         return self.env.datamodels["wallet.balance.datamodel.out"](balance=total_due)
 
-    @restapi.method(
-        [(["/addbalance"], "POST")],
-        auth="user",
-        input_param=Datamodel("wallet.addbalance.datamodel.in"),
-        output_param=Datamodel("wallet.balance.datamodel.out"),
-    )
-    def postbalance(self, payload):
-        """Add wallet balance"""
-        wallet = (
-            request.env["account.journal"]
+    @restapi.method([(["/balances"], "GET")], auth="user", tags=["Wallet"])
+    def getbalances(self):
+        partner_id = request.env.user.partner_id.id
+        payments = (
+            request.env["account.payment"]
             .with_user(1)
-            .search([("name", "ilike", payload.name)], limit=1)
-        )
-
-        payment = request.env["account.payment"].with_user(1)
-
-        payment_type = (
-            request.env["account.payment.method"]
-            .with_user(1)
-            .search(
-                [("code", "=", "manual"), ("payment_type", "=", payment_type)], limit=1
+            .search_read(
+                [("partner_id", "=", partner_id)],
+                fields=["payment_type", "amount", "date", "name"],
             )
         )
+        return payments
 
-        payload = {
-            "payment_type": "inbound",
-            "partner_type": "customer",
-            "journal_id": wallet.id,
-            "partner_id": request.env.user.partner_id.id,
-            "amount": payload.amount,
-            "payment_method_id": payment_type.id,
-        }
-        payment.create(payload).action_post()
-        total_due = abs(request.env.user.partner_id.total_due)
-        return self.env.datamodels["wallet.balance.datamodel.out"](balance=total_due)
+    @restapi.method([(["/paymentlink/<int:amount>"], ["GET"])], auth="user", tags=["Wallet"])
+    def wallet_paymentlink(self, amount):
+        """Get checkout payment link."""
+        transaction = Transaction(
+            authorization_key="sk_test_6613ae6de9e50d198ba22637e6df1fecf3611610"
+        )
+        partner_id = request.env.user.partner_id 
+
+
+        initialize = transaction.initialize(
+            partner_id.email or request.user.login, amount * 100
+        )
+        return initialize[3]
+
+    @restapi.method(
+        [(["/create"], "POST")],
+        auth="user",
+        tags=["Wallet"],
+        input_param=Datamodel("wallet.addbalance.datamodel.in"),
+        )
+    def postbalance(self, payload):
+        """Add wallet balance"""
+        transaction = Transaction(
+            authorization_key="sk_test_6613ae6de9e50d198ba22637e6df1fecf3611610"
+        )
+        response = transaction.verify(payload.payment_ref)
+        print('response!!!!!!!!!!!!!!!', response)
+
+        try:
+
+            if response[3]["status"] == "success":
+                wallet_id = request.env.ref('aisiki.aisiki_wallet_journal').with_user(1)
+
+                payment = request.env["account.payment"].with_user(1)
+
+                payment_type = (
+                    request.env["account.payment.method"]
+                    .with_user(1)
+                    .search(
+                        [("code", "=", "manual"), ("payment_type", "=", 'inbound')], limit=1
+                    )
+                )
+
+                payload = {
+                    "payment_type": "inbound",
+                    "partner_type": "customer",
+                    "journal_id": wallet_id.id,
+                    "partner_id": request.env.user.partner_id.id,
+                    "amount": response[3]['amount'],
+                    "payment_method_id": payment_type.id,
+                }
+                payment.create(payload).action_post()
+                total_due = abs(request.env.user.partner_id.total_due)
+                resp = request.make_response(json.dumps({'balance':total_due}))
+                resp.status_code = 404
+                return resp
+        except Exception as e:
+            resp = request.make_response(json.dumps({'error': str(response)}))
+            resp.status_code = 402
+            return resp
+          
+
+        
+    
+        # return json.dumps(response[3]['status'])
 
     # @restapi.method(
     #     [(["/payment"], "POST")],
@@ -581,6 +624,49 @@ class OrderingApp(Component):
     #         state=order.state,
     #     )
 
+    @restapi.method([(["/cart"], "GET")], auth="user", tags=["Cart"])
+    def cartitem(self):
+        res = {}
+        domain = [("partner_id", "=", request.env.user.partner_id.id), ('state', '=', 'draft')]
+        orders = request.env['sale.order'].with_user(1).search(domain, limit=1)
+        data = []
+        for order in orders:
+            data.append({'name': order.name, 'date_order': order.date_order, 'id': order.id,   "items": [
+                {
+                    "product_id": line.product_id.id,
+                    "description": line.name,
+                    "quantity": line.product_uom_qty,
+                    "price_unit": line.price_unit,
+                    "subtotal": line.price_subtotal,
+                }
+                for line in order.order_line
+            ],})
+        res["data"] = data
+        res["count"] = len(orders)
+        return res
+
+    @restapi.method([(["/cancel/<int:order_id>"], "PATCH")], auth="user", tags=["Cart"])
+    def cartcancel(self, order_id):
+        res = {}
+        domain = [("partner_id", "=", request.env.user.partner_id.id), ('state', '=', 'draft'), ('id', '=', order_id)]
+        order = request.env['sale.order'].with_user(1).search(domain)
+        try:
+            if order:
+                order.action_cancel()
+                resp = request.make_response({})
+                resp.status_code = 204
+                return resp
+            else:
+                resp = request.make_response( json.dumps({'error': 'order %s not found' % (order_id,)}))
+                resp.status_code = 404
+                return resp
+
+        except Exception as e:
+            data = json.dumps({"error": str(e)})
+            resp = request.make_response(data)
+            resp.status_code = 400
+            return resp
+
     @restapi.method(
         [(["/cart/<int:order_id>"], ["DELETE"])], auth="user", tags=["Cart"]
     )
@@ -610,13 +696,13 @@ class OrderingApp(Component):
         transaction = Transaction(
             authorization_key="sk_test_6613ae6de9e50d198ba22637e6df1fecf3611610"
         )
-        partner_id = request.env.user.partner_id.id
+        partner_id = request.env.user.partner_id
         order = (
             request.env["sale.order"]
             .with_user(1)
             .search(
                 [
-                    ("partner_id", "=", partner_id),
+                    ("partner_id", "=", partner_id.id),
                     ("state", "=", "draft"),
                     ("id", "=", order_id),
                 ],
@@ -625,7 +711,7 @@ class OrderingApp(Component):
         )
 
         initialize = transaction.initialize(
-            "ajepebabatope@gmail.com", order.amount_total * 100
+            partner_id.email, order.amount_total * 100
         )
         return initialize
 

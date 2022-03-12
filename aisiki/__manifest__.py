@@ -7,7 +7,7 @@
     "author": "Babatope Ajepe",
     "website": "http://www.yourcompany.com",
     "category": "Uncategorized",
-    "version": "1.6",
+    "version": "1.8",
     "depends": [
         "base",
         "sms",
@@ -23,6 +23,7 @@
         "component",
         "website_sale",
         "auth_signup",
+        "l10n_generic_coa",
         "sale_commission",
         "go_sales_order_delivery_status",
     ],
@@ -31,5 +32,6 @@
         # 'security/ir.model.access.csv',
         "views/product.xml",
         "views/res_partner.xml",
+        "data/account_journal.xml",
     ],
 }
