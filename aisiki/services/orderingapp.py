@@ -546,8 +546,6 @@ class OrderingApp(Component):
             authorization_key="sk_test_6613ae6de9e50d198ba22637e6df1fecf3611610"
         )
         response = transaction.verify(payload.payment_ref)
-        print('response!!!!!!!!!!!!!!!', response)
-
         try:
 
             if response[3]["status"] == "success":
