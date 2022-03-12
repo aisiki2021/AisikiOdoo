@@ -130,8 +130,7 @@ class CartIn(Datamodel):
 class AddWalletBalance(Datamodel):
     _name = "wallet.addbalance.datamodel.in"
 
-    amount = fields.Decimal(required=True, allow_none=False)
-    name = fields.String(required=True, allow_none=False)
+    payment_ref = fields.String(required=True, allow_none=False)
 
 
 class PaymentDtamodelIn(Datamodel):
