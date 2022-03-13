@@ -126,6 +126,12 @@ class CartIn(Datamodel):
 
     items = fields.List(NestedModel("cart.datamodel.items"))
 
+class CartUpdateIn(Datamodel):
+    _name = "update.cart.datamodel.in"
+
+    items = fields.List(NestedModel("cart.datamodel.items"))
+    cart_id = fields.Integer(required=True, allow_none=False)
+
 
 class AddWalletBalance(Datamodel):
     _name = "wallet.addbalance.datamodel.in"

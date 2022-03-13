@@ -302,6 +302,11 @@ class OrderingApp(Component):
             "default_code",
             "categ_id",
             "description_sale",
+            "default_code",
+            "qty_available",
+            "virtual_available",
+            "incoming_qty",
+            "categ_id"
         ]
         products = (
             request.env["product.product"]
@@ -334,6 +339,9 @@ class OrderingApp(Component):
             "cart_qty",
             "display_name",
             "description",
+            "qty_available",
+            "virtual_available",
+            "incoming_qty",
         ]
         products = (
             request.env["product.product"]
@@ -394,6 +402,9 @@ class OrderingApp(Component):
             "cart_qty",
             "display_name",
             "description",
+            "qty_available",
+            "virtual_available",
+            "incoming_qty",
         ]
         products = (
             request.env["product.product"]
@@ -626,7 +637,7 @@ class OrderingApp(Component):
     def cartitem(self):
         res = {}
         domain = [("partner_id", "=", request.env.user.partner_id.id), ('state', '=', 'draft')]
-        orders = request.env['sale.order'].with_user(1).search(domain, limit=1)
+        orders = request.env['sale.order'].with_user(1).search(domain, limit=80)
         data = []
         for order in orders:
             data.append({'name': order.name, 'date_order': order.date_order, 'id': order.id,   "items": [
@@ -751,38 +762,22 @@ class OrderingApp(Component):
         return response[3]
 
     @restapi.method(
-        [(["/cart"], ["POST", "PUT"])],
+        [(["/cart"], ["PUT"])],
         auth="user",
-        input_param=Datamodel("cart.datamodel.in"),
+        input_param=Datamodel("update.cart.datamodel.in"),
         tags=["Cart"],
     )
-    def cart(self, payload):
+    def updatecart(self, payload):
         items = []
         partner_id = request.env.user.partner_id.id
         order = (
             request.env["sale.order"]
             .with_user(1)
-            .search([("partner_id", "=", partner_id), ("state", "=", "draft")], limit=1)
+            .search([("partner_id", "=", partner_id), ("state", "=", "draft"), ('id', '=', payload.cart_id)], limit=1)
         )
         if not order:
-            for line in payload.items:
-                items.append(
-                    (
-                        0,
-                        0,
-                        {
-                            "product_id": line.product_id,
-                            "price_unit": line.price_unit,
-                            "product_uom_qty": line.quantity,
-                            "discount": line.discount,
-                        },
-                    )
-                )
-            payload = {
-                "partner_id": partner_id,
-                "order_line": items,
-            }
-            order = request.env["sale.order"].with_user(1).create(payload)
+            resp = request.make_response(json.dumps({"error": "There is no open order"}))
+            resp.status_code = 400
         else:
             order.order_line.unlink()
             for line in payload.items:
@@ -805,6 +800,55 @@ class OrderingApp(Component):
                 }
                 for line in order.order_line
             ]
+
+        return {
+            "name": order.name,
+            "amount_total": order.amount_total,
+            "state": order.state,
+            "delivery_status": order.delivery_status,
+            "customer": order.partner_id.name,
+            "date_order": order.date_order,
+            "items": [
+                {
+                    "product_id": line.product_id.id,
+                    "description": line.name,
+                    "quantity": line.product_uom_qty,
+                    "price_unit": line.price_unit,
+                    "subtotal": line.price_subtotal,
+                }
+                for line in order.order_line
+            ],
+        }
+
+    @restapi.method(
+        [(["/cart"], ["POST"])],
+        auth="user",
+        input_param=Datamodel("cart.datamodel.in"),
+        tags=["Cart"],
+    )
+    def createcart(self, payload):
+        items = []
+        partner_id = request.env.user.partner_id.id
+        for line in payload.items:
+            items.append(
+                    (
+                        0,
+                        0,
+                        {
+                            "product_id": line.product_id,
+                            "price_unit": line.price_unit,
+                            "product_uom_qty": line.quantity,
+                            "discount": line.discount,
+                        },
+                    )
+                )
+        payload = {
+                "partner_id": partner_id,
+                "order_line": items,
+                'team_id':    request.env.ref('sales_team.salesteam_website_sales').id,
+            }
+        order = request.env["sale.order"].with_user(1).create(payload)
+
 
         return {
             "name": order.name,
