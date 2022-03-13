@@ -53,3 +53,14 @@ class ProductTemplate(models.Model):
                 rec._name,
                 rec.id,
             )
+
+
+# class SaleOrder(models.Model):
+#     _inherit = "sale.order"
+
+#     @api.model
+#     def create(self, values):
+#         res = super(SaleOrder, self).create(values)
+#         print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!', self.env.context)
+#         [o.write({'team_id':    sales_team.salesteam_website_sales}) for o in res]
+#         return res

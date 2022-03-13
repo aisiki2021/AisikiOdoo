@@ -637,7 +637,7 @@ class OrderingApp(Component):
     def cartitem(self):
         res = {}
         domain = [("partner_id", "=", request.env.user.partner_id.id), ('state', '=', 'draft')]
-        orders = request.env['sale.order'].with_user(1).search(domain, limit=1)
+        orders = request.env['sale.order'].with_user(1).search(domain, limit=80)
         data = []
         for order in orders:
             data.append({'name': order.name, 'date_order': order.date_order, 'id': order.id,   "items": [
@@ -764,7 +764,7 @@ class OrderingApp(Component):
     @restapi.method(
         [(["/cart"], ["PUT"])],
         auth="user",
-        input_param=Datamodel("cart.datamodel.in"),
+        input_param=Datamodel("update.cart.datamodel.in"),
         tags=["Cart"],
     )
     def updatecart(self, payload):
@@ -773,7 +773,7 @@ class OrderingApp(Component):
         order = (
             request.env["sale.order"]
             .with_user(1)
-            .search([("partner_id", "=", partner_id), ("state", "=", "draft")], limit=1)
+            .search([("partner_id", "=", partner_id), ("state", "=", "draft"), ('id', '=', payload.cart_id)], limit=1)
         )
         if not order:
             resp = request.make_response(json.dumps({"error": "There is no open order"}))
@@ -845,6 +845,7 @@ class OrderingApp(Component):
         payload = {
                 "partner_id": partner_id,
                 "order_line": items,
+                'team_id':    request.env.ref('sales_team.salesteam_website_sales').id,
             }
         order = request.env["sale.order"].with_user(1).create(payload)
 
