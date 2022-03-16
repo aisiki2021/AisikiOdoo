@@ -36,7 +36,7 @@ class OrderingApp(Component):
         result = request.env["ir.http"].session_info()
         _rotate_session(request)
         request.session.rotate = False
-        expiration = datetime.datetime.utcnow() + datetime.timedelta(days=7)
+        expiration = datetime.datetime.utcnow() + datetime.timedelta(days=1)
         return self.env.datamodels["saleforce.login.datamodel.out"](
             session_id=request.session.sid,
             expires_at=fields.Datetime.to_string(expiration),
@@ -109,7 +109,7 @@ class OrderingApp(Component):
         input_param=Datamodel("create.vendor.datamode.in"),
         output_param=Datamodel("create.vendor.datamode.out"),
     )
-    def vendor(self, payload):
+    def createvendor(self, payload):
         values = {
             "name": payload.name,
             "purchase_frequency": payload.purchase_frequency,
@@ -191,7 +191,6 @@ class OrderingApp(Component):
     @restapi.method(
         [(["/orders/<int:order_id>"], "GET")],
         auth="user",
-        # input_param=Datamodel("orders.datamodel.in"),
         output_param=Datamodel("orders.datamodel.out", is_list=True),
     )
     def getorder(self, order_id=None):
