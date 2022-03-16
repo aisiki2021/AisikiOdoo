@@ -237,21 +237,20 @@ class OrderingApp(Component):
         partner_id = request.env.user.partner_id
 
         res = {
-            "id":partner_id.id,
-            "name":partner_id.name,
-            "street":partner_id.street,
-            "phone":partner_id.phone,
-            "latitude":partner_id.partner_latitude ,
-            "longitude":partner_id.partner_longitude,
-            "business_category":partner_id.business_category,
-            "number_of_offices":partner_id.number_of_offices,
-            "contact_person":partner_id.contact_person,
-            "referral_code":request.env.user.referral_code,
-            "login":request.env.user.login,
-            "food_items":partner_id.common_product_ids.ids,
+            "id": partner_id.id,
+            "name": partner_id.name,
+            "street": partner_id.street,
+            "phone": partner_id.phone,
+            "latitude": partner_id.partner_latitude,
+            "longitude": partner_id.partner_longitude,
+            "business_category": partner_id.business_category,
+            "number_of_offices": partner_id.number_of_offices,
+            "contact_person": partner_id.contact_person,
+            "referral_code": request.env.user.referral_code,
+            "login": request.env.user.login,
+            "food_items": partner_id.common_product_ids.ids,
         }
         return json.dumps(res)
-
 
     @restapi.method(
         [(["/updateprofile"], "PUT")],
@@ -267,23 +266,25 @@ class OrderingApp(Component):
                 "name": payload.name if payload.name else partner_id.name,
                 "street": payload.street if payload.street else partner_id.street,
                 "phone": payload.phone if payload.phone else partner_id.phone,
-                "partner_latitude": payload.latitude if payload.latitude else partner_id.partner_latitude,
-                "partner_longitude": payload.longitude if payload.longitude else partner_id.partner_longitude,
-
+                "partner_latitude": payload.latitude
+                if payload.latitude
+                else partner_id.partner_latitude,
+                "partner_longitude": payload.longitude
+                if payload.longitude
+                else partner_id.partner_longitude,
             }
         )
         res = {
-            "id":partner_id.id,
-            "name":partner_id.name,
-            "street":partner_id.street,
-            "phone":partner_id.phone,
-            "latitude":partner_id.partner_latitude ,
-            "longitude":partner_id.partner_longitude,
-            "business_category":partner_id.business_category,
-            "number_of_offices":partner_id.number_of_offices,
-            "contact_person":partner_id.contact_person,
-            "referral_code":request.env.user.referral_code,
-
+            "id": partner_id.id,
+            "name": partner_id.name,
+            "street": partner_id.street,
+            "phone": partner_id.phone,
+            "latitude": partner_id.partner_latitude,
+            "longitude": partner_id.partner_longitude,
+            "business_category": partner_id.business_category,
+            "number_of_offices": partner_id.number_of_offices,
+            "contact_person": partner_id.contact_person,
+            "referral_code": request.env.user.referral_code,
         }
         return json.dumps(res)
 
@@ -616,7 +617,6 @@ class OrderingApp(Component):
             resp.status_code = 402
             return resp
 
-
     @restapi.method([(["/cart"], "GET")], auth="user", tags=["Cart"])
     def cartitem(self):
         res = {}
@@ -662,8 +662,12 @@ class OrderingApp(Component):
         try:
             if order:
                 order.action_cancel()
-                resp = request.make_response({})
-                resp.status_code = 204
+                resp = request.make_response(
+                    json.dumps(
+                        {"message": "sale.order %s has been cancelled" % (order_id,)}
+                    )
+                )
+                resp.status_code = 200
                 return resp
             else:
                 resp = request.make_response(
@@ -690,18 +694,26 @@ class OrderingApp(Component):
             .search(
                 [
                     ("partner_id", "=", partner_id),
-                    ("state", "=", "draft"),
+                    ("state", "in", ['cancel', "draft"]),
                     ("id", "=", order_id),
                 ],
                 limit=1,
             )
         )
+        
         order.unlink()
-        resp = request.make_response({})
-        resp.status_code = 204
+        resp = request.make_response(
+            json.dumps({"message": "sale.order %s has been deleted" % (order_id,)})
+        )
+        resp.status_code = 200
         return resp
 
-    @restapi.method([(["/pay"], ["POST"])], input_param=Datamodel("list.order.datamodel.in"),auth="user", tags=["Cart"])
+    @restapi.method(
+        [(["/pay"], ["POST"])],
+        input_param=Datamodel("list.order.datamodel.in"),
+        auth="user",
+        tags=["Cart"],
+    )
     def pay(self, payload):
         """Generate paystack payment link."""
         transaction = Transaction(
@@ -721,13 +733,17 @@ class OrderingApp(Component):
             )
         )
         if not orders:
-            resp = request.make_response(json.dumps({"error": "No other found for the given id(s) %s" % (payload.ids)}))
+            resp = request.make_response(
+                json.dumps(
+                    {"error": "No other found for the given id(s) %s" % (payload.ids)}
+                )
+            )
             resp.status_code = 401
             return resp
 
-        total = sum([o.amount_total for o in orders])  * 100
+        total = sum([o.amount_total for o in orders]) * 100
 
-        initialize = transaction.initialize(partner_id.email, total )
+        initialize = transaction.initialize(partner_id.email, total)
         return initialize
 
     @restapi.method(
@@ -750,23 +766,34 @@ class OrderingApp(Component):
                 limit=len(payload.ids),
             )
         )
+        if not orders:
+            resp = request.make_response(
+                json.dumps({"error": "There is no open order in cart or draft state"})
+            )
+            resp.status_code = 400
+            return resp
         transaction = Transaction(
             authorization_key="sk_test_6613ae6de9e50d198ba22637e6df1fecf3611610"
         )
         response = transaction.verify(payload.payment_ref)
         state = "error"
-        print('!!!!!!!!!!!!!!!!!!!!!!!!!', response)
         if response[3] != None and response[3]["status"] == "success":
             state = "done"
 
-            [[order.action_confirm(),order._create_payment_transaction(
-            {
-                "acquirer_id": 14,
-                "acquirer_reference": response[3]["reference"],
-                "state": state,
-                "state_message": response[3],
-            }
-        )] for order in orders]
+            [
+                [
+                    order.action_confirm(),
+                    order._create_payment_transaction(
+                        {
+                            "acquirer_id": 14,
+                            "acquirer_reference": response[3]["reference"],
+                            "state": state,
+                            "state_message": response[3],
+                        }
+                    ),
+                ]
+                for order in orders
+            ]
         error = request.make_response(json.dumps(response))
         error.status_code = 401
         return response[3] if response[3] else error
@@ -794,7 +821,7 @@ class OrderingApp(Component):
         )
         if not order:
             resp = request.make_response(
-                json.dumps({"error": "There is no open order"})
+                json.dumps({"error": "There is no open order in cart or draft state"})
             )
             resp.status_code = 400
         else:

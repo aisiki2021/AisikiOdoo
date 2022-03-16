@@ -89,7 +89,6 @@ class FooditemIn(Datamodel):
     offset = fields.String(required=False, allow_none=True, load_default=0)
 
 
-
 class WalletBalance(Datamodel):
     _name = "wallet.balance.datamodel.out"
 
@@ -147,7 +146,6 @@ class PartnerUpdateInfo(Datamodel):
     phone = fields.String(required=True, allow_none=True)
     latitude = fields.Float(required=True, allow_none=True)
     longitude = fields.Float(required=True, allow_none=True)
-
 
 
 class CheckoutOrderDatamodel(Datamodel):
