@@ -89,20 +89,6 @@ class FooditemIn(Datamodel):
     offset = fields.String(required=False, allow_none=True, load_default=0)
 
 
-# class Fooditems(Datamodel):
-#     _name = "product.datamodel.out"
-
-#     id = fields.Integer(required=False, allow_none=False)
-#     name = fields.String(required=False, allow_none=False)
-#     type = fields.String(required=False, allow_none=True)
-#     image_url = fields.Url(required=False, allow_none=False)
-#     qty_available = fields.Integer(required=True, allow_none=False)
-#     price = fields.Decimal(required=True, allow_none=False)
-#     internal_ref = fields.String(required=True, allow_none=False)
-#     barcode = fields.String(required=True, allow_none=False)
-#     virtual_available = fields.Integer(required=True, allow_none=False)
-
-
 class WalletBalance(Datamodel):
     _name = "wallet.balance.datamodel.out"
 
@@ -126,6 +112,7 @@ class CartIn(Datamodel):
 
     items = fields.List(NestedModel("cart.datamodel.items"))
 
+
 class CartUpdateIn(Datamodel):
     _name = "update.cart.datamodel.in"
 
@@ -146,21 +133,14 @@ class PaymentDtamodelIn(Datamodel):
     order_id = fields.Integer(required=True, allow_none=False)
 
 
-class PartnerInfo(Datamodel):
-    _name = "profile.datamodel"
-
-    id = fields.Integer(required=True, allow_none=False)
-    name = fields.String(required=True, allow_none=False)
-    street = fields.String(required=True, allow_none=False)
-    phone = fields.String(required=True, allow_none=True)
-    latitude = fields.Float(required=True, allow_none=True)
-    longitude = fields.Float(required=True, allow_none=True)
+class ListOrderDatamodelIn(Datamodel):
+    _name = "list.order.datamodel.in"
+    ids = fields.List(fields.Integer(), required=True, allow_none=False)
 
 
 class PartnerUpdateInfo(Datamodel):
     _name = "profile.datamodel.update"
 
-    id = fields.Integer(required=True, allow_none=False)
     name = fields.String(required=True, allow_none=False)
     street = fields.String(required=True, allow_none=False)
     phone = fields.String(required=True, allow_none=True)
@@ -168,11 +148,7 @@ class PartnerUpdateInfo(Datamodel):
     longitude = fields.Float(required=True, allow_none=True)
 
 
-class PartnerUpdateInfo(Datamodel):
-    _name = "profile.datamodel.update1"
-
-    name = fields.String(required=True, allow_none=False)
-    street = fields.String(required=True, allow_none=False)
-    phone = fields.String(required=True, allow_none=True)
-    latitude = fields.Float(required=True, allow_none=True)
-    longitude = fields.Float(required=True, allow_none=True)
+class CheckoutOrderDatamodel(Datamodel):
+    _name = "checkout.order.datamodel"
+    ids = fields.List(fields.Integer(), required=True, allow_none=False)
+    payment_ref = fields.String(required=True, allow_none=False)
