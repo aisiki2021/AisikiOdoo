@@ -780,7 +780,7 @@ class OrderingApp(Component):
         partner_id = request.env.user.partner_id.id
         orders = (
             request.env["sale.order"]
-            .with_user(request.env.user.id)
+            .with_user(1)
             .search(
                 [
                     ("partner_id", "=", partner_id),
@@ -807,7 +807,7 @@ class OrderingApp(Component):
             [
                 [
                     order.action_confirm(),
-                    order._create_payment_transaction(
+                    order.with_user(1)._create_payment_transaction(
                         {
                             "acquirer_id": 14,
                             "acquirer_reference": response[3]["reference"],
