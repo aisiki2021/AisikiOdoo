@@ -641,6 +641,7 @@ class OrderingApp(Component):
                             "quantity": line.product_uom_qty,
                             "price_unit": line.price_unit,
                             "subtotal": line.price_subtotal,
+                            "image_url": line.product_id.image_url,
                         }
                         for line in order.order_line
                     ],
@@ -789,6 +790,7 @@ class OrderingApp(Component):
                             "acquirer_reference": response[3]["reference"],
                             "state": state,
                             "state_message": response[3],
+                            "partner_country_id": request.env.ref('base.ng').id,
                         }
                     ),
                 ]
@@ -841,6 +843,7 @@ class OrderingApp(Component):
             items = [
                 {
                     "product_id": line.product_id.id,
+                    "image_url": line.product_id.image_url,
                     "quantity": line.product_uom_qty,
                     "discount": str(line.discount),
                     "price_unit": str(line.price_unit),
@@ -911,6 +914,7 @@ class OrderingApp(Component):
                     "quantity": line.product_uom_qty,
                     "price_unit": line.price_unit,
                     "subtotal": line.price_subtotal,
+                    'image_url': line.product_id.image_url
                 }
                 for line in order.order_line
             ],
