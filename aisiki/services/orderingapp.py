@@ -767,7 +767,7 @@ class OrderingApp(Component):
 
         total = sum([o.amount_total for o in orders]) * 100
 
-        initialize = transaction.initialize(partner_id.email, total)
+        initialize = transaction.initialize(partner_id.email or request.env.user.company_id.email, total)
         return initialize
 
     @restapi.method(
