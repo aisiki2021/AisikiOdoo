@@ -474,7 +474,7 @@ class OrderingApp(Component):
     @restapi.method(
         [(["/orders/<string:status>/status"], "GET")], auth="user", tags=["Order"],
     )
-    def orders_by_status(self, status, id):
+    def orders_by_status(self, status):
         """status: [nothing] | [to_deliver] | [partial] | [delivered] | [processing] """
         res = {}
         domain = [
