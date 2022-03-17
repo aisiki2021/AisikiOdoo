@@ -746,7 +746,7 @@ class OrderingApp(Component):
         partner_id = request.env.user.partner_id
         orders = (
             request.env["sale.order"]
-            .with_user(request.env.user.id)
+            .with_user(1)
             .search(
                 [
                     ("partner_id", "=", partner_id.id),
