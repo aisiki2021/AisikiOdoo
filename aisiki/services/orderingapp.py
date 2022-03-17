@@ -198,7 +198,7 @@ class OrderingApp(Component):
         phone = payload.phone.strip()
         user = (
             request.env["res.users"]
-            .with_user(request.env.user.id)
+            .with_user(1)
             .search([("login", "=", phone)], limit=1)
         )
         return self.env.datamodels["forgotpassword.datamodel.out"](
@@ -326,7 +326,7 @@ class OrderingApp(Component):
         ]
         products = (
             request.env["product.product"]
-            .with_user(request.env.user.id)
+            .with_user(1)
             .search_read(
                 domain, fields=fields, limit=limit, offset=offset, order="id desc"
             )
@@ -334,7 +334,7 @@ class OrderingApp(Component):
 
         res["total"] = (
             request.env["product.product"]
-            .with_user(request.env.user.id)
+            .with_user(1)
             .search_count(domain)
         )
         res["data"] = products
@@ -365,7 +365,7 @@ class OrderingApp(Component):
         ]
         products = (
             request.env["product.product"]
-            .with_user(request.env.user.id)
+            .with_user(1)
             .search_read(domain, fields=fields)
         )
         res["data"] = products
@@ -378,7 +378,7 @@ class OrderingApp(Component):
         fields = ["name", "id"]
         products = (
             request.env["product.category"]
-            .with_user(request.env.user.id)
+            .with_user(1)
             .search_read(domain, fields=fields)
         )
         res["data"] = products
@@ -395,7 +395,7 @@ class OrderingApp(Component):
         fields = ["name", "id"]
         products = (
             request.env["product.product"]
-            .with_user(request.env.user.id)
+            .with_user(1)
             .search_read(domain, fields=fields)
         )
         res["data"] = products
@@ -428,7 +428,7 @@ class OrderingApp(Component):
         ]
         products = (
             request.env["product.product"]
-            .with_user(request.env.user.id)
+            .with_user(1)
             .search_read(domain, fields=fields, limit=80)
         )
         res["data"] = products
@@ -441,7 +441,7 @@ class OrderingApp(Component):
         domain = [("partner_id", "=", request.env.user.partner_id.id)]
         orders = (
             request.env["sale.order"]
-            .with_user(request.env.user.id)
+            .with_user(1)
             .search(domain, limit=80)
         )
         details = [
@@ -484,7 +484,7 @@ class OrderingApp(Component):
         fields = ["name", "date_order", "delivery_status"]
         orders = (
             request.env["sale.order"]
-            .with_user(request.env.user.id)
+            .with_user(1)
             .search_read(domain, fields=fields, limit=80)
         )
         res["data"] = orders
@@ -504,7 +504,7 @@ class OrderingApp(Component):
         ]
         orders = (
             request.env["sale.order"]
-            .with_user(request.env.user.id)
+            .with_user(1)
             .search_read(domain, fields=fields, limit=80)
         )
         res["data"] = orders
@@ -525,7 +525,7 @@ class OrderingApp(Component):
         ]
         orders = (
             request.env["sale.order"]
-            .with_user(request.env.user.id)
+            .with_user(1)
             .search(domain, limit=80)
         )
         details = [
@@ -570,7 +570,7 @@ class OrderingApp(Component):
         partner_id = request.env.user.partner_id.id
         payments = (
             request.env["account.payment"]
-            .with_user(request.env.user.id)
+            .with_user(1)
             .search_read(
                 [("partner_id", "=", partner_id)],
                 fields=["payment_type", "amount", "date", "name"],
@@ -611,11 +611,11 @@ class OrderingApp(Component):
                     request.env.user.id
                 )
 
-                payment = request.env["account.payment"].with_user(request.env.user.id)
+                payment = request.env["account.payment"].with_user(1)
 
                 payment_type = (
                     request.env["account.payment.method"]
-                    .with_user(request.env.user.id)
+                    .with_user(1)
                     .search(
                         [("code", "=", "manual"), ("payment_type", "=", "inbound")],
                         limit=1,
@@ -682,7 +682,7 @@ class OrderingApp(Component):
             ("state", "=", "draft"),
             ("id", "=", order_id),
         ]
-        order = request.env["sale.order"].with_user(request.env.user.id).search(domain)
+        order = request.env["sale.order"].with_user(1).search(domain)
         try:
             if order:
                 order.action_cancel()
@@ -714,7 +714,7 @@ class OrderingApp(Component):
         partner_id = request.env.user.partner_id.id
         order = (
             request.env["sale.order"]
-            .with_user(request.env.user.id)
+            .with_user(1)
             .search(
                 [
                     ("partner_id", "=", partner_id),
@@ -834,7 +834,7 @@ class OrderingApp(Component):
         partner_id = request.env.user.partner_id.id
         order = (
             request.env["sale.order"]
-            .with_user(request.env.user.id)
+            .with_user(1)
             .search(
                 [
                     ("partner_id", "=", partner_id),
@@ -859,7 +859,7 @@ class OrderingApp(Component):
                     "product_uom_qty": line.quantity,
                     "discount": line.discount,
                 }
-                request.env["sale.order.line"].with_user(request.env.user.id).create(
+                request.env["sale.order.line"].with_user(1).create(
                     payload
                 )
 
