@@ -439,15 +439,37 @@ class OrderingApp(Component):
     def orders(self):
         res = {}
         domain = [("partner_id", "=", request.env.user.partner_id.id)]
-        fields = ["name", "amount_total", "state", "partner_id", "create_date"]
         orders = (
             request.env["sale.order"]
             .with_user(request.env.user.id)
-            .search_read(domain, fields=fields, limit=80)
+            .search(domain, limit=80)
         )
-        res["data"] = orders
+        details = [
+            {
+                "name": order.name,
+                "amount_total": order.amount_total,
+                "state": order.state,
+                "delivery_status": order.delivery_status,
+                "customer": order.partner_id.name,
+                "date_order": order.date_order,
+                "items": [
+                    {
+                        "product_id": line.product_id.id,
+                        "description": line.name,
+                        "quantity": line.product_uom_qty,
+                        "price_unit": line.price_unit,
+                        "subtotal": line.price_subtotal,
+                        "image_url": line.product_id.image_url,
+                    }
+                    for line in order.order_line
+                ],
+            }
+            for order in orders
+        ]
+        res["data"] = details
         res["count"] = len(orders)
         return res
+ 
 
     @restapi.method(
         [(["/orders/<string:status>/status"], "GET")], auth="user", tags=["Order"],
@@ -521,6 +543,7 @@ class OrderingApp(Component):
                         "quantity": line.product_uom_qty,
                         "price_unit": line.price_unit,
                         "subtotal": line.price_subtotal,
+                        "image_url": line.product_id.image_url,
                     }
                     for line in order.order_line
                 ],
