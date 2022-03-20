@@ -270,15 +270,15 @@ class AisikiBaseRest(Component):
             }
         )
         res = {
-            "id": partner_id.id,
-            "name": partner_id.name,
-            "street": partner_id.street,
-            "phone": partner_id.phone,
-            "latitude": partner_id.partner_latitude,
-            "longitude": partner_id.partner_longitude,
-            "business_category": partner_id.business_category,
-            "number_of_offices": partner_id.number_of_offices,
-            "contact_person": partner_id.contact_person,
-            "referral_code": request.env.user.referral_code,
+            "id":partner_id.id,
+            "name":partner_id.name,
+            "street":partner_id.street,
+            "phone":partner_id.phone,
+            "latitude":partner_id.partner_latitude,
+            "longitude":partner_id.partner_longitude,
+            "business_category":partner_id.business_category,
+            "number_of_offices":partner_id.number_of_offices,
+            "contact_person":partner_id.contact_person,
+            "referral_code":request.env.user.referral_code,
         }
         return json.dumps(res)
