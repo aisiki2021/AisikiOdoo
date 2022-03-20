@@ -8,5 +8,14 @@
             <field name="sequence">10</field>
             <field name="alias_name">purchase_expense</field>
         </record>
+
+        <record id="sequence_agent_seq" model="ir.sequence">
+            <field name="name">Aisiki Agent Sequence</field>
+            <field name="code">aisiki.agent.seq</field>
+            <field name="prefix">A</field>
+            <field eval="1" name="number_next"/>
+            <field eval="1" name="number_increment"/>
+            <field eval="False" name="company_id"/>
+        </record>
     </data>
 </odoo>

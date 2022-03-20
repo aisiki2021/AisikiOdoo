@@ -40,11 +40,9 @@ class SingupIn(Datamodel):
     last_name = fields.String(required=True, allow_none=False)
     phone = fields.String(required=True, allow_none=False)
     city = fields.String(required=True, allow_none=False)
-    idnumber = fields.String(required=True, allow_none=False)
     referral_code = fields.String(required=True, allow_none=False)
-    toc = fields.Boolean(required=False, allow_none=False)
-    idtype = fields.String(required=False, allow_none=False)
-    agentid = fields.String(required=True, allow_none=False)
+    toc = fields.Boolean(required=True, allow_none=True)
+    password = fields.String(required=True, allow_none=False)
     email = fields.Email(required=False, allow_none=True)
 
 
@@ -57,7 +55,7 @@ class SingupOut(Datamodel):
     idnumber = fields.String(required=False, allow_none=True)
     referral_code = fields.String(required=False, allow_none=True)
     toc = fields.Boolean(required=False, allow_none=True)
-    idtype = fields.String(required=False, allow_none=True)
+    login = fields.String(required=False, allow_none=True)
     agentid = fields.String(required=False, allow_none=True)
     email = fields.Email(required=False, allow_none=True)
 

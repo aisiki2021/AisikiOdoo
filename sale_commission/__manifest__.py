@@ -1,9 +1,6 @@
-# Copyright 2014-2020 Tecnativa - Pedro M. Baeza
-# Copyright 2020 Tecnativa - Manuel Calero
 {
     "name": "Sales commissions",
     "version": "14.0.1.1.5",
-    "author": "Tecnativa," "Odoo Community Association (OCA)",
     "category": "Sales Management",
     "license": "AGPL-3",
     "depends": ["account", "product", "sale_management"],

@@ -23,85 +23,46 @@ class OrderingApp(Component):
         
     """
 
-    # @restapi.method(
-    #     [(["/authentication"], "POST")],
-    #     auth="public",
-    #     input_param=Datamodel("saleforce.login.datamodel.in"),
-    #     output_param=Datamodel("saleforce.login.datamodel.out"),
-    # )
-    # def authentication(self, payload):
-    #     params = request.params
-    #     db_name = params.get("db", db_monodb())
-    #     request.session.authenticate(db_name, params["agentid"], params["password"])
-    #     result = request.env["ir.http"].session_info()
-    #     _rotate_session(request)
-    #     request.session.rotate = False
-    #     expiration = datetime.datetime.utcnow() + datetime.timedelta(days=1)
-    #     return self.env.datamodels["saleforce.login.datamodel.out"](
-    #         session_id=request.session.sid,
-    #         expires_at=fields.Datetime.to_string(expiration),
-    #         uid=result.get("uid"),
-    #         agentid=result.get("username"),
-    #         name=result.get("name"),
-    #         partner_id=result.get("partner_id"),
-    #     )
+  
 
-    # @restapi.method(
-    #     [(["/forgotpassword"], "GET")],
-    #     auth="public",
-    #     input_param=Datamodel("saleforce.forgotpassword.datamodel.in"),
-    #     output_param=Datamodel("saleforce.forgotpassword.datamodel.out"),
-    # )
-    # def forgotpassword(self, payload):
-    #     agentid = payload.agentid.strip()
-    #     user = (
-    #         request.env["res.users"]
-    #         .with_user(1)
-    #         .search([("login", "=", agentid)], limit=1)
-    #     )
-    #     return self.env.datamodels["forgotpassword.datamodel.out"](
-    #         password_reset_url=user.password_reset_url
-    #     )
+    @restapi.method(
+        [(["/register"], "POST")],
+        auth="public",
+        tags=["Authentication"],
+        input_param=Datamodel("signup.saleforce.datamode.in"),
+        output_param=Datamodel("signup.saleforce.datamode.out"),
+    )
+    def register(self, payload):
+        values = {
+            "name": payload.first_name + " " + payload.last_name,
+            "referral_code": payload.referral_code,
+            "phone": payload.phone,
+            "city": payload.city,
+            "toc": payload.toc,
+            "login": payload.phone,
+            "email": payload.email,
+            "agentid": request.env['ir.sequence'].next_by_code('aisiki.agent.seq')
+        }
 
-    # @restapi.method(
-    #     [(["/singup"], "POST")],
-    #     auth="public",
-    #     input_param=Datamodel("signup.saleforce.datamode.in"),
-    #     output_param=Datamodel("signup.saleforce.datamode.out"),
-    # )
-    # def singup(self, payload):
-    #     values = {
-    #         "name": payload.first_name + " " + payload.last_name,
-    #         "referral_code": payload.referral_code,
-    #         "phone": payload.phone,
-    #         "city": payload.city,
-    #         "idnumber": payload.idnumber,
-    #         "toc": payload.toc,
-    #         "idtype": payload.idtype,
-    #         "login": payload.agentid,
-    #         "email": payload.email,
-    #     }
+        try:
+            user = request.env["res.users"].with_user(1)._signup_create_user(values)
+            user.write({"city": payload.city, "agent": True})
+            return self.env.datamodels["signup.saleforce.datamode.out"](
+                name=user.name or "",
+                phone=user.phone or "",
+                city=user.city or "",
+                agentid=user.agentid or "",
+                referral_code=user.referral_code,
+                toc=user.toc,
+                email=user.email or "",
+                login=user.login or "",
+            )
 
-    #     try:
-    #         user = request.env["res.users"].with_user(1)._signup_create_user(values)
-    #         user.write({"city": payload.city, "isagent": True})
-    #         return self.env.datamodels["signup.saleforce.datamode.out"](
-    #             name=user.name or "",
-    #             phone=user.phone or "",
-    #             city=user.city or "",
-    #             agentid=user.login or "",
-    #             referral_code=user.referral_code,
-    #             idnumber=user.idnumber,
-    #             toc=user.toc,
-    #             idtype=user.idtype,
-    #             email=user.email or "",
-    #         )
+        except Exception as e:
 
-    #     except Exception as e:
-
-    #         return self.env.datamodels["datamodel.error.out"](
-    #             message=str(e), error=True
-    #         )
+            return self.env.datamodels["datamodel.error.out"](
+                message=str(e), error=True
+            )
 
     # @restapi.method(
     #     [(["/createvendor"], "POST")],
