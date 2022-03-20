@@ -64,131 +64,200 @@ class OrderingApp(Component):
                 message=str(e), error=True
             )
 
-    # @restapi.method(
-    #     [(["/createvendor"], "POST")],
-    #     auth="user",
-    #     input_param=Datamodel("create.vendor.datamode.in"),
-    #     output_param=Datamodel("create.vendor.datamode.out"),
-    # )
-    # def createvendor(self, payload):
-    #     values = {
-    #         "name": payload.name,
-    #         "purchase_frequency": payload.purchase_frequency,
-    #         "partner_longitude": payload.longitude,
-    #         "partner_latitude": payload.latitude,
-    #         "phone": payload.phone,
-    #         "email": payload.email,
-    #         "business_type": payload.business_type,
-    #         "agent_ids": [(6, 0, [request.env.user.partner_id.id])],
-    #     }
+    @restapi.method(
+        [(["/agents", '/agents/<int:id>', '/agent/<int:id>/vendors'], "GET")],
+        auth="user",
+        tags=["BusinessSaleForce"])
+    def agents(self, _id=None):
+        domain = [('agent', '=', True)]
+        fields = [
+            "name",
+            "purchase_frequency",
+            "partner_longitude",
+            "partner_latitude",
+            "phone",
+            "email",
+        
+        ]
+        if request.httprequest.path.endswith('vendors'):
+            domain = [('parent_id', '=', request.env.user.partner_id.id)]
+        if _id:
+            domain = domain.append(('id', '=', _id))
+        agents = request.env['res.partner'].with_user(1).search_read(domain, fields=fields, limit=80)
+        return agents
 
-    #     try:
-    #         vendor = request.env["res.partner"].with_user(1).create(values)
-    #         return self.env.datamodels["create.vendor.datamode.in"](
-    #             name=vendor.name,
-    #             phone=vendor.phone,
-    #             latitude=vendor.partner_longitude or 0.0,
-    #             longitude=vendor.partner_latitude or 0.0,
-    #             purchase_frequency=vendor.purchase_frequency or 0,
-    #             email=vendor.email,
-    #             business_type=vendor.business_type or "",
-    #         )
 
-    #     except Exception as e:
-    #         return self.env.datamodels["datamodel.error.out"](
-    #             message=str(e), error=True
-    #         )
+    @restapi.method(
+        [(["/vendor"], "POST")],
+        auth="user",
+        tags=["BusinessSaleForce"],
+        input_param=Datamodel("create.vendor.datamode.in"),
+        output_param=Datamodel("create.vendor.datamode.out"),
+    )
+    def createvendor(self, payload):
+        values = {
+            "name": payload.name,
+            "purchase_frequency": payload.purchase_frequency,
+            "partner_longitude": payload.longitude,
+            "partner_latitude": payload.latitude,
+            "phone": payload.phone,
+            "email": payload.email,
+            "business_type": payload.business_type,
+            "agent_ids": [(6, 0, [request.env.user.partner_id.id])],
+            "parent_id": request.env.user.partner_id.id,
+        }
 
-    # @restapi.method(
-    #     [(["/orderstotal"], "GET")],
-    #     auth="user",
-    #     input_param=Datamodel("orders.datamodel.in"),
-    #     output_param=Datamodel("orders.datamodel.out", is_list=True),
-    # )
-    # def total_order(self, payload):
-    #     """."""
-    #     res = []
-    #     ids = request.env.user.partner_id.child_ids.ids
-    #     ids.append(request.env.user.partner_id.id)
-    #     domain = [("partner_id", "in", ids)]
-    #     limit = payload.limit or 80
-    #     offset = payload.offset or 0
-    #     if limit:
-    #         limit = int(limit)
-    #     if offset:
-    #         offset = int(offset)
-    #     orders = (
-    #         request.env["sale.order"]
-    #         .with_user(1)
-    #         .search(domain, limit=limit, order="create_date", offset=offset)
-    #     )
-    #     total_order = request.env["sale.order"].with_user(1).search_count(domain)
-    #     for order in orders:
-    #         res.append(
-    #             self.env.datamodels["orders.datamodel.out"](
-    #                 total_order=total_order,
-    #                 id=order.id,
-    #                 name=order.name,
-    #                 state=order.state,
-    #                 customer=order.partner_id.name,
-    #                 phone=order.partner_id.phone,
-    #                 date_order=str(order.date_order) or str(order.create_date),
-    #                 amount_total=order.amount_total,
-    #                 amount_untaxed=order.amount_untaxed,
-    #                 items=[
-    #                     {
-    #                         "product_id": item.product_id.id,
-    #                         "quantity": item.product_uom_qty,
-    #                         "price_unit": item.price_unit,
-    #                         "discount": item.discount,
-    #                         "name": item.name,
-    #                     }
-    #                     for item in order.order_line
-    #                 ],
-    #             )
-    #         )
-    #     return res
+        try:
+            vendor = request.env["res.partner"].with_user(1).create(values)
+            return self.env.datamodels["create.vendor.datamode.in"](
+                name=vendor.name,
+                phone=vendor.phone,
+                latitude=vendor.partner_longitude or 0.0,
+                longitude=vendor.partner_latitude or 0.0,
+                purchase_frequency=vendor.purchase_frequency or 0,
+                email=vendor.email,
+                business_type=vendor.business_type or "",
+            )
 
-    # @restapi.method(
-    #     [(["/orders/<int:order_id>"], "GET")],
-    #     auth="user",
-    #     output_param=Datamodel("orders.datamodel.out", is_list=True),
-    # )
-    # def getorder(self, order_id=None):
-    #     """."""
-    #     res = []
-    #     ids = request.env.user.partner_id.child_ids.ids
-    #     ids.append(request.env.user.partner_id.id)
-    #     domain = [("partner_id", "in", ids)]
-    #     orders = (
-    #         request.env["sale.order"].with_user(1).search(domain, order="create_date")
-    #     )
-    #     total_order = request.env["sale.order"].with_user(1).search_count(domain)
-    #     for order in orders:
-    #         res.append(
-    #             self.env.datamodels["orders.datamodel.out"](
-    #                 total_order=total_order,
-    #                 id=order.id,
-    #                 name=order.name,
-    #                 state=order.state,
-    #                 customer=order.partner_id.name,
-    #                 phone=order.partner_id.phone,
-    #                 date_order=str(order.date_order) or str(order.create_date),
-    #                 amount_total=order.amount_total,
-    #                 amount_untaxed=order.amount_untaxed,
-    #                 items=[
-    #                     {
-    #                         "product_id": item.product_id.id,
-    #                         "quantity": item.product_uom_qty,
-    #                         "price_unit": item.price_unit,
-    #                         "discount": item.discount,
-    #                         "name": item.name,
-    #                     }
-    #                     for item in order.order_line
-    #                 ],
-    #             )
-    #         )
-    #     return res
+        except Exception as e:
+            return self.env.datamodels["datamodel.error.out"](
+                message=str(e), error=True
+            )
+
+    @restapi.method(
+        [(["/getvendors"], "GET")],
+        auth="user",
+        tags=["BusinessSaleForce"]
+    )
+    def getvendors(self):
+        domain = [('parent_id', '=', request.env.user.partner_id.id)]
+        fields = [
+            "name",
+            "purchase_frequency",
+            "partner_longitude",
+            "partner_latitude",
+            "phone",
+            "email",
+        
+        ]
+        if vendor_id:
+            domain.append(('id', '=', vendor_id))
+        agents = request.env['res.partner'].with_user(1).search_read(domain, fields=fields, limit=80)
+        return agents
+
+    @restapi.method(
+        [(["/getvendor/<int:vendor_id>"], "GET")],
+        auth="user",
+        tags=["BusinessSaleForce"]
+    )
+    def getvendor(self, vendor_id=None):
+        domain = [('parent_id', '=', request.env.user.partner_id.id)]
+        fields = [
+            "name",
+            "purchase_frequency",
+            "partner_longitude",
+            "partner_latitude",
+            "phone",
+            "email",
+        
+        ]
+        if vendor_id:
+            domain.append(('id', '=', vendor_id))
+        agents = request.env['res.partner'].with_user(1).search_read(domain, fields=fields, limit=80)
+        return agents
+
+    @restapi.method(
+        [(["/orders"], "GET")],
+        auth="user",
+        tags=["Order"],
+        input_param=Datamodel("orders.datamodel.in"),
+        output_param=Datamodel("orders.datamodel.out", is_list=True),
+    )
+    def orders(self, payload):
+        """."""
+        res = []
+        ids = request.env.user.partner_id.child_ids.ids
+        ids.append(request.env.user.partner_id.id)
+        domain = [("partner_id", "in", ids)]
+        limit = payload.limit or 80
+        offset = payload.offset or 0
+        if limit:
+            limit = int(limit)
+        if offset:
+            offset = int(offset)
+        orders = (
+            request.env["sale.order"]
+            .with_user(1)
+            .search(domain, limit=limit, order="create_date", offset=offset)
+        )
+        total_order = request.env["sale.order"].with_user(1).search_count(domain)
+        for order in orders:
+            res.append(
+                self.env.datamodels["orders.datamodel.out"](
+                    total_order=total_order,
+                    id=order.id,
+                    name=order.name,
+                    state=order.state,
+                    customer=order.partner_id.name,
+                    phone=order.partner_id.phone,
+                    date_order=str(order.date_order) or str(order.create_date),
+                    amount_total=order.amount_total,
+                    amount_untaxed=order.amount_untaxed,
+                    items=[
+                        {
+                            "product_id": item.product_id.id,
+                            "quantity": item.product_uom_qty,
+                            "price_unit": item.price_unit,
+                            "discount": item.discount,
+                            "name": item.name,
+                        }
+                        for item in order.order_line
+                    ],
+                )
+            )
+        return res
+
+    @restapi.method(
+        [(["/orders/<int:order_id>"], "GET")],
+        tags=["Order"],
+        auth="user",
+        output_param=Datamodel("orders.datamodel.out", is_list=True),
+    )
+    def getorder(self, order_id=None):
+        """."""
+        res = []
+        ids = request.env.user.partner_id.child_ids.ids
+        ids.append(request.env.user.partner_id.id)
+        domain = [("partner_id", "in", ids)]
+        orders = (
+            request.env["sale.order"].with_user(1).search(domain, order="create_date")
+        )
+        total_order = request.env["sale.order"].with_user(1).search_count(domain)
+        for order in orders:
+            res.append(
+                self.env.datamodels["orders.datamodel.out"](
+                    total_order=total_order,
+                    id=order.id,
+                    name=order.name,
+                    state=order.state,
+                    customer=order.partner_id.name,
+                    phone=order.partner_id.phone,
+                    date_order=str(order.date_order) or str(order.create_date),
+                    amount_total=order.amount_total,
+                    amount_untaxed=order.amount_untaxed,
+                    items=[
+                        {
+                            "product_id": item.product_id.id,
+                            "quantity": item.product_uom_qty,
+                            "price_unit": item.price_unit,
+                            "discount": item.discount,
+                            "name": item.name,
+                        }
+                        for item in order.order_line
+                    ],
+                )
+            )
+        return res
 
     # @restapi.method(
     #     [(["/getvendors"], "GET")],
@@ -222,44 +291,45 @@ class OrderingApp(Component):
     #         result.append(self.env.datamodels["vendor.datamodel.out"](**res))
     #     return result
 
-    # @restapi.method(
-    #     [(["/createorder"], "POST")],
-    #     auth="user",
-    #     input_param=Datamodel("create.orders.datamodel.in"),
-    #     output_param=Datamodel("create.orders.datamodel.out",),
-    # )
-    # def createorder(self, payload):
-    #     data = []
-    #     partner_id = request.env.user.partner_id
-    #     for item in payload.items:
-    #         data.append(
-    #             (
-    #                 0,
-    #                 0,
-    #                 {
-    #                     "product_id": item.product_id,
-    #                     "product_uom_qty": item.quantity,
-    #                     "price_unit": item.price_unit,
-    #                     "discount": item.discount,
-    #                     "name": item.name,
-    #                 },
-    #             )
-    #         )
+    @restapi.method(
+        [(["/order"], "POST")],
+        auth="user",
+        tags=["Order"],
+        input_param=Datamodel("create.orders.datamodel.in"),
+        output_param=Datamodel("create.orders.datamodel.out",),
+    )
+    def createorder(self, payload):
+        data = []
+        partner_id = request.env.user.partner_id
+        for item in payload.items:
+            data.append(
+                (
+                    0,
+                    0,
+                    {
+                        "product_id": item.product_id,
+                        "product_uom_qty": item.quantity,
+                        "price_unit": item.price_unit,
+                        "discount": item.discount,
+                        "name": item.name,
+                    },
+                )
+            )
 
-    #     values = {
-    #         "partner_id": payload.partner_id,
-    #         "partner_shipping_id": payload.partner_id,
-    #         "partner_invoice_id": payload.partner_id,
-    #         "order_line": data,
-    #     }
-    #     order = request.env["sale.order"].create(values)
-    #     output = {
-    #         "id": order.id,
-    #         "name": order.name,
-    #         "state": order.state,
-    #         "amount_total": order.amount_total,
-    #     }
-    #     return self.env.datamodels["create.orders.datamodel.out"](**output)
+        values = {
+            "partner_id": payload.partner_id,
+            "partner_shipping_id": payload.partner_id,
+            "partner_invoice_id": payload.partner_id,
+            "order_line": data,
+        }
+        order = request.env["sale.order"].with_user(1).create(values)
+        output = {
+            "id": order.id,
+            "name": order.name,
+            "state": order.state,
+            "amount_total": order.amount_total,
+        }
+        return self.env.datamodels["create.orders.datamodel.out"](**output)
 
     # @restapi.method(
     #     [(["/cart"], "GET")],
@@ -306,27 +376,7 @@ class OrderingApp(Component):
     #         )
     #     return res
 
-    # @restapi.method(
-    #     [(["/editprofile"], "POST")],
-    #     auth="user",
-    #     input_param=Datamodel("editprofile.datamodel.in"),
-    #     output_param=Datamodel("editprofile.datamodel.out"),
-    # )
-    # def editprofile(self, payload):
-    #     image_base64 = payload.image_base64.encode()
-    #     if image_base64:
-    #         request.env.user.partner_id.write({"image_1920": image_base64})
-    #     if payload.old_passwd and payload.new_passwd:
-    #         try:
-    #             request.env.user.change_password(payload.old_passwd, payload.new_passwd)
-    #         except Exception as e:
-    #             return self.env.datamodels["editprofile.datamodel.out"](
-    #                 message="%s: old password is not correct" % (str(e),), haserror=True
-    #             )
 
-    #     return self.env.datamodels["editprofile.datamodel.out"](
-    #         image_base64=request.env.user.partner_id.image_1920
-    #     )
 
     # @restapi.method(
     #     [(["/paymenthistory"], "GET")],
