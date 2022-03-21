@@ -196,6 +196,7 @@ class AisikiBaseRest(Component):
             .with_user(1)
             .search([("login", "=", phone)], limit=1)
         )
+        user.action_reset_password()
         return self.env.datamodels["forgotpassword.datamodel.out"](
             password_reset_url=user.password_reset_url
         )
@@ -245,7 +246,10 @@ class AisikiBaseRest(Component):
             "login": request.env.user.login,
             "food_items": partner_id.common_product_ids.ids,
         }
-        return json.dumps(res)
+        res =json.dumps(res)
+        resp = request.make_response(res)
+        resp.status_code = 200
+        return resp
 
     @restapi.method(
         [(["/updateprofile"], "PUT")],
@@ -281,4 +285,7 @@ class AisikiBaseRest(Component):
             "contact_person":partner_id.contact_person,
             "referral_code":request.env.user.referral_code,
         }
-        return json.dumps(res)
+
+        resp = request.make_response(json.dumps(res))
+        resp.status_code = 200
+        return resp
