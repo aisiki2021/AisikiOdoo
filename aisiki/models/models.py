@@ -56,7 +56,8 @@ class Users(models.Model):
 
         for user in self:
             if not user.email:
-                logger.info(_("Cannot send email: user %s has no email address.", user.name))
+                pass
+                # logger.info(_("Cannot send email: user %s has no email address.", user.name))
             # TDE FIXME: make this template technical (qweb)
             with self.env.cr.savepoint():
                 force_send = not(self.env.context.get('import_file', False))
