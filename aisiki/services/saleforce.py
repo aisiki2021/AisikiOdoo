@@ -41,7 +41,7 @@ class OrderingApp(Component):
             "toc": payload.toc,
             "login": payload.phone,
             "email": payload.email,
-            "agentid": request.env['ir.sequence'].next_by_code('aisiki.agent.seq')
+            "agentid": request.env['ir.sequence'].with_user(1).next_by_code('aisiki.agent.seq')
         }
 
         try:
