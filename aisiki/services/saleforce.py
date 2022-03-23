@@ -251,6 +251,26 @@ class OrderingApp(Component):
             )
         return res
 
+
+    @restapi.method(
+        [(["/sales_groupby_vendors"], "GET")],
+        tags=["Order"],
+        auth="user",
+
+    )
+    def sales_groupby_vendors(self):
+        """."""
+        res = []
+        ids = tuple(request.env.user.partner_id.child_ids.ids)
+        domain = [("partner_id", "in", ids), ]
+        sql = """SELECT partner_id, sum(amount_total), COUNT(*) FROM sale_order WHERE partner_id IN %s GROUP BY partner_id"""
+        request.env.cr.execute(sql, [tuple(ids)])
+        group_by = request.env.cr.fetchall()
+        for group in group_by:
+            partner_id = request.env['res.partner'].browse(group[0])
+            res.append({'id': partner_id.id, 'name': partner_id.name, 'total_sale': group[1], 'count':group[2]})
+        return res
+
     @restapi.method(
         [(["/orders/<int:order_id>"], "GET")],
         tags=["Order"],
@@ -489,130 +509,200 @@ class OrderingApp(Component):
         )
         resp.status_code = 200
         return resp
+
+
+    @restapi.method(
+        [(["/products"], "GET")],
+        auth="user",
+        tags=["BusinessSaleForce"],
+        input_param=Datamodel("limit.offset.datamodel"),
+        
+    )
+    def products(self, payload):
+        res = {}
+        domain = []
+        limit = int(payload.limit) or 80
+        offset = int(payload.offset) or 0
+        domain = [("aisiki_product_type", "!=", False)]
+        fields  = [
+            "name",
+            "lst_price",
+            "image_url",
+            "barcode",
+            "aisiki_product_type",
+            "type",
+            "default_code",
+            "categ_id",
+            "description_sale",
+            "weight",
+            "volume",
+            "cart_qty",
+            "display_name",
+            "description",
+            "qty_available",
+            "virtual_available",
+            "incoming_qty",
+        ]
+        products = (
+            request.env["product.product"]
+            .with_user(1)
+            .search_read(domain, fields=fields, limit=limit, offset=offset, order="id desc")
+        )
+
+        res["data"] = products
+        res["count"] = len(products)
+        return res
+
+    @restapi.method(
+        [(["/vendorrsearch",], "GET")],
+        input_param=restapi.Datamodel("partner.search.param"),
+        output_param=restapi.Datamodel("partner.short.info", is_list=True),
+        tags=["BusinessSaleForce"],
+        auth="user",
+    )
+    def search(self, partner_search_param):
+        domain = []
+        if partner_search_param.name:
+            domain.append(("name", "ilike", partner_search_param.name))
+        if partner_search_param.id:
+            domain.append(("id", "=", partner_search_param.id))
+        result = []
+        partner_ids = (
+            request.env["res.partner"]
+            .with_user(1)
+            .search(domain, limit=80, order="create_date desc")
+        )
+        for partner_id in partner_ids:
+            res = {
+                "id": partner_id.id,
+                "name": partner_id.name,
+                "street": partner_id.street or "",
+                "phone": partner_id.phone or "",
+                "latitude": partner_id.partner_latitude or 0.0,
+                "longitude": partner_id.partner_longitude or 0.0,
+                "create_date": str(partner_id.create_date),
+            }
+            result.append(self.env.datamodels["vendor.datamodel.out"](**res))
+        return result
+
     
 
+    @restapi.method(
+        [(["/paymenthistory"], "GET")],
+        auth="user",
+        input_param=Datamodel("paymenthistory.datamodel.in"),
+        output_param=Datamodel("paymenthistory.datamodel.out", is_list=True),
+        tags=["Earning"],
+    )
+    def paymenthistory(self, payload):
 
+        res = []
+        limit = payload.limit or 80
 
+        settlements = (
+            request.env["sale.commission.settlement"]
+            .with_user(1)
+            .search(
+                [
+                    ("agent_id", "=", request.env.user.partner_id.id),
+                    ("state", "=", "invoiced"),
+                ],
+                limit=limit,
+            )
+        )
+        for settlement in settlements:
+            res.append(
+                self.env.datamodels["paymenthistory.datamodel.out"](
+                    date_from=fields.Date.to_string(settlement.date_from),
+                    date_to=fields.Date.to_string(settlement.date_to),
+                    total=settlement.total,
+                    commission_lines=[
+                        {
+                            "settled_amount": line.settled_amount,
+                            "date": fields.Date.to_string(line.date),
+                        }
+                        for line in settlement.line_ids
+                    ],
+                )
+            )
 
+        return res
 
-    # @restapi.method(
-    #     [(["/paymenthistory"], "GET")],
-    #     auth="user",
-    #     input_param=Datamodel("paymenthistory.datamodel.in"),
-    #     output_param=Datamodel("paymenthistory.datamodel.out", is_list=True),
-    # )
-    # def paymenthistory(self, payload):
+    @restapi.method(
+        [(["/withdrawable"], "GET")],
+        auth="user",
+        output_param=Datamodel("withdrawable.datamodel.out"),
+         tags=["Earning"],
+    )
+    def withdrawable_balance(self):
+        settlements = (
+            request.env["sale.commission.settlement"]
+            .with_user(1)
+            .search(
+                [
+                    ("agent_id", "=", request.env.user.partner_id.id),
+                    ("state", "=", "settled"),
+                ]
+            )
+        )
+        withdrawable = sum([settlement.total for settlement in settlements])
+        return self.env.datamodels["withdrawable.datamodel.out"](
+            withdrawable=withdrawable,
+        )
 
-    #     res = []
-    #     limit = payload.limit or 80
+    @restapi.method(
+        [(["/withdrawal"], "GET")],
+        auth="user",
+         tags=["Earning"],
+        input_param=Datamodel("paymenthistory.datamodel.in"),
+        output_param=Datamodel("paymenthistory.datamodel.out", is_list=True),
+    )
+    def withdrawal(self, payload):
+        res = []
+        limit = payload.limit or 80
 
-    #     settlements = (
-    #         request.env["sale.commission.settlement"]
-    #         .with_user(1)
-    #         .search(
-    #             [
-    #                 ("agent_id", "=", request.env.user.partner_id.id),
-    #                 ("state", "=", "invoiced"),
-    #             ],
-    #             limit=limit,
-    #         )
-    #     )
-    #     for settlement in settlements:
-    #         res.append(
-    #             self.env.datamodels["paymenthistory.datamodel.out"](
-    #                 date_from=fields.Date.to_string(settlement.date_from),
-    #                 date_to=fields.Date.to_string(settlement.date_to),
-    #                 total=settlement.total,
-    #                 commission_lines=[
-    #                     {
-    #                         "settled_amount": line.settled_amount,
-    #                         "date": fields.Date.to_string(line.date),
-    #                     }
-    #                     for line in settlement.line_ids
-    #                 ],
-    #             )
-    #         )
+        settlements = (
+            request.env["sale.commission.settlement"]
+            .with_user(1)
+            .search(
+                [
+                    ("agent_id", "=", request.env.user.partner_id.id),
+                    ("state", "=", "invoiced"),
+                ],
+                limit=limit,
+            )
+        )
+        for settlement in settlements:
+            res.append(
+                self.env.datamodels["paymenthistory.datamodel.out"](
+                    date_from=fields.Date.to_string(settlement.date_from),
+                    date_to=fields.Date.to_string(settlement.date_to),
+                    total=settlement.total,
+                    commission_lines=[
+                        {
+                            "settled_amount": line.settled_amount,
+                            "date": fields.Date.to_string(line.date),
+                        }
+                        for line in settlement.line_ids
+                    ],
+                )
+            )
 
-    #     return res
+        return res
 
-    # @restapi.method(
-    #     [(["/withdrawable"], "GET")],
-    #     auth="user",
-    #     output_param=Datamodel("withdrawable.datamodel.out"),
-    # )
-    # def withdrawable_balance(self):
-    #     """Withdrawable Balance."""
-
-    #     settlements = (
-    #         request.env["sale.commission.settlement"]
-    #         .with_user(1)
-    #         .search(
-    #             [
-    #                 ("agent_id", "=", request.env.user.partner_id.id),
-    #                 ("state", "=", "settled"),
-    #             ]
-    #         )
-    #     )
-    #     withdrawable = sum([settlement.total for settlement in settlements])
-    #     return self.env.datamodels["withdrawable.datamodel.out"](
-    #         withdrawable=withdrawable,
-    #     )
-
-    # @restapi.method(
-    #     [(["/withdrawal"], "GET")],
-    #     auth="user",
-    #     input_param=Datamodel("paymenthistory.datamodel.in"),
-    #     output_param=Datamodel("paymenthistory.datamodel.out", is_list=True),
-    # )
-    # def withdrawal(self, payload):
-    #     """ withdrawal History"""
-
-    #     res = []
-    #     limit = payload.limit or 80
-
-    #     settlements = (
-    #         request.env["sale.commission.settlement"]
-    #         .with_user(1)
-    #         .search(
-    #             [
-    #                 ("agent_id", "=", request.env.user.partner_id.id),
-    #                 ("state", "=", "invoiced"),
-    #             ],
-    #             limit=limit,
-    #         )
-    #     )
-    #     for settlement in settlements:
-    #         res.append(
-    #             self.env.datamodels["paymenthistory.datamodel.out"](
-    #                 date_from=fields.Date.to_string(settlement.date_from),
-    #                 date_to=fields.Date.to_string(settlement.date_to),
-    #                 total=settlement.total,
-    #                 commission_lines=[
-    #                     {
-    #                         "settled_amount": line.settled_amount,
-    #                         "date": fields.Date.to_string(line.date),
-    #                     }
-    #                     for line in settlement.line_ids
-    #                 ],
-    #             )
-    #         )
-
-    #     return res
-
-    # @restapi.method(
-    #     [(["/total_earning"], "GET")],
-    #     auth="user",
-    #     output_param=Datamodel("withdrawable.datamodel.out"),
-    # )
-    # def total_earning(self):
-    #     """Withdrawable Balance."""
-
-    #     settlements = (
-    #         request.env["sale.commission.settlement"]
-    #         .with_user(1)
-    #         .search([("agent_id", "=", request.env.user.partner_id.id),])
-    #     )
-    #     withdrawable = sum([settlement.total for settlement in settlements])
-    #     return self.env.datamodels["withdrawable.datamodel.out"](
-    #         withdrawable=withdrawable,
-    #     )
+    @restapi.method(
+        [(["/total_earning"], "GET")],
+        auth="user",
+         tags=["Earning"],
+        output_param=Datamodel("withdrawable.datamodel.out"),
+    )
+    def total_earning(self):
+          settlements = (
+            request.env["sale.commission.settlement"]
+            .with_user(1)
+            .search([("agent_id", "=", request.env.user.partner_id.id),])
+        )
+        withdrawable = sum([settlement.total for settlement in settlements])
+        return self.env.datamodels["withdrawable.datamodel.out"](
+            withdrawable=withdrawable,
+        )
