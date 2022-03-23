@@ -154,7 +154,6 @@ class AisikiBaseRest(Component):
             "password": payload.password,
             "partner_longitude": payload.longitude,
             "partner_latitude": payload.latitude,
-            "password": payload.password,
             "referral_code": payload.referral_code,
             "contact_person": payload.contact_person,
             "business_category": payload.business_category,
