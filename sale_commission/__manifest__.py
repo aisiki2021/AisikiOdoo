@@ -1,6 +1,6 @@
 {
     "name": "Sales commissions",
-    "version": "14.0.1.1.7",
+    "version": "14.0.1.2.7",
     "category": "Sales Management",
     "license": "AGPL-3",
     "depends": ["account", "product", "sale_management"],
