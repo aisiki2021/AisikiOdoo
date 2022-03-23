@@ -295,9 +295,52 @@ class OrderingApp(Component):
 
 
     @restapi.method(
+        [(["/order"], "PUT")],
+        auth="user",
+        tags=["Cart"],
+        input_param=Datamodel("update.order.datamodel.in"),
+    )
+    def updateorder(self, payload):
+        """partner_id is the vendor or customer id"""
+        data = []
+        partner_id = request.env.user.partner_id
+        domain = [('partner_id.parent_id', '=', partner_id.id), ('id', '=', payload.cart_id), ('state', '=', 'draft')]
+        orders = request.env["sale.order"].with_user(1).search(domain, limit=1)
+        if orders:
+            for item in payload.items:
+                orders._cart_update(product_id=item.product_id, add_qty=item.quantity)     
+            data = []
+            res = {}
+            for order in orders:
+                data.append(
+                    {
+                        "id": order.id,
+                        "customer": order.partner_id.name,
+                        "phone": order.partner_id.phone,
+                        "name": order.name,
+                        "date_order": order.date_order,
+                        "items": [
+                            {
+                                "product_id": line.product_id.id,
+                                "description": line.name,
+                                "quantity": line.product_uom_qty,
+                                "price_unit": line.price_unit,
+                                "subtotal": line.price_subtotal,
+                                "image_url": line.product_id.image_url,
+                            }
+                            for line in order.order_line
+                        ],
+                    }
+                )
+            res["data"] = data
+            res["count"] = len(orders)
+            return res
+
+
+    @restapi.method(
         [(["/order"], "POST")],
         auth="user",
-        tags=["Order"],
+        tags=["Cart"],
         input_param=Datamodel("create.orders.datamodel.in"),
     )
     def createorder(self, payload):

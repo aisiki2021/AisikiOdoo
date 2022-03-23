@@ -216,3 +216,13 @@ class WithdrawableDatamodelOut(Datamodel):
     _name = "withdrawable.datamodel.out"
 
     withdrawable = fields.Float(required=True)
+
+
+
+
+class UpdateOrderDatamodelIn(Datamodel):
+    _name = "update.order.datamodel.in"
+    cart_id = fields.Integer(required=True)
+    items = fields.List(
+        NestedModel("cart.datamodel.items"), required=False, allow_none=False)
+    
