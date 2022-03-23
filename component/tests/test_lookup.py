@@ -136,19 +136,13 @@ class TestLookup(TransactionComponentRegistryCase):
 
         self._build_components(Foo, Bar, Any)
 
-        components = self.comp_registry.lookup(
-            "foobar", usage="speaker", model_name="res.partner"
-        )
+        components = self.comp_registry.lookup("foobar", usage="speaker", model_name="res.partner")
         self.assertEqual("foo", components[0]._name)
 
-        components = self.comp_registry.lookup(
-            "foobar", usage="speaker", model_name="res.users"
-        )
+        components = self.comp_registry.lookup("foobar", usage="speaker", model_name="res.users")
         self.assertEqual("bar", components[0]._name)
 
-        components = self.comp_registry.lookup(
-            "foobar", usage="listener", model_name="res.users"
-        )
+        components = self.comp_registry.lookup("foobar", usage="listener", model_name="res.users")
         self.assertEqual("any", components[0]._name)
 
     def test_lookup_cache(self):

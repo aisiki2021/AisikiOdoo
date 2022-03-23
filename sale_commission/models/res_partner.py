@@ -21,13 +21,8 @@ class ResPartner(models.Model):
     )
 
     # Fields for the partner when it acts as an agent
-    agent = fields.Boolean(
-        string="Creditor/Agent",
-        help="Check this field if the partner is a creditor or an agent.",
-    )
-    agent_type = fields.Selection(
-        selection=[("agent", "External agent")], string="Type", default="agent",
-    )
+    agent = fields.Boolean(string="Creditor/Agent", help="Check this field if the partner is a creditor or an agent.",)
+    agent_type = fields.Selection(selection=[("agent", "External agent")], string="Type", default="agent",)
     commission_id = fields.Many2one(
         string="Commission",
         comodel_name="sale.commission",
@@ -36,20 +31,11 @@ class ResPartner(models.Model):
         "needed.",
     )
     settlement = fields.Selection(
-        selection=[
-            ("monthly", "Monthly"),
-            ("quaterly", "Quarterly"),
-            ("semi", "Semi-annual"),
-            ("annual", "Annual"),
-        ],
+        selection=[("monthly", "Monthly"), ("quaterly", "Quarterly"), ("semi", "Semi-annual"), ("annual", "Annual"),],
         string="Settlement period",
         default="monthly",
     )
-    settlement_ids = fields.One2many(
-        comodel_name="sale.commission.settlement",
-        inverse_name="agent_id",
-        readonly=True,
-    )
+    settlement_ids = fields.One2many(comodel_name="sale.commission.settlement", inverse_name="agent_id", readonly=True,)
 
     @api.model
     def _commercial_fields(self):

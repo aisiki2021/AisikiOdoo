@@ -22,12 +22,7 @@ class TestCerberusValidator(TreeCase, MetaCase("DummyCase", (object,), {})):
         super().setUpClass()
         cls.simple_schema = {
             "name": {"type": "string", "required": True, "nullable": True},
-            "title": {
-                "type": "string",
-                "nullable": False,
-                "required": False,
-                "allowed": ["mr", "mm"],
-            },
+            "title": {"type": "string", "nullable": False, "required": False, "allowed": ["mr", "mm"],},
             "age": {"type": "integer", "default": 18},
             "interests": {"type": "list", "schema": {"type": "string"}},
         }
@@ -36,19 +31,12 @@ class TestCerberusValidator(TreeCase, MetaCase("DummyCase", (object,), {})):
             "name": {"type": "string", "required": True, "empty": False},
             "country": {
                 "type": "dict",
-                "schema": {
-                    "id": {"type": "integer", "required": True, "nullable": False},
-                    "name": {"type": "string"},
-                },
+                "schema": {"id": {"type": "integer", "required": True, "nullable": False}, "name": {"type": "string"},},
             },
             "is_company": {"type": "boolean"},
         }
-        cls.simple_schema_cerberus_validator = CerberusValidator(
-            schema=cls.simple_schema
-        )
-        cls.nested_schema_cerberus_validator = CerberusValidator(
-            schema=cls.nested_schema
-        )
+        cls.simple_schema_cerberus_validator = CerberusValidator(schema=cls.simple_schema)
+        cls.nested_schema_cerberus_validator = CerberusValidator(schema=cls.nested_schema)
 
     def test_to_openapi_responses(self):
         res = self.simple_schema_cerberus_validator.to_openapi_responses(None)
@@ -63,16 +51,9 @@ class TestCerberusValidator(TreeCase, MetaCase("DummyCase", (object,), {})):
                                 "required": ["name"],
                                 "properties": {
                                     "name": {"nullable": True, "type": "string"},
-                                    "title": {
-                                        "enum": ["mr", "mm"],
-                                        "nullable": False,
-                                        "type": "string",
-                                    },
+                                    "title": {"enum": ["mr", "mm"], "nullable": False, "type": "string",},
                                     "age": {"default": 18, "type": "integer"},
-                                    "interests": {
-                                        "type": "array",
-                                        "items": {"type": "string"},
-                                    },
+                                    "interests": {"type": "array", "items": {"type": "string"},},
                                 },
                             }
                         }
@@ -96,10 +77,7 @@ class TestCerberusValidator(TreeCase, MetaCase("DummyCase", (object,), {})):
                                         "type": "object",
                                         "required": ["id"],
                                         "properties": {
-                                            "id": {
-                                                "nullable": False,
-                                                "type": "integer",
-                                            },
+                                            "id": {"nullable": False, "type": "integer",},
                                             "name": {"type": "string"},
                                         },
                                     },
@@ -124,16 +102,9 @@ class TestCerberusValidator(TreeCase, MetaCase("DummyCase", (object,), {})):
                             "required": ["name"],
                             "properties": {
                                 "name": {"nullable": True, "type": "string"},
-                                "title": {
-                                    "enum": ["mr", "mm"],
-                                    "nullable": False,
-                                    "type": "string",
-                                },
+                                "title": {"enum": ["mr", "mm"], "nullable": False, "type": "string",},
                                 "age": {"default": 18, "type": "integer"},
-                                "interests": {
-                                    "type": "array",
-                                    "items": {"type": "string"},
-                                },
+                                "interests": {"type": "array", "items": {"type": "string"},},
                             },
                         }
                     }
@@ -281,16 +252,13 @@ class TestCerberusValidator(TreeCase, MetaCase("DummyCase", (object,), {})):
         validator = v.get_cerberus_validator(MyService(), "output")
         self.assertTrue(validator)
         self.assertDictEqual(
-            validator.root_schema.schema,
-            {"name": {"type": "string", "required": True, "nullable": True}},
+            validator.root_schema.schema, {"name": {"type": "string", "required": True, "nullable": True}},
         )
 
     def test_schema_lookup_from_string_custom_validator(self):
         class MyService(object):
             def _get_simple_schema(self):
-                return Validator(
-                    {"name": {"type": "string", "required": False}}, require_all=True
-                )
+                return Validator({"name": {"type": "string", "required": False}}, require_all=True)
 
             def component(self, *args, **kwargs):
                 return BaseRestCerberusValidator(unittest.mock.Mock())
@@ -311,9 +279,7 @@ class TestCerberusValidator(TreeCase, MetaCase("DummyCase", (object,), {})):
                 assertEq(method_name, "my_endpoint")
                 assertEq(direction, "input")
                 # A callable with no parameter is expected.
-                return lambda: Validator(
-                    {"name": {"type": "string", "required": False}}, require_all=True
-                )
+                return lambda: Validator({"name": {"type": "string", "required": False}}, require_all=True)
 
             def has_validator_handler(self, service, method_name, direction):
                 return True
@@ -345,11 +311,7 @@ class TestCerberusValidator(TreeCase, MetaCase("DummyCase", (object,), {})):
                 "type": "object",
                 "required": ["indexes"],
                 "properties": {
-                    "indexes": {
-                        "nullable": True,
-                        "type": "object",
-                        "additionalProperties": {"type": "string"},
-                    }
+                    "indexes": {"nullable": True, "type": "object", "additionalProperties": {"type": "string"},}
                 },
             },
         )
@@ -381,10 +343,7 @@ class TestCerberusValidator(TreeCase, MetaCase("DummyCase", (object,), {})):
                         "additionalProperties": {
                             "type": "object",
                             "required": ["id"],
-                            "properties": {
-                                "id": {"nullable": False, "type": "integer",},
-                                "name": {"type": "string"},
-                            },
+                            "properties": {"id": {"nullable": False, "type": "integer",}, "name": {"type": "string"},},
                         },
                     }
                 },
@@ -400,10 +359,8 @@ class TestCerberusValidator(TreeCase, MetaCase("DummyCase", (object,), {})):
                     "name used to fill the index and value is the "
                     "index name",
                     "example": {
-                        "shopinvader.category": "demo_elasticsearch_backend_"
-                        "shopinvader_category_en_US",
-                        "shopinvader.variant": "demo_elasticsearch_backend_"
-                        "shopinvader_variant_en_US",
+                        "shopinvader.category": "demo_elasticsearch_backend_" "shopinvader_category_en_US",
+                        "shopinvader.variant": "demo_elasticsearch_backend_" "shopinvader_variant_en_US",
                     },
                 },
                 "required": True,
@@ -424,10 +381,8 @@ class TestCerberusValidator(TreeCase, MetaCase("DummyCase", (object,), {})):
                         "name used to fill the index and value is "
                         "the index name",
                         "example": {
-                            "shopinvader.category": "demo_elasticsearch_backend_"
-                            "shopinvader_category_en_US",
-                            "shopinvader.variant": "demo_elasticsearch_backend_"
-                            "shopinvader_variant_en_US",
+                            "shopinvader.category": "demo_elasticsearch_backend_" "shopinvader_category_en_US",
+                            "shopinvader.variant": "demo_elasticsearch_backend_" "shopinvader_variant_en_US",
                         },
                         "nullable": True,
                         "type": "object",

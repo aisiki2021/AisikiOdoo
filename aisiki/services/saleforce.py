@@ -12,7 +12,6 @@ from odoo import fields
 from odoo.tools.misc import flatten
 
 
-
 class OrderingApp(Component):
     _inherit = "aisiki.base.rest"
     _name = "saleforce"
@@ -22,8 +21,6 @@ class OrderingApp(Component):
         Business Sale Force
         
     """
-
-  
 
     @restapi.method(
         [(["/register"], "POST")],
@@ -42,7 +39,7 @@ class OrderingApp(Component):
             "login": payload.phone,
             "password": payload.password,
             "email": payload.email,
-            "agentid": request.env['ir.sequence'].with_user(1).next_by_code('aisiki.agent.seq')
+            "agentid": request.env["ir.sequence"].with_user(1).next_by_code("aisiki.agent.seq"),
         }
 
         try:
@@ -61,16 +58,11 @@ class OrderingApp(Component):
 
         except Exception as e:
 
-            return self.env.datamodels["datamodel.error.out"](
-                message=str(e), error=True
-            )
+            return self.env.datamodels["datamodel.error.out"](message=str(e), error=True)
 
-    @restapi.method(
-        [(["/all_agents"], "GET")],
-        auth="user",
-        tags=["BusinessSaleForce"])
+    @restapi.method([(["/all_agents"], "GET")], auth="user", tags=["BusinessSaleForce"])
     def get_agents(self):
-        domain = [('agent', '=', True)]
+        domain = [("agent", "=", True)]
         fields = [
             "name",
             "purchase_frequency",
@@ -78,17 +70,13 @@ class OrderingApp(Component):
             "partner_latitude",
             "phone",
             "email",
-        
         ]
-        agents = request.env['res.partner'].with_user(1).search_read(domain, fields=fields, limit=80)
+        agents = request.env["res.partner"].with_user(1).search_read(domain, fields=fields, limit=80)
         return agents
 
-    @restapi.method(
-        [(['/agents/<int:id>'], "GET")],
-        auth="user",
-        tags=["BusinessSaleForce"])
+    @restapi.method([(["/agents/<int:id>"], "GET")], auth="user", tags=["BusinessSaleForce"])
     def agent_by_id(self, id=None):
-        domain = [('agent', '=', True), ('id', '=', id)]
+        domain = [("agent", "=", True), ("id", "=", id)]
         fields = [
             "name",
             "purchase_frequency",
@@ -96,17 +84,12 @@ class OrderingApp(Component):
             "partner_latitude",
             "phone",
             "email",
-        
         ]
 
-        agents = request.env['res.partner'].with_user(1).search_read(domain, fields=fields, limit=80)
+        agents = request.env["res.partner"].with_user(1).search_read(domain, fields=fields, limit=80)
         return agents
 
-
-    @restapi.method(
-        [(['/agent/<int:id>/vendors'], "GET")],
-        auth="user",
-        tags=["BusinessSaleForce"])
+    @restapi.method([(["/agent/<int:id>/vendors"], "GET")], auth="user", tags=["BusinessSaleForce"])
     def agents_vendor(self, id=None):
         fields = [
             "name",
@@ -115,12 +98,10 @@ class OrderingApp(Component):
             "partner_latitude",
             "phone",
             "email",
-        
         ]
-        domain = [('parent_id', '=', id), ('parent_id.agent', '=', True)]
-        agents = request.env['res.partner'].with_user(1).search_read(domain, fields=fields, limit=80)
+        domain = [("parent_id", "=", id), ("parent_id.agent", "=", True)]
+        agents = request.env["res.partner"].with_user(1).search_read(domain, fields=fields, limit=80)
         return agents
-
 
     @restapi.method(
         [(["/vendor"], "POST")],
@@ -155,17 +136,11 @@ class OrderingApp(Component):
             )
 
         except Exception as e:
-            return self.env.datamodels["datamodel.error.out"](
-                message=str(e), error=True
-            )
+            return self.env.datamodels["datamodel.error.out"](message=str(e), error=True)
 
-    @restapi.method(
-        [(["/getvendors"], "GET")],
-        auth="user",
-        tags=["BusinessSaleForce"]
-    )
+    @restapi.method([(["/getvendors"], "GET")], auth="user", tags=["BusinessSaleForce"])
     def getvendors(self):
-        domain = [('parent_id', '=', request.env.user.partner_id.id)]
+        domain = [("parent_id", "=", request.env.user.partner_id.id)]
         fields = [
             "name",
             "purchase_frequency",
@@ -173,19 +148,13 @@ class OrderingApp(Component):
             "partner_latitude",
             "phone",
             "email",
-        
         ]
 
-        return request.env['res.partner'].with_user(1).search_read(domain, fields=fields, limit=80)
-     
+        return request.env["res.partner"].with_user(1).search_read(domain, fields=fields, limit=80)
 
-    @restapi.method(
-        [(["/getvendor/<int:vendor_id>"], "GET")],
-        auth="user",
-        tags=["BusinessSaleForce"]
-    )
+    @restapi.method([(["/getvendor/<int:vendor_id>"], "GET")], auth="user", tags=["BusinessSaleForce"])
     def getvendor(self, vendor_id=None):
-        domain = [('parent_id', '=', request.env.user.partner_id.id)]
+        domain = [("parent_id", "=", request.env.user.partner_id.id)]
         fields = [
             "name",
             "purchase_frequency",
@@ -193,11 +162,10 @@ class OrderingApp(Component):
             "partner_latitude",
             "phone",
             "email",
-        
         ]
         if vendor_id:
-            domain.append(('id', '=', vendor_id))
-        agents = request.env['res.partner'].with_user(1).search_read(domain, fields=fields, limit=80)
+            domain.append(("id", "=", vendor_id))
+        agents = request.env["res.partner"].with_user(1).search_read(domain, fields=fields, limit=80)
         return agents
 
     @restapi.method(
@@ -219,11 +187,7 @@ class OrderingApp(Component):
             limit = int(limit)
         if offset:
             offset = int(offset)
-        orders = (
-            request.env["sale.order"]
-            .with_user(1)
-            .search(domain, limit=limit, order="create_date", offset=offset)
-        )
+        orders = request.env["sale.order"].with_user(1).search(domain, limit=limit, order="create_date", offset=offset)
         total_order = request.env["sale.order"].with_user(1).search_count(domain)
         for order in orders:
             res.append(
@@ -249,6 +213,24 @@ class OrderingApp(Component):
                     ],
                 )
             )
+        return res
+
+    @restapi.method(
+        [(["/sales_groupby_vendors"], "GET")], tags=["Order"], auth="user",
+    )
+    def sales_groupby_vendors(self):
+        """."""
+        res = []
+        ids = tuple(request.env.user.partner_id.child_ids.ids)
+        domain = [
+            ("partner_id", "in", ids),
+        ]
+        sql = """SELECT partner_id, sum(amount_total), COUNT(*) FROM sale_order WHERE partner_id IN %s GROUP BY partner_id"""
+        request.env.cr.execute(sql, [tuple(ids)])
+        group_by = request.env.cr.fetchall()
+        for group in group_by:
+            partner_id = request.env["res.partner"].browse(group[0])
+            res.append({"id": partner_id.id, "name": partner_id.name, "total_sale": group[1], "count": group[2]})
         return res
 
     @restapi.method(
@@ -262,10 +244,10 @@ class OrderingApp(Component):
         res = []
         ids = request.env.user.partner_id.child_ids.ids
         ids.append(request.env.user.partner_id.id)
-        domain = [("partner_id", "in", ids), ]
-        orders = (
-            request.env["sale.order"].with_user(1).search(domain, order="create_date")
-        )
+        domain = [
+            ("partner_id", "in", ids),
+        ]
+        orders = request.env["sale.order"].with_user(1).search(domain, order="create_date")
         total_order = request.env["sale.order"].with_user(1).search_count(domain)
         for order in orders:
             res.append(
@@ -293,22 +275,18 @@ class OrderingApp(Component):
             )
         return res
 
-
     @restapi.method(
-        [(["/order"], "PUT")],
-        auth="user",
-        tags=["Cart"],
-        input_param=Datamodel("update.order.datamodel.in"),
+        [(["/order"], "PUT")], auth="user", tags=["Cart"], input_param=Datamodel("update.order.datamodel.in"),
     )
     def updateorder(self, payload):
         """partner_id is the vendor or customer id"""
         data = []
         partner_id = request.env.user.partner_id
-        domain = [('partner_id.parent_id', '=', partner_id.id), ('id', '=', payload.cart_id), ('state', '=', 'draft')]
+        domain = [("partner_id.parent_id", "=", partner_id.id), ("id", "=", payload.cart_id), ("state", "=", "draft")]
         orders = request.env["sale.order"].with_user(1).search(domain, limit=1)
         if orders:
             for item in payload.items:
-                orders._cart_update(product_id=item.product_id, add_qty=item.quantity)     
+                orders._cart_update(product_id=item.product_id, add_qty=item.quantity)
             data = []
             res = {}
             for order in orders:
@@ -336,12 +314,8 @@ class OrderingApp(Component):
             res["count"] = len(orders)
             return res
 
-
     @restapi.method(
-        [(["/order"], "POST")],
-        auth="user",
-        tags=["Cart"],
-        input_param=Datamodel("create.orders.datamodel.in"),
+        [(["/order"], "POST")], auth="user", tags=["Cart"], input_param=Datamodel("create.orders.datamodel.in"),
     )
     def createorder(self, payload):
         """partner_id is the vendor or customer id"""
@@ -396,8 +370,6 @@ class OrderingApp(Component):
         res["count"] = len(orders)
         return res
 
-
-
     @restapi.method([(["/cart"], "GET")], auth="user", tags=["Cart"])
     def cartitem(self):
         res = {}
@@ -444,17 +416,11 @@ class OrderingApp(Component):
         try:
             if order:
                 order.action_cancel()
-                resp = request.make_response(
-                    json.dumps(
-                        {"message": "sale.order %s has been cancelled" % (order_id,)}
-                    )
-                )
+                resp = request.make_response(json.dumps({"message": "sale.order %s has been cancelled" % (order_id,)}))
                 resp.status_code = 200
                 return resp
             else:
-                resp = request.make_response(
-                    json.dumps({"error": "order %s not found" % (order_id,)})
-                )
+                resp = request.make_response(json.dumps({"error": "order %s not found" % (order_id,)}))
                 resp.status_code = 404
                 return resp
 
@@ -464,9 +430,7 @@ class OrderingApp(Component):
             resp.status_code = 400
             return resp
 
-    @restapi.method(
-        [(["/cart/<int:order_id>"], ["DELETE"])], auth="user", tags=["Cart"]
-    )
+    @restapi.method([(["/cart/<int:order_id>"], ["DELETE"])], auth="user", tags=["Cart"])
     def delete(self, order_id):
         items = []
         partner_id = request.env.user.partner_id.id
@@ -474,145 +438,174 @@ class OrderingApp(Component):
             request.env["sale.order"]
             .with_user(1)
             .search(
-                [
-                    ("partner_id", "=", partner_id),
-                    ("state", "in", ['cancel', "draft"]),
-                    ("id", "=", order_id),
-                ],
+                [("partner_id", "=", partner_id), ("state", "in", ["cancel", "draft"]), ("id", "=", order_id),],
                 limit=1,
             )
         )
-        
+
         order.unlink()
-        resp = request.make_response(
-            json.dumps({"message": "sale.order %s has been deleted" % (order_id,)})
-        )
+        resp = request.make_response(json.dumps({"message": "sale.order %s has been deleted" % (order_id,)}))
         resp.status_code = 200
         return resp
-    
 
+    @restapi.method(
+        [(["/products"], "GET")],
+        auth="user",
+        tags=["BusinessSaleForce"],
+        input_param=Datamodel("limit.offset.datamodel"),
+    )
+    def products(self, payload):
+        res = {}
+        domain = []
+        limit = int(payload.limit) or 80
+        offset = int(payload.offset) or 0
+        domain = [("aisiki_product_type", "!=", False)]
+        fields = [
+            "name",
+            "lst_price",
+            "image_url",
+            "barcode",
+            "aisiki_product_type",
+            "type",
+            "default_code",
+            "categ_id",
+            "description_sale",
+            "weight",
+            "volume",
+            "cart_qty",
+            "display_name",
+            "description",
+            "qty_available",
+            "virtual_available",
+            "incoming_qty",
+        ]
+        products = (
+            request.env["product.product"]
+            .with_user(1)
+            .search_read(domain, fields=fields, limit=limit, offset=offset, order="id desc")
+        )
 
+        res["data"] = products
+        res["count"] = len(products)
+        return res
 
+    @restapi.method(
+        [(["/vendorrsearch",], "GET")],
+        input_param=restapi.Datamodel("partner.search.param"),
+        output_param=restapi.Datamodel("partner.short.info", is_list=True),
+        tags=["BusinessSaleForce"],
+        auth="user",
+    )
+    def search(self, partner_search_param):
+        domain = []
+        if partner_search_param.name:
+            domain.append(("name", "ilike", partner_search_param.name))
+        if partner_search_param.id:
+            domain.append(("id", "=", partner_search_param.id))
+        result = []
+        partner_ids = request.env["res.partner"].with_user(1).search(domain, limit=80, order="create_date desc")
+        for partner_id in partner_ids:
+            res = {
+                "id": partner_id.id,
+                "name": partner_id.name,
+                "street": partner_id.street or "",
+                "phone": partner_id.phone or "",
+                "latitude": partner_id.partner_latitude or 0.0,
+                "longitude": partner_id.partner_longitude or 0.0,
+                "create_date": str(partner_id.create_date),
+            }
+            result.append(self.env.datamodels["vendor.datamodel.out"](**res))
+        return result
 
+    @restapi.method(
+        [(["/paymenthistory"], "GET")],
+        auth="user",
+        input_param=Datamodel("paymenthistory.datamodel.in"),
+        output_param=Datamodel("paymenthistory.datamodel.out", is_list=True),
+        tags=["Earning"],
+    )
+    def paymenthistory(self, payload):
 
-    # @restapi.method(
-    #     [(["/paymenthistory"], "GET")],
-    #     auth="user",
-    #     input_param=Datamodel("paymenthistory.datamodel.in"),
-    #     output_param=Datamodel("paymenthistory.datamodel.out", is_list=True),
-    # )
-    # def paymenthistory(self, payload):
+        res = []
+        limit = payload.limit or 80
 
-    #     res = []
-    #     limit = payload.limit or 80
+        settlements = (
+            request.env["sale.commission.settlement"]
+            .with_user(1)
+            .search([("agent_id", "=", request.env.user.partner_id.id), ("state", "=", "invoiced"),], limit=limit,)
+        )
+        for settlement in settlements:
+            res.append(
+                self.env.datamodels["paymenthistory.datamodel.out"](
+                    date_from=fields.Date.to_string(settlement.date_from),
+                    date_to=fields.Date.to_string(settlement.date_to),
+                    total=settlement.total,
+                    commission_lines=[
+                        {"settled_amount": line.settled_amount, "date": fields.Date.to_string(line.date),}
+                        for line in settlement.line_ids
+                    ],
+                )
+            )
 
-    #     settlements = (
-    #         request.env["sale.commission.settlement"]
-    #         .with_user(1)
-    #         .search(
-    #             [
-    #                 ("agent_id", "=", request.env.user.partner_id.id),
-    #                 ("state", "=", "invoiced"),
-    #             ],
-    #             limit=limit,
-    #         )
-    #     )
-    #     for settlement in settlements:
-    #         res.append(
-    #             self.env.datamodels["paymenthistory.datamodel.out"](
-    #                 date_from=fields.Date.to_string(settlement.date_from),
-    #                 date_to=fields.Date.to_string(settlement.date_to),
-    #                 total=settlement.total,
-    #                 commission_lines=[
-    #                     {
-    #                         "settled_amount": line.settled_amount,
-    #                         "date": fields.Date.to_string(line.date),
-    #                     }
-    #                     for line in settlement.line_ids
-    #                 ],
-    #             )
-    #         )
+        return res
 
-    #     return res
+    @restapi.method(
+        [(["/withdrawable"], "GET")],
+        auth="user",
+        output_param=Datamodel("withdrawable.datamodel.out"),
+        tags=["Earning"],
+    )
+    def withdrawable_balance(self):
+        settlements = (
+            request.env["sale.commission.settlement"]
+            .with_user(1)
+            .search([("agent_id", "=", request.env.user.partner_id.id), ("state", "=", "settled"),])
+        )
+        withdrawable = sum([settlement.total for settlement in settlements])
+        return self.env.datamodels["withdrawable.datamodel.out"](withdrawable=withdrawable,)
 
-    # @restapi.method(
-    #     [(["/withdrawable"], "GET")],
-    #     auth="user",
-    #     output_param=Datamodel("withdrawable.datamodel.out"),
-    # )
-    # def withdrawable_balance(self):
-    #     """Withdrawable Balance."""
+    @restapi.method(
+        [(["/withdrawal"], "GET")],
+        auth="user",
+        tags=["Earning"],
+        input_param=Datamodel("paymenthistory.datamodel.in"),
+        output_param=Datamodel("paymenthistory.datamodel.out", is_list=True),
+    )
+    def withdrawal(self, payload):
+        res = []
+        limit = payload.limit or 80
 
-    #     settlements = (
-    #         request.env["sale.commission.settlement"]
-    #         .with_user(1)
-    #         .search(
-    #             [
-    #                 ("agent_id", "=", request.env.user.partner_id.id),
-    #                 ("state", "=", "settled"),
-    #             ]
-    #         )
-    #     )
-    #     withdrawable = sum([settlement.total for settlement in settlements])
-    #     return self.env.datamodels["withdrawable.datamodel.out"](
-    #         withdrawable=withdrawable,
-    #     )
+        settlements = (
+            request.env["sale.commission.settlement"]
+            .with_user(1)
+            .search([("agent_id", "=", request.env.user.partner_id.id), ("state", "=", "invoiced"),], limit=limit,)
+        )
+        for settlement in settlements:
+            res.append(
+                self.env.datamodels["paymenthistory.datamodel.out"](
+                    date_from=fields.Date.to_string(settlement.date_from),
+                    date_to=fields.Date.to_string(settlement.date_to),
+                    total=settlement.total,
+                    commission_lines=[
+                        {"settled_amount": line.settled_amount, "date": fields.Date.to_string(line.date),}
+                        for line in settlement.line_ids
+                    ],
+                )
+            )
 
-    # @restapi.method(
-    #     [(["/withdrawal"], "GET")],
-    #     auth="user",
-    #     input_param=Datamodel("paymenthistory.datamodel.in"),
-    #     output_param=Datamodel("paymenthistory.datamodel.out", is_list=True),
-    # )
-    # def withdrawal(self, payload):
-    #     """ withdrawal History"""
+        return res
 
-    #     res = []
-    #     limit = payload.limit or 80
-
-    #     settlements = (
-    #         request.env["sale.commission.settlement"]
-    #         .with_user(1)
-    #         .search(
-    #             [
-    #                 ("agent_id", "=", request.env.user.partner_id.id),
-    #                 ("state", "=", "invoiced"),
-    #             ],
-    #             limit=limit,
-    #         )
-    #     )
-    #     for settlement in settlements:
-    #         res.append(
-    #             self.env.datamodels["paymenthistory.datamodel.out"](
-    #                 date_from=fields.Date.to_string(settlement.date_from),
-    #                 date_to=fields.Date.to_string(settlement.date_to),
-    #                 total=settlement.total,
-    #                 commission_lines=[
-    #                     {
-    #                         "settled_amount": line.settled_amount,
-    #                         "date": fields.Date.to_string(line.date),
-    #                     }
-    #                     for line in settlement.line_ids
-    #                 ],
-    #             )
-    #         )
-
-    #     return res
-
-    # @restapi.method(
-    #     [(["/total_earning"], "GET")],
-    #     auth="user",
-    #     output_param=Datamodel("withdrawable.datamodel.out"),
-    # )
-    # def total_earning(self):
-    #     """Withdrawable Balance."""
-
-    #     settlements = (
-    #         request.env["sale.commission.settlement"]
-    #         .with_user(1)
-    #         .search([("agent_id", "=", request.env.user.partner_id.id),])
-    #     )
-    #     withdrawable = sum([settlement.total for settlement in settlements])
-    #     return self.env.datamodels["withdrawable.datamodel.out"](
-    #         withdrawable=withdrawable,
-    #     )
+    @restapi.method(
+        [(["/total_earning"], "GET")],
+        auth="user",
+        tags=["Earning"],
+        output_param=Datamodel("withdrawable.datamodel.out"),
+    )
+    def total_earning(self):
+        settlements = (
+            request.env["sale.commission.settlement"]
+            .with_user(1)
+            .search([("agent_id", "=", request.env.user.partner_id.id),])
+        )
+        withdrawable = sum([settlement.total for settlement in settlements])
+        return self.env.datamodels["withdrawable.datamodel.out"](withdrawable=withdrawable,)

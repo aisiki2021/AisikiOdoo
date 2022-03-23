@@ -21,30 +21,20 @@ class TestCerberusListValidator(TreeCase, MetaCase("DummyCase", (object,), {})):
         super().setUpClass()
         cls.simple_schema = {
             "name": {"type": "string", "required": True, "nullable": True},
-            "title": {
-                "type": "string",
-                "nullable": False,
-                "required": False,
-                "allowed": ["mr", "mm"],
-            },
+            "title": {"type": "string", "nullable": False, "required": False, "allowed": ["mr", "mm"],},
         }
 
         cls.nested_schema = {
             "name": {"type": "string", "required": True, "empty": False},
             "country": {
                 "type": "dict",
-                "schema": {
-                    "id": {"type": "integer", "required": True, "nullable": False},
-                    "name": {"type": "string"},
-                },
+                "schema": {"id": {"type": "integer", "required": True, "nullable": False}, "name": {"type": "string"},},
             },
         }
         cls.simple_schema_list_validator = CerberusListValidator(
             schema=cls.simple_schema, min_items=1, max_items=2, unique_items=True
         )
-        cls.nested_schema_list_validator = CerberusListValidator(
-            schema=cls.nested_schema
-        )
+        cls.nested_schema_list_validator = CerberusListValidator(schema=cls.nested_schema)
         cls.maxDiff = None
 
     def test_to_openapi_responses(self):
@@ -61,11 +51,7 @@ class TestCerberusListValidator(TreeCase, MetaCase("DummyCase", (object,), {})):
                                     "required": ["name"],
                                     "properties": {
                                         "name": {"nullable": True, "type": "string"},
-                                        "title": {
-                                            "enum": ["mr", "mm"],
-                                            "nullable": False,
-                                            "type": "string",
-                                        },
+                                        "title": {"enum": ["mr", "mm"], "nullable": False, "type": "string",},
                                     },
                                 },
                                 "maxItems": 2,
@@ -95,10 +81,7 @@ class TestCerberusListValidator(TreeCase, MetaCase("DummyCase", (object,), {})):
                                             "type": "object",
                                             "required": ["id"],
                                             "properties": {
-                                                "id": {
-                                                    "nullable": False,
-                                                    "type": "integer",
-                                                },
+                                                "id": {"nullable": False, "type": "integer",},
                                                 "name": {"type": "string"},
                                             },
                                         },
@@ -125,11 +108,7 @@ class TestCerberusListValidator(TreeCase, MetaCase("DummyCase", (object,), {})):
                                 "required": ["name"],
                                 "properties": {
                                     "name": {"nullable": True, "type": "string"},
-                                    "title": {
-                                        "enum": ["mr", "mm"],
-                                        "nullable": False,
-                                        "type": "string",
-                                    },
+                                    "title": {"enum": ["mr", "mm"], "nullable": False, "type": "string",},
                                 },
                             },
                             "maxItems": 2,
@@ -157,10 +136,7 @@ class TestCerberusListValidator(TreeCase, MetaCase("DummyCase", (object,), {})):
                                         "type": "object",
                                         "required": ["id"],
                                         "properties": {
-                                            "id": {
-                                                "nullable": False,
-                                                "type": "integer",
-                                            },
+                                            "id": {"nullable": False, "type": "integer",},
                                             "name": {"type": "string"},
                                         },
                                     },
@@ -228,16 +204,13 @@ class TestCerberusListValidator(TreeCase, MetaCase("DummyCase", (object,), {})):
         validator = v.get_cerberus_validator(MyService(), "output")
         self.assertTrue(validator)
         self.assertDictEqual(
-            validator.root_schema.schema,
-            {"name": {"type": "string", "required": True, "nullable": True}},
+            validator.root_schema.schema, {"name": {"type": "string", "required": True, "nullable": True}},
         )
 
     def test_schema_lookup_from_string_custom_validator(self):
         class MyService(object):
             def _get_simple_schema(self):
-                return Validator(
-                    {"name": {"type": "string", "required": False}}, require_all=True
-                )
+                return Validator({"name": {"type": "string", "required": False}}, require_all=True)
 
             def component(self, *args, **kwargs):
                 return BaseRestCerberusValidator(unittest.mock.Mock())
