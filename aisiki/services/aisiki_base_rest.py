@@ -254,7 +254,6 @@ class AisikiBaseRest(Component):
         [(["/updateprofile"], "PUT")],
         auth="user",
         input_param=Datamodel("profile.datamodel.update"),
-        # output_param=Datamodel("profile.datamodel.update"),
         tags=["Authentication"],
     )
     def updateprofile(self, payload):
