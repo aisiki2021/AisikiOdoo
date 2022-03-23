@@ -1,6 +1,6 @@
 {
     "name": "Sales commissions",
-    "version": "14.0.1.1.6",
+    "version": "14.0.1.1.7",
     "category": "Sales Management",
     "license": "AGPL-3",
     "depends": ["account", "product", "sale_management"],
@@ -22,7 +22,7 @@
         "report/sale_commission_analysis_report_view.xml",
         "wizard/wizard_settle.xml",
         "wizard/wizard_invoice.xml",
-        "data/sale_agent_demo.xml"
+        "data/sale_agent.xml"
     ],
 
     "installable": True,
