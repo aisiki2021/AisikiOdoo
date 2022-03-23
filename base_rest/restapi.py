@@ -151,13 +151,7 @@ class BinaryData(RestMethodParam):
     @property
     def _binary_content_schema(self):
         return {
-            mediatype: {
-                "schema": {
-                    "type": "string",
-                    "format": "binary",
-                    "required": self._required,
-                }
-            }
+            mediatype: {"schema": {"type": "string", "format": "binary", "required": self._required,}}
             for mediatype in self._mediatypes
         }
 
@@ -251,9 +245,7 @@ class CerberusValidator(RestMethodParam):
         schema = self._schema
         if isinstance(self._schema, str):
             validator_component = service.component(usage="cerberus.validator")
-            schema = validator_component.get_validator_handler(
-                service, self._schema, direction
-            )()
+            schema = validator_component.get_validator_handler(service, self._schema, direction)()
         if isinstance(schema, Validator):
             return schema
         if isinstance(schema, dict):
@@ -302,24 +294,14 @@ class CerberusListValidator(CerberusValidator):
         ExceptionClass = UserError if direction == "input" else SystemError
         for idx, p in enumerate(data):
             if not validator.validate(p):
-                raise ExceptionClass(
-                    _("BadRequest item %s :%s") % (idx, validator.errors)
-                )
+                raise ExceptionClass(_("BadRequest item %s :%s") % (idx, validator.errors))
             values.append(validator.document)
         if self._min_items is not None and len(values) < self._min_items:
             raise ExceptionClass(
-                _(
-                    "BadRequest: Not enough items in the list (%s < %s)"
-                    % (len(values), self._min_items)
-                )
+                _("BadRequest: Not enough items in the list (%s < %s)" % (len(values), self._min_items))
             )
         if self._max_items is not None and len(values) > self._max_items:
-            raise ExceptionClass(
-                _(
-                    "BadRequest: Too many items in the list (%s > %s)"
-                    % (len(values), self._max_items)
-                )
-            )
+            raise ExceptionClass(_("BadRequest: Too many items in the list (%s > %s)" % (len(values), self._max_items)))
         return values
 
     def to_json_schema(self, service, direction):

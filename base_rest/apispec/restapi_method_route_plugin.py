@@ -46,9 +46,7 @@ class RestApiMethodRoutePlugin(BasePlugin):
         params = []
         for argument in rule.arguments:
             param = {"in": "path", "name": argument, "required": True}
-            type_, format_ = self.converter_mapping.get(
-                type(rule._converters[argument]), DEFAULT_TYPE
-            )
+            type_, format_ = self.converter_mapping.get(type(rule._converters[argument]), DEFAULT_TYPE)
             schema = {"type": type_}
             if format_ is not None:
                 schema["format"] = format_

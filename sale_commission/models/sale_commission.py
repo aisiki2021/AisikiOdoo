@@ -16,16 +16,11 @@ class SaleCommission(models.Model):
     )
     fix_qty = fields.Float(string="Fixed percentage")
     section_ids = fields.One2many(
-        string="Sections",
-        comodel_name="sale.commission.section",
-        inverse_name="commission_id",
+        string="Sections", comodel_name="sale.commission.section", inverse_name="commission_id",
     )
     active = fields.Boolean(default=True)
     invoice_state = fields.Selection(
-        [("open", "Invoice Based"), ("paid", "Payment Based")],
-        string="Invoice Status",
-        required=True,
-        default="open",
+        [("open", "Invoice Based"), ("paid", "Payment Based")], string="Invoice Status", required=True, default="open",
     )
     amount_base_type = fields.Selection(
         selection=[("gross_amount", "Gross Amount"), ("net_amount", "Net Amount")],
@@ -55,6 +50,4 @@ class SaleCommissionSection(models.Model):
     def _check_amounts(self):
         for section in self:
             if section.amount_to < section.amount_from:
-                raise exceptions.ValidationError(
-                    _("The lower limit cannot be greater than upper one.")
-                )
+                raise exceptions.ValidationError(_("The lower limit cannot be greater than upper one."))

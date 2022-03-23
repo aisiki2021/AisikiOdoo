@@ -21,10 +21,7 @@ class ApiDocsController(Controller):
         return request.make_response(data, headers=headers, cookies=cookies)
 
     @route(
-        ["/api-docs", "/api-docs/index.html"],
-        methods=["GET"],
-        type="http",
-        auth="public",
+        ["/api-docs", "/api-docs/index.html"], methods=["GET"], type="http", auth="public",
     )
     def index(self, **params):
         self._get_api_urls()
@@ -42,9 +39,7 @@ class ApiDocsController(Controller):
             service,
             controller_class,
         ):
-            openapi_doc = service.to_openapi(
-                default_auth=controller_class._default_auth
-            )
+            openapi_doc = service.to_openapi(default_auth=controller_class._default_auth)
             return self.make_json_response(openapi_doc)
 
     def _get_api_urls(self):
@@ -62,8 +57,7 @@ class ApiDocsController(Controller):
                 api_urls.append(
                     {
                         "name": "{}: {}".format(collection_path, service._usage),
-                        "url": "/api-docs/%s/%s.json"
-                        % (collection_path, service._usage),
+                        "url": "/api-docs/%s/%s.json" % (collection_path, service._usage),
                     }
                 )
         api_urls = sorted(api_urls, key=lambda k: k["name"])

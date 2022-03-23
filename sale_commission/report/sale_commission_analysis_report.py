@@ -14,13 +14,9 @@ class SaleCommissionAnalysisReport(models.Model):
 
     @api.model
     def _get_selection_invoice_state(self):
-        return self.env["account.move"].fields_get(allfields=["state"])["state"][
-            "selection"
-        ]
+        return self.env["account.move"].fields_get(allfields=["state"])["state"]["selection"]
 
-    invoice_state = fields.Selection(
-        selection="_get_selection_invoice_state", string="Invoice Status", readonly=True
-    )
+    invoice_state = fields.Selection(selection="_get_selection_invoice_state", string="Invoice Status", readonly=True)
     date_invoice = fields.Date("Date Invoice", readonly=True)
     company_id = fields.Many2one("res.company", "Company", readonly=True)
     partner_id = fields.Many2one("res.partner", "Partner", readonly=True)
@@ -34,9 +30,7 @@ class SaleCommissionAnalysisReport(models.Model):
     balance = fields.Float(string="Balance", readonly=True,)
     percentage = fields.Integer("Percentage of commission", readonly=True)
     amount = fields.Float("Amount", readonly=True)
-    invoice_line_id = fields.Many2one(
-        "account.move.line", "Invoice line", readonly=True
-    )
+    invoice_line_id = fields.Many2one("account.move.line", "Invoice line", readonly=True)
     settled = fields.Boolean("Settled", readonly=True)
     commission_id = fields.Many2one("sale.commission", "Sale commission", readonly=True)
 
@@ -96,10 +90,5 @@ class SaleCommissionAnalysisReport(models.Model):
         tools.drop_view_if_exists(self._cr, self._table)
         self._cr.execute(
             "CREATE or REPLACE VIEW %s AS ( %s FROM ( %s ) %s )",
-            (
-                AsIs(self._table),
-                AsIs(self._select()),
-                AsIs(self._from()),
-                AsIs(self._group_by()),
-            ),
+            (AsIs(self._table), AsIs(self._select()), AsIs(self._from()), AsIs(self._group_by()),),
         )

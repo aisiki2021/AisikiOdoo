@@ -38,9 +38,7 @@ class NestedModel(Nested):
                     super_parent = parent
                     break
                 parent = parent.parent
-            self.nested = super_parent._env.datamodels[
-                self.datamodel_name
-            ].__schema_class__
+            self.nested = super_parent._env.datamodels[self.datamodel_name].__schema_class__
             self.nested._env = super_parent._env
         return super(NestedModel, self).schema
 

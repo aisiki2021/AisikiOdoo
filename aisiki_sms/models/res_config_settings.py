@@ -16,9 +16,7 @@ class ResConfigSetting(models.TransientModel):
             {
                 "aisiki_username": param_obj.sudo().get_param("aisiki.username"),
                 "aisiki_api_key": param_obj.sudo().get_param("aisiki.api.key"),
-                "aisiki_overwrite_default": param_obj.sudo().get_param(
-                    "aisiki.overwrite.default"
-                ),
+                "aisiki_overwrite_default": param_obj.sudo().get_param("aisiki.overwrite.default"),
             }
         )
         return res
@@ -29,6 +27,4 @@ class ResConfigSetting(models.TransientModel):
         param_obj = self.env["ir.config_parameter"]
         param_obj.sudo().set_param("aisiki.username", self.aisiki_username)
         param_obj.sudo().set_param("aisiki.api.key", self.aisiki_api_key)
-        param_obj.sudo().set_param(
-            "aisiki.overwrite.default", self.aisiki_overwrite_default
-        )
+        param_obj.sudo().set_param("aisiki.overwrite.default", self.aisiki_overwrite_default)
