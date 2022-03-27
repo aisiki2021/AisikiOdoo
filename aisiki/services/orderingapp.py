@@ -153,14 +153,16 @@ class OrderingApp(Component):
         res["count"] = len(products)
         return res
 
-
     @restapi.method([(["/orders/metric/<int:days>"], "GET")], auth="user", tags=["Order"])
     def orders_metric(self, days=1):
         """Metric in days default is 1"""
         date = fields.Date.today() - timedelta(days=days)
-        domain = [("partner_id", "=", request.env.user.partner_id.id), ('create_date', '>=', date), ('state', '=','sale')]
-        return {'amount_total': sum([o.amount_total for o in request.env["sale.order"].with_user(1).search(domain)])}
-
+        domain = [
+            ("partner_id", "=", request.env.user.partner_id.id),
+            ("create_date", ">=", date),
+            ("state", "=", "sale"),
+        ]
+        return {"amount_total": sum([o.amount_total for o in request.env["sale.order"].with_user(1).search(domain)])}
 
     @restapi.method([(["/orders"], "GET")], auth="user", tags=["Order"])
     def orders(self):

@@ -61,19 +61,16 @@ class Delivery(Component):
 
             return self.env.datamodels["datamodel.error.out"](message=str(e), error=True)
 
-    # @restapi.method([(["/all_agents"], "GET")], auth="user", tags=["BusinessSaleForce"])
-    # def get_agents(self):
-    #     domain = [("agent", "=", True)]
-    #     fields = [
-    #         "name",
-    #         "purchase_frequency",
-    #         "partner_longitude",
-    #         "partner_latitude",
-    #         "phone",
-    #         "email",
-    #     ]
-    #     agents = request.env["res.partner"].with_user(1).search_read(domain, fields=fields, limit=80)
-    #     return agents
+    @restapi.method([(["/all_agents"], "GET")], auth="user", tags=["DeliveryAgents"])
+    def get_agents(self):
+        domain = [("delivery_agent", "=", True)]
+        fields = [
+            "name",
+            "phone",
+            "email",
+        ]
+        agents = request.env["res.partner"].with_user(1).search_read(domain, fields=fields, limit=80)
+        return agents
 
     # @restapi.method([(["/agents/<int:id>"], "GET")], auth="user", tags=["BusinessSaleForce"])
     # def agent_by_id(self, id=None):
@@ -176,52 +173,38 @@ class Delivery(Component):
     #     agents = request.env["res.partner"].with_user(1).search_read(domain, fields=fields, limit=80)
     #     return agents
 
-    # @restapi.method(
-    #     [(["/orders"], "GET")],
-    #     auth="user",
-    #     tags=["Order"],
-    #     input_param=Datamodel("orders.datamodel.in"),
-    #     output_param=Datamodel("orders.datamodel.out", is_list=True),
-    # )
-    # def orders(self, payload):
-    #     """."""
-    #     res = []
-    #     ids = request.env.user.partner_id.child_ids.ids
-    #     ids.append(request.env.user.partner_id.id)
-    #     domain = [("partner_id", "in", ids)]
-    #     limit = payload.limit or 80
-    #     offset = payload.offset or 0
-    #     if limit:
-    #         limit = int(limit)
-    #     if offset:
-    #         offset = int(offset)
-    #     orders = request.env["sale.order"].with_user(1).search(domain, limit=limit, order="create_date", offset=offset)
-    #     total_order = request.env["sale.order"].with_user(1).search_count(domain)
-    #     for order in orders:
-    #         res.append(
-    #             self.env.datamodels["orders.datamodel.out"](
-    #                 total_order=total_order,
-    #                 id=order.id,
-    #                 name=order.name,
-    #                 state=order.state,
-    #                 customer=order.partner_id.name,
-    #                 phone=order.partner_id.phone,
-    #                 date_order=str(order.date_order) or str(order.create_date),
-    #                 amount_total=order.amount_total,
-    #                 amount_untaxed=order.amount_untaxed,
-    #                 items=[
-    #                     {
-    #                         "product_id": item.product_id.id,
-    #                         "quantity": item.product_uom_qty,
-    #                         "price_unit": item.price_unit,
-    #                         "discount": item.discount,
-    #                         "name": item.name,
-    #                     }
-    #                     for item in order.order_line
-    #                 ],
-    #             )
-    #         )
-    #     return res
+    @restapi.method([(["/orders"], "GET")], auth="user", tags=["Order"], input_param=Datamodel("orders.datamodel.in"))
+    def orders(self, payload):
+        """."""
+        res = []
+
+        _id = request.env.user.partner_id.id
+        # domain = [("delivery_agent_id", "=", _id)]
+        domain = []
+        limit = payload.limit or 80
+        offset = payload.offset or 0
+        if limit:
+            limit = int(limit)
+        if offset:
+            offset = int(offset)
+        orders = (
+            request.env["stock.picking"].with_user(1).search(domain, limit=limit, order="create_date", offset=offset)
+        )
+        total_order = request.env["stock.picking"].with_user(1).search_count(domain)
+        res = []
+        for order in orders:
+            res.append(
+                {
+                    "name": order.name,
+                    "delivery_address": order.partner_id._display_address(without_company=True),
+                    "customer": order.partner_id.name,
+                    "phone": order.partner_id.phone,
+                    "email": order.partner_id.phone,
+                    "mobile": order.partner_id.phone,
+                    "schedule_date": order.schedule_date,
+                }
+            )
+        return res
 
     # @restapi.method(
     #     [(["/sales_groupby_vendors"], "GET")], tags=["Order"], auth="user",
@@ -524,5 +507,3 @@ class Delivery(Component):
     #         }
     #         result.append(self.env.datamodels["vendor.datamodel.out"](**res))
     #     return result
-
-    

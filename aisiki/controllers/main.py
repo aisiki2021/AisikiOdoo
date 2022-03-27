@@ -15,6 +15,7 @@ class ProductController(main.RestController):
     _root_path = "/prod/"
     _collection_name = "catlog"
 
+
 class DeliveryController(main.RestController):
     _root_path = "/dl/"
     _collection_name = "delivery"

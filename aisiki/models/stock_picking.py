@@ -9,6 +9,4 @@ _logger = logging.getLogger(__name__)
 class Picking(models.Model):
     _inherit = "stock.picking"
 
-    delivery_agent_id = fields.Many2one(comodel_name="res.partner", domain=[('delivery_agent', '=', True)])
-
-    
+    delivery_agent_id = fields.Many2one(comodel_name="res.partner", domain=[("delivery_agent", "=", True)])

@@ -95,5 +95,3 @@ class ProductTemplate(models.Model):
 
         for rec in self:
             rec.image_url = "%s/web/image/%s/%s/image_1024" % (base_url, rec._name, rec.id,)
-
-

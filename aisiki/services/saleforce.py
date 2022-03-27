@@ -157,10 +157,8 @@ class OrderingApp(Component):
     def vendor_metric(self, days=1):
         """Metric in days default is 1"""
         date = fields.Date.today() - timedelta(days=days)
-        domain = [("parent_id", "=", request.env.user.partner_id.id), ('create_date', '>=', date)]
-        return {'count': request.env["res.partner"].with_user(1).search_count(domain)}
-
-
+        domain = [("parent_id", "=", request.env.user.partner_id.id), ("create_date", ">=", date)]
+        return {"count": request.env["res.partner"].with_user(1).search_count(domain)}
 
     @restapi.method([(["/getvendor/<int:vendor_id>"], "GET")], auth="user", tags=["BusinessSaleForce"])
     def getvendor(self, vendor_id=None):
@@ -177,7 +175,6 @@ class OrderingApp(Component):
             domain.append(("id", "=", vendor_id))
         agents = request.env["res.partner"].with_user(1).search_read(domain, fields=fields, limit=80)
         return agents
-
 
     @restapi.method(
         [(["/confirm"], ["POST"])], input_param=Datamodel("confirm.order.datamodel"), auth="user", tags=["Order"],
@@ -196,7 +193,7 @@ class OrderingApp(Component):
             resp = request.make_response(json.dumps({"error": "There is no open order in cart or draft state"}))
             resp.status_code = 400
             return resp
- 
+
         [order.action_confirm() for order in orders]
         res = []
         for order in orders:
@@ -223,9 +220,6 @@ class OrderingApp(Component):
                 )
             )
         return res
-      
-            
-
 
     @restapi.method(
         [(["/orders"], "GET")],
@@ -239,7 +233,7 @@ class OrderingApp(Component):
         res = []
         ids = request.env.user.partner_id.child_ids.ids
         ids.append(request.env.user.partner_id.id)
-        domain = [("partner_id", "in", ids), ('state', '=', 'sale')]
+        domain = [("partner_id", "in", ids), ("state", "=", "sale")]
         limit = payload.limit or 80
         offset = payload.offset or 0
         if limit:
