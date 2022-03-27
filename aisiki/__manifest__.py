@@ -7,7 +7,7 @@
     "author": "Babatope Ajepe",
     "website": "http://www.yourcompany.com",
     "category": "Uncategorized",
-    "version": "1.3.10",
+    "version": "1.3.12",
     "depends": [
         "base",
         "sms",
@@ -31,6 +31,7 @@
     "data": [
         # 'security/ir.model.access.csv',
         "views/product.xml",
+        "views/stock_picking.xml",
         "views/res_partner.xml",
         "data/account_journal.xml",
     ],

@@ -6,6 +6,7 @@
         <field name="inherit_id" ref="base.view_partner_form" />
         <field name="arch" type="xml">
             <xpath expr="//field[@name='website']" position="before">
+                <field name="delivery_agent"/>
                 <field name="business_category" />
                 <field name="number_of_offices"/>
             </xpath>

@@ -22,8 +22,7 @@
         "report/sale_commission_analysis_report_view.xml",
         "wizard/wizard_settle.xml",
         "wizard/wizard_invoice.xml",
-        "data/sale_agent.xml"
+        "data/sale_agent.xml",
     ],
-
     "installable": True,
 }

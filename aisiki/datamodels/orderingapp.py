@@ -146,3 +146,8 @@ class CheckoutOrderDatamodel(Datamodel):
     _name = "checkout.order.datamodel"
     ids = fields.List(fields.Integer(), required=True, allow_none=False)
     payment_ref = fields.String(required=True, allow_none=False)
+
+
+class ConfirmOrder(Datamodel):
+    _name = "confirm.order.datamodel"
+    ids = fields.List(fields.Integer(), required=True, allow_none=False)
