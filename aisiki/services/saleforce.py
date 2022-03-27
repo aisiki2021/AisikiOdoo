@@ -8,6 +8,7 @@ from odoo.addons.base_rest_datamodel.restapi import Datamodel
 import datetime
 import json
 from odoo import fields
+from datetime import datetime, timedelta
 
 from odoo.tools.misc import flatten
 
@@ -152,6 +153,15 @@ class OrderingApp(Component):
 
         return request.env["res.partner"].with_user(1).search_read(domain, fields=fields, limit=80)
 
+    @restapi.method([(["/vendor/metric/<int:days>"], "GET")], auth="user", tags=["BusinessSaleForce"])
+    def vendor_metric(self, days=1):
+        """Metric in days default is 1"""
+        date = fields.Date.today() - timedelta(days=days)
+        domain = [("parent_id", "=", request.env.user.partner_id.id), ('create_date', '>=', date)]
+        return {'count': request.env["res.partner"].with_user(1).search_count(domain)}
+
+
+
     @restapi.method([(["/getvendor/<int:vendor_id>"], "GET")], auth="user", tags=["BusinessSaleForce"])
     def getvendor(self, vendor_id=None):
         domain = [("parent_id", "=", request.env.user.partner_id.id)]
@@ -168,6 +178,55 @@ class OrderingApp(Component):
         agents = request.env["res.partner"].with_user(1).search_read(domain, fields=fields, limit=80)
         return agents
 
+
+    @restapi.method(
+        [(["/confirm"], ["POST"])], input_param=Datamodel("confirm.order.datamodel"), auth="user", tags=["Order"],
+    )
+    def comfirm_payment(self, payload):
+        partner_id = request.env.user.partner_id.id
+        orders = (
+            request.env["sale.order"]
+            .with_user(1)
+            .search(
+                [("partner_id.parent_id", "=", partner_id), ("state", "=", "draft"), ("id", "in", payload.ids),],
+                limit=len(payload.ids),
+            )
+        )
+        if not orders:
+            resp = request.make_response(json.dumps({"error": "There is no open order in cart or draft state"}))
+            resp.status_code = 400
+            return resp
+ 
+        [order.action_confirm() for order in orders]
+        res = []
+        for order in orders:
+            res.append(
+                dict(
+                    id=order.id,
+                    name=order.name,
+                    state=order.state,
+                    customer=order.partner_id.name,
+                    phone=order.partner_id.phone,
+                    date_order=str(order.date_order) or str(order.create_date),
+                    amount_total=order.amount_total,
+                    amount_untaxed=order.amount_untaxed,
+                    items=[
+                        {
+                            "product_id": item.product_id.id,
+                            "quantity": item.product_uom_qty,
+                            "price_unit": item.price_unit,
+                            "discount": item.discount,
+                            "name": item.name,
+                        }
+                        for item in order.order_line
+                    ],
+                )
+            )
+        return res
+      
+            
+
+
     @restapi.method(
         [(["/orders"], "GET")],
         auth="user",
@@ -180,7 +239,7 @@ class OrderingApp(Component):
         res = []
         ids = request.env.user.partner_id.child_ids.ids
         ids.append(request.env.user.partner_id.id)
-        domain = [("partner_id", "in", ids)]
+        domain = [("partner_id", "in", ids), ('state', '=', 'sale')]
         limit = payload.limit or 80
         offset = payload.offset or 0
         if limit:

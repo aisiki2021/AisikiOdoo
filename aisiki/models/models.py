@@ -80,6 +80,7 @@ class ResPartner(models.Model):
     idtype = fields.Char(related="user_id.idtype", store=True)
     business_type = fields.Char()
     purchase_frequency = fields.Float()
+    delivery_agent = fields.Boolean(string="Delivery Agent")
 
 
 class ProductTemplate(models.Model):
@@ -96,12 +97,3 @@ class ProductTemplate(models.Model):
             rec.image_url = "%s/web/image/%s/%s/image_1024" % (base_url, rec._name, rec.id,)
 
 
-# class SaleOrder(models.Model):
-#     _inherit = "sale.order"
-
-#     @api.model
-#     def create(self, values):
-#         res = super(SaleOrder, self).create(values)
-#         print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!', self.env.context)
-#         [o.write({'team_id':    sales_team.salesteam_website_sales}) for o in res]
-#         return res
