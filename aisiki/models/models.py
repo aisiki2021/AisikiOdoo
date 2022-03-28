@@ -71,7 +71,6 @@ class ResPartner(models.Model):
 
     common_product_ids = fields.Many2many(comodel_name="product.product")
     contact_person = fields.Char(string="Contact Person")
-    business_category = fields.Char(string="Business Category")
     number_of_offices = fields.Char(string="Number of Offices")
     referral_code = fields.Char(string="Referral Code", related="user_id.referral_code", store=True)
     city = fields.Char(related="user_id.city")
@@ -81,6 +80,21 @@ class ResPartner(models.Model):
     business_type = fields.Char()
     purchase_frequency = fields.Float()
     delivery_agent = fields.Boolean(string="Delivery Agent")
+    # fields
+
+    business_name = fields.Char()
+    business_branch = fields.Char()
+    addressline = fields.Char()
+    state = fields.Char()
+    business_category = fields.Char()
+    emergency_firstname = fields.Char()
+    emergency_lastname = fields.Char()
+    emergency_relationship = fields.Char()
+    emergency_phonenumber = fields.Char()
+    emergency_address = fields.Char()
+    emergency_state = fields.Char()
+    emergency_city = fields.Char()
+
 
 
 class ProductTemplate(models.Model):
