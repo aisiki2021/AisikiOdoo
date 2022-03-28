@@ -122,6 +122,18 @@ class OrderingApp(Component):
             "business_type": payload.business_type,
             "agent_ids": [(6, 0, [request.env.user.partner_id.id])],
             "parent_id": request.env.user.partner_id.id,
+            "business_name": payload.business_name,
+            "business_branch": payload.business_branch,
+            "addressline": payload.addressline,
+            "state": payload.state,
+            "business_category": payload.business_category,
+            "emergency_firstname": payload.emergency_firstname,
+            "emergency_lastname": payload.emergency_lastname,
+            "emergency_relationship": payload.emergency_relationship,
+            "emergency_phonenumber": payload.emergency_phonenumber,
+            "emergency_address": payload.emergency_address,
+            "emergency_state": payload.emergency_state,
+            "emergency_city": payload.emergency_city,
         }
 
         try:
