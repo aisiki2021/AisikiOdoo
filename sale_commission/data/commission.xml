@@ -11,3 +11,4 @@
         <field name="invoice_state">paid</field>
     </record>
 
+</odoo>
