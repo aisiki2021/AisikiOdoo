@@ -96,7 +96,6 @@ class ResPartner(models.Model):
     emergency_city = fields.Char()
 
 
-
 class ProductTemplate(models.Model):
     _inherit = "product.template"
 
