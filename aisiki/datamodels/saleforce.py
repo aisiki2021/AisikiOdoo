@@ -220,3 +220,11 @@ class UpdateOrderDatamodelIn(Datamodel):
     _name = "update.order.datamodel.in"
     cart_id = fields.Integer(required=True)
     items = fields.List(NestedModel("cart.datamodel.items"), required=False, allow_none=False)
+
+
+class Delivery_OrderIn(Datamodel):
+    _name = "delivery.datamodel.in"
+
+    limit = fields.String(required=False, load_default=80)
+    offset = fields.String(required=False, load_default=0)
+    days = fields.Integer(required=False, load_default=1)
