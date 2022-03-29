@@ -10,3 +10,4 @@ class Picking(models.Model):
     _inherit = "stock.picking"
 
     delivery_agent_id = fields.Many2one(comodel_name="res.partner", domain=[("delivery_agent", "=", True)])
+    payment_term_id =  fields.Many2one(comodel_name='account.payment.term')
