@@ -40,6 +40,7 @@ class Delivery(Component):
             "login": payload.phone,
             "password": payload.password,
             "email": payload.email,
+            "delivery_agent": True,
             "agentid": request.env["ir.sequence"].with_user(1).next_by_code("aisiki.agent.seq"),
         }
 
