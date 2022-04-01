@@ -21,6 +21,7 @@ class OrderingAppRegisterLogin(Datamodel):
 
     phone = fields.String(required=True, allow_none=False)
     password = fields.String(required=True, allow_none=False)
+    origin = fields.String(required=True, allow_none=False)
 
 
 class OrderingAppRegisterLoginOut(Datamodel):
@@ -62,6 +63,7 @@ class CorporateRegisterIn(Datamodel):
     logo = fields.String(required=False, allow_none=True)
     food_items = fields.List(fields.Integer(), required=False, allow_none=False)
     is_corporate = fields.Boolean(load_default=True)
+    origin = fields.String(required=True, allow_none=False)
 
 
 class CorporateRegisterOut(Datamodel):

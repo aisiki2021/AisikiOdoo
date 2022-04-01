@@ -14,6 +14,7 @@ class Users(models.Model):
     city = fields.Char()
     agentid = fields.Char()
     toc = fields.Char()
+    origin = fields.Char()
     idtype = fields.Char()
     registration_stage = fields.Selection(
         selection=[("not_verified", "Not Verified"), ("verified", "Verify")],
@@ -85,7 +86,7 @@ class ResPartner(models.Model):
     business_name = fields.Char()
     business_branch = fields.Char()
     addressline = fields.Char()
-    state = fields.Char()
+    state = fields.Char(string="State.")
     business_category = fields.Char()
     emergency_firstname = fields.Char()
     emergency_lastname = fields.Char()

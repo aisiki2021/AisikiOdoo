@@ -42,6 +42,7 @@ class Delivery(Component):
             "email": payload.email,
             "delivery_agent": True,
             "agentid": request.env["ir.sequence"].with_user(1).next_by_code("aisiki.agent.seq"),
+            "origin": payload.origin,
         }
 
         try:
@@ -62,7 +63,7 @@ class Delivery(Component):
 
             return self.env.datamodels["datamodel.error.out"](message=str(e), error=True)
 
-    @restapi.method([(["/agents"], "GET")], auth="user", tags=["DeliveryAgents"])
+    @restapi.method([(["/agents"], "GET")], auth="user", tags=["Delivery"])
     def get_agents(self):
         domain = [("delivery_agent", "=", True)]
         fields = [
@@ -93,6 +94,7 @@ class Delivery(Component):
                     "lat": order.partner_id.partner_latitude,
                     "lng": order.partner_id.partner_longitude,
                     "email": order.partner_id.phone,
+                    "delivery_status": order.delivery_status,
                     "mobile": order.partner_id.phone,
                     "scheduled_date": order.scheduled_date,
                     "create_date": str(order.create_date),
@@ -144,6 +146,7 @@ class Delivery(Component):
                     "customer": order.partner_id.name,
                     "phone": order.partner_id.phone,
                     "create_date": str(order.create_date),
+                    "delivery_status": order.delivery_status,
                     "lat": order.partner_id.partner_latitude,
                     "lng": order.partner_id.partner_longitude,
                     "email": order.partner_id.phone,
@@ -168,7 +171,7 @@ class Delivery(Component):
         return res
 
     @restapi.method(
-        [(["/completed"], "GET")], auth="user", tags=["Order"], input_param=Datamodel("delivery.datamodel.in")
+        [(["/completed"], "GET")], auth="user", tags=["Delivery"], input_param=Datamodel("delivery.datamodel.in")
     )
     def completed(self, payload):
         """."""
@@ -179,7 +182,7 @@ class Delivery(Component):
         domain = [
             ("delivery_agent_id", "=", _id),
             ("picking_type_id.sequence_code", "=", "OUT"),
-            ("state", "in", ["done"]),
+            ("delivery_status", "=", 'completed'),
             ('create_date', '>=', date),
         ]
         limit = payload.limit or 80
@@ -200,6 +203,7 @@ class Delivery(Component):
                     "delivery_address": order.partner_id._display_address(without_company=True),
                     "customer": order.partner_id.name,
                     "phone": order.partner_id.phone,
+                    "delivery_status": order.delivery_status,
                     "lat": order.partner_id.partner_latitude,
                     "lng": order.partner_id.partner_longitude,
                     "email": order.partner_id.phone,
@@ -260,6 +264,7 @@ class Delivery(Component):
                     "lat": order.partner_id.partner_latitude,
                     "lng": order.partner_id.partner_longitude,
                     "email": order.partner_id.phone,
+                    "delivery_status": order.delivery_status,
                     "mobile": order.partner_id.phone,
                     "scheduled_date": order.scheduled_date,
                     "create_date": str(order.create_date),
@@ -295,6 +300,7 @@ class Delivery(Component):
                     "delivery_address": order.partner_id._display_address(without_company=True),
                     "customer": order.partner_id.name,
                     "phone": order.partner_id.phone,
+                    "delivery_status": order.delivery_status,
                     "lat": order.partner_id.partner_latitude,
                     "lng": order.partner_id.partner_longitude,
                     "email": order.partner_id.phone,
@@ -319,10 +325,11 @@ class Delivery(Component):
         return res
 
 
-    @restapi.method([(["/delivered/<int:order_id>"], "PATCH")], auth="user", tags=["Order"])
+    @restapi.method([(["/delivered/<int:order_id>"], "PATCH")], auth="user", tags=["Delivery"])
     def delivered(self, order_id):
+        """To mark an order as delivered"""
         _id = request.env.user.partner_id.id
-        domain = [("delivery_agent_id", "=", _id), ("id", "=", order_id)]
+        domain = [("delivery_agent_id", "=", _id), ("id", "=", order_id), ('delivery_status', '!=', 'completed')]
         order = request.env["stock.picking"].with_user(1).search(domain, limit=1)
         if order:
             for move_id in order.move_lines:
@@ -330,11 +337,13 @@ class Delivery(Component):
                 move_id._action_assign()
             order._compute_state()
             order.button_validate()
+            order.write({'delivery_status': 'completed'})
             return {
                     "id": order.id,
                     "name": order.name,
                     "state": order.state,
                     "delivery_address": order.partner_id._display_address(without_company=True),
+                    "delivery_status": order.delivery_status,
                     "customer": order.partner_id.name,
                     "phone": order.partner_id.phone,
                     "lat": order.partner_id.partner_latitude,
@@ -361,4 +370,124 @@ class Delivery(Component):
         resp = request.make_response(data)
         resp.status_code = 400
         return resp
+
+
+
+# Delivery
+
+    @restapi.method([(["/assigned"], "GET")], auth="user", tags=["Delivery"], input_param=Datamodel("delivery.datamodel.in"))
+    def order_assign(self, payload):
+        """."""
+        res = []
+
+        _id = request.env.user.partner_id.id
+        date = fields.Date.today() - timedelta(days=payload.days or 1)
+        domain = [
+            ("delivery_agent_id", "=", _id),
+            ("picking_type_id.sequence_code", "=", "OUT"),
+            ("delivery_status", "=", "assigned"),
+            ('create_date', '>=', date),
+        ]
+        limit = payload.limit or 80
+        offset = payload.offset or 0
+        if limit:
+            limit = int(limit)
+        if offset:
+            offset = int(offset)
+        orders = (
+            request.env["stock.picking"].with_user(1).search(domain, limit=limit, order="create_date", offset=offset)
+        )
+
+        res = []
+        for order in orders:
+            res.append(
+                {
+                    "id": order.id,
+                    "name": order.name,
+                    "delivery_address": order.partner_id._display_address(without_company=True),
+                    "customer": order.partner_id.name,
+                    "phone": order.partner_id.phone,
+                    "delivery_status": order.delivery_status,
+                    "create_date": str(order.create_date),
+                    "lat": order.partner_id.partner_latitude,
+                    "lng": order.partner_id.partner_longitude,
+                    "email": order.partner_id.phone,
+                    "mobile": order.partner_id.phone,
+                    "scheduled_date": order.scheduled_date,
+                    "create_date": str(order.create_date),
+                    "amount_total": order.sale_id.amount_total,
+                    "payment_term": order.payment_term_id.name,
+                    "items": [
+                        {
+                            "image_url": item.product_id.image_url,
+                            "product_id": item.product_id.id,
+                            "quantity": item.product_uom_qty,
+                            "price_subtotal": item.sale_line_id.price_subtotal,
+                            "quantity_done": item.quantity_done,
+                            "description": item.description_picking,
+                        }
+                        for item in order.move_ids_without_package
+                    ],
+                }
+            )
+        return res
+
+
+    @restapi.method([(["/in_transist"], "GET")], auth="user", tags=["Delivery"], input_param=Datamodel("delivery.datamodel.in"))
+    def in_transist(self, payload):
+        """."""
+        res = []
+
+        _id = request.env.user.partner_id.id
+        date = fields.Date.today() - timedelta(days=payload.days or 1)
+        domain = [
+            ("delivery_agent_id", "=", _id),
+            ("picking_type_id.sequence_code", "=", "OUT"),
+            ("delivery_status", "=", "in_transist"),
+            ('create_date', '>=', date),
+        ]
+        limit = payload.limit or 80
+        offset = payload.offset or 0
+        if limit:
+            limit = int(limit)
+        if offset:
+            offset = int(offset)
+        orders = (
+            request.env["stock.picking"].with_user(1).search(domain, limit=limit, order="create_date", offset=offset)
+        )
+
+        res = []
+        for order in orders:
+            res.append(
+                {
+                    "id": order.id,
+                    "name": order.name,
+                    "delivery_address": order.partner_id._display_address(without_company=True),
+                    "customer": order.partner_id.name,
+                    "phone": order.partner_id.phone,
+                    "delivery_status": order.delivery_status,
+                    "create_date": str(order.create_date),
+                    "lat": order.partner_id.partner_latitude,
+                    "lng": order.partner_id.partner_longitude,
+                    "email": order.partner_id.phone,
+                    "mobile": order.partner_id.phone,
+                    "scheduled_date": order.scheduled_date,
+                    "create_date": str(order.create_date),
+                    "amount_total": order.sale_id.amount_total,
+                    "payment_term": order.payment_term_id.name,
+                    "items": [
+                        {
+                            "image_url": item.product_id.image_url,
+                            "product_id": item.product_id.id,
+                            "quantity": item.product_uom_qty,
+                            "price_subtotal": item.sale_line_id.price_subtotal,
+                            "quantity_done": item.quantity_done,
+                            "description": item.description_picking,
+                        }
+                        for item in order.move_ids_without_package
+                    ],
+                }
+            )
+        return res
+
 
