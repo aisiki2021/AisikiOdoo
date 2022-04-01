@@ -8,7 +8,7 @@ from odoo.addons.base_rest import restapi
 from odoo.addons.component.core import Component
 
 from odoo.addons.base_rest_datamodel.restapi import Datamodel
-
+from odoo.exceptions import ValidationError
 
 import pyotp
 
@@ -47,15 +47,19 @@ class AisikiBaseRest(Component):
             _rotate_session(request)
             request.session.rotate = False
             expiration = datetime.datetime.utcnow() + datetime.timedelta(days=1)
-            return {
-                "session_id": request.session.sid,
-                "expires_at": fields.Datetime.to_string(expiration),
-                "uid": result.get("uid"),
-                "username": result.get("username"),
-                "name": result.get("name"),
-                "partner_id": result.get("partner_id"),
-                "registration_stage": user.registration_stage,
-            }
+            if user.origin == params.get('origin'):
+    
+                return {
+                    "session_id": request.session.sid,
+                    "expires_at": fields.Datetime.to_string(expiration),
+                    "uid": result.get("uid"),
+                    "username": result.get("username"),
+                    "name": result.get("name"),
+                    "partner_id": result.get("partner_id"),
+                    "registration_stage": user.registration_stage,
+                }
+            else:
+                raise ValidationError('Access Denied')
         except Exception as e:
             data = json.dumps({"error": str(e)})
             resp = request.make_response(data)

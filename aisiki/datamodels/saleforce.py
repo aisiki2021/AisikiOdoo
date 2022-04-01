@@ -44,6 +44,7 @@ class SingupIn(Datamodel):
     toc = fields.Boolean(required=True, allow_none=True)
     password = fields.String(required=True, allow_none=False)
     email = fields.Email(required=False, allow_none=True)
+    origin = fields.String(required=True, allow_none=False)
 
 
 class SingupOut(Datamodel):
