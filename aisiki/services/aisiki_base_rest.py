@@ -135,6 +135,7 @@ class AisikiBaseRest(Component):
             "name": payload.name,
             "login": payload.login,
             "phone": payload.phone,
+            "origin": payload.origin,
             "password": payload.password,
             "partner_longitude": payload.longitude,
             "partner_latitude": payload.latitude,

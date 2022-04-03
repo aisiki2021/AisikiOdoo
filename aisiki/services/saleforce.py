@@ -38,6 +38,7 @@ class OrderingApp(Component):
             "city": payload.city,
             "toc": payload.toc,
             "login": payload.phone,
+            "origin": payload.origin,
             "password": payload.password,
             "email": payload.email,
             "agentid": request.env["ir.sequence"].with_user(1).next_by_code("aisiki.agent.seq"),
