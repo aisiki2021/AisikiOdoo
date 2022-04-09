@@ -9,10 +9,14 @@
         * Search for Aisiki Settings. 
     """,
     "version": "1.0",
-    "depends": ["sms",],
+    "depends": [
+        "sms",
+    ],
     "category": "Tools",
     "author": "Babatope Ajepe",
-    "data": ["views/res_config_settings.xml",],
+    "data": [
+        "views/res_config_settings.xml",
+    ],
     "application": False,
     "installable": True,
     "active": True,

@@ -11,8 +11,18 @@ class StockReturnRequest(models.Model):
     _inherit = ["mail.thread", "mail.activity.mixin"]
     _order = "create_date desc"
 
-    name = fields.Char("Reference", default=lambda self: _("New"), copy=False, readonly=True, required=True,)
-    partner_id = fields.Many2one(comodel_name="res.partner", readonly=True, states={"draft": [("readonly", False)]},)
+    name = fields.Char(
+        "Reference",
+        default=lambda self: _("New"),
+        copy=False,
+        readonly=True,
+        required=True,
+    )
+    partner_id = fields.Many2one(
+        comodel_name="res.partner",
+        readonly=True,
+        states={"draft": [("readonly", False)]},
+    )
     return_type = fields.Selection(
         selection=[
             ("supplier", "Return to Supplier"),
@@ -46,7 +56,10 @@ class StockReturnRequest(models.Model):
         states={"draft": [("readonly", False)]},
     )
     return_order = fields.Selection(
-        selection=[("date desc, id desc", "Newer first"), ("date asc, id desc", "Older first"),],
+        selection=[
+            ("date desc, id desc", "Newer first"),
+            ("date asc, id desc", "Older first"),
+        ],
         default="date desc, id desc",
         required=True,
         string="Return Order",
@@ -54,12 +67,21 @@ class StockReturnRequest(models.Model):
         readonly=True,
         states={"draft": [("readonly", False)]},
     )
-    from_date = fields.Date(string="Search moves up to this date",)
+    from_date = fields.Date(
+        string="Search moves up to this date",
+    )
     picking_types = fields.Many2many(
-        comodel_name="stock.picking.type", string="Operation types", help="Restrict operation types to search for",
+        comodel_name="stock.picking.type",
+        string="Operation types",
+        help="Restrict operation types to search for",
     )
     state = fields.Selection(
-        selection=[("draft", "Open"), ("confirmed", "Confirmed"), ("done", "Done"), ("cancel", "Cancelled"),],
+        selection=[
+            ("draft", "Open"),
+            ("confirmed", "Confirmed"),
+            ("done", "Done"),
+            ("cancel", "Cancelled"),
+        ],
         default="draft",
         readonly=True,
         copy=False,
@@ -72,7 +94,11 @@ class StockReturnRequest(models.Model):
         readonly=True,
         copy=False,
     )
-    to_refund = fields.Boolean(string="To refund", readonly=True, states={"draft": [("readonly", False)]},)
+    to_refund = fields.Boolean(
+        string="To refund",
+        readonly=True,
+        states={"draft": [("readonly", False)]},
+    )
     show_to_refund = fields.Boolean(
         compute="_compute_show_to_refund",
         default=lambda self: "to_refund" in self.env["stock.move"]._fields,
@@ -88,7 +114,10 @@ class StockReturnRequest(models.Model):
         readonly=True,
         states={"draft": [("readonly", False)]},
     )
-    note = fields.Text(string="Comments", help="They will be visible on the report",)
+    note = fields.Text(
+        string="Comments",
+        help="They will be visible on the report",
+    )
 
     @api.onchange("return_type", "partner_id")
     def onchange_locations(self):
@@ -111,7 +140,12 @@ class StockReturnRequest(models.Model):
 
     @api.model
     def _default_warehouse_id(self):
-        warehouse = self.env["stock.warehouse"].search([("company_id", "=", self.env.user.company_id.id),], limit=1,)
+        warehouse = self.env["stock.warehouse"].search(
+            [
+                ("company_id", "=", self.env.user.company_id.id),
+            ],
+            limit=1,
+        )
         return warehouse
 
     def _compute_show_to_refund(self):
@@ -123,8 +157,12 @@ class StockReturnRequest(models.Model):
 
     def _prepare_return_picking(self, picking_dict, moves):
         """Extend to add more values if needed"""
-        picking_type = self.env["stock.picking.type"].browse(picking_dict.get("picking_type_id"))
-        return_picking_type = picking_type.return_picking_type_id or picking_type.return_picking_type_id
+        picking_type = self.env["stock.picking.type"].browse(
+            picking_dict.get("picking_type_id")
+        )
+        return_picking_type = (
+            picking_type.return_picking_type_id or picking_type.return_picking_type_id
+        )
         picking_dict.update(
             {
                 "move_lines": [(6, 0, moves.ids)],
@@ -143,9 +181,18 @@ class StockReturnRequest(models.Model):
         """Create return pickings with the proper moves"""
         return_pickings = self.env["stock.picking"]
         for picking in pickings:
-            picking_dict = picking.copy_data({"origin": picking.name, "printed": False,})[0]
-            moves = picking_moves.filtered(lambda x: x.origin_returned_move_id.picking_id == picking)
-            new_picking = return_pickings.create(self._prepare_return_picking(picking_dict, moves))
+            picking_dict = picking.copy_data(
+                {
+                    "origin": picking.name,
+                    "printed": False,
+                }
+            )[0]
+            moves = picking_moves.filtered(
+                lambda x: x.origin_returned_move_id.picking_id == picking
+            )
+            new_picking = return_pickings.create(
+                self._prepare_return_picking(picking_dict, moves)
+            )
             new_picking.message_post_with_view(
                 "mail.message_origin_link",
                 values={"self": new_picking, "origin": picking},
@@ -177,7 +224,9 @@ class StockReturnRequest(models.Model):
             "product_uom_id": line.product_uom_id.id,
             "lot_id": line.lot_id.id,
             "location_id": return_move.location_id.id,
-            "location_dest_id": return_move.location_dest_id._get_putaway_strategy(line.product_id).id
+            "location_dest_id": return_move.location_dest_id._get_putaway_strategy(
+                line.product_id
+            ).id
             or return_move.location_dest_id.id,
             "qty_done": qty,
         }
@@ -228,16 +277,36 @@ class StockReturnRequest(models.Model):
                     if return_move.location_id.usage == "internal":
                         try:
                             quants = Quant._update_reserved_quantity(
-                                line.product_id, return_move.location_id, qty, lot_id=line.lot_id, strict=False,
+                                line.product_id,
+                                return_move.location_id,
+                                qty,
+                                lot_id=line.lot_id,
+                                strict=False,
                             )
                             for q in quants:
-                                vals_list.append((0, 0, self._prepare_move_line_values(line, return_move, q[1], q[0]),))
+                                vals_list.append(
+                                    (
+                                        0,
+                                        0,
+                                        self._prepare_move_line_values(
+                                            line, return_move, q[1], q[0]
+                                        ),
+                                    )
+                                )
                         except UserError:
                             failed_moves.append((line, return_move))
                     else:
-                        vals_list.append((0, 0, self._prepare_move_line_values(line, return_move, qty),))
+                        vals_list.append(
+                            (
+                                0,
+                                0,
+                                self._prepare_move_line_values(line, return_move, qty),
+                            )
+                        )
                     return_move.write(
-                        {"move_line_ids": vals_list,}
+                        {
+                            "move_line_ids": vals_list,
+                        }
                     )
                     return_moves += return_move
                     line.returnable_move_ids += return_move
@@ -254,11 +323,20 @@ class StockReturnRequest(models.Model):
         if failed_moves:
             failed_moves_str = "\n".join(
                 [
-                    "{}: {} {:.2f}".format(x[0].product_id.display_name, x[0].lot_id.name or "\t", x[0].quantity,)
+                    "{}: {} {:.2f}".format(
+                        x[0].product_id.display_name,
+                        x[0].lot_id.name or "\t",
+                        x[0].quantity,
+                    )
                     for x in failed_moves
                 ]
             )
-            raise ValidationError(_("It wasn't possible to assign stock for this returns:\n" "%s" % failed_moves_str))
+            raise ValidationError(
+                _(
+                    "It wasn't possible to assign stock for this returns:\n"
+                    "%s" % failed_moves_str
+                )
+            )
         # Finish move traceability
         for move in return_moves:
             vals = {}
@@ -298,7 +376,9 @@ class StockReturnRequest(models.Model):
     @api.model
     def create(self, vals):
         if "name" not in vals or vals["name"] == _("New"):
-            vals["name"] = self.env["ir.sequence"].next_by_code("stock.return.request") or _("New")
+            vals["name"] = self.env["ir.sequence"].next_by_code(
+                "stock.return.request"
+            ) or _("New")
         return super().create(vals)
 
     def action_view_pickings(self):
@@ -316,7 +396,9 @@ class StockReturnRequest(models.Model):
         return action
 
     def do_print_return_request(self):
-        return self.env.ref("stock_return_request" ".action_report_stock_return_request").report_action(self)
+        return self.env.ref(
+            "stock_return_request" ".action_report_stock_return_request"
+        ).report_action(self)
 
 
 class StockReturnRequestLine(models.Model):
@@ -324,18 +406,46 @@ class StockReturnRequestLine(models.Model):
     _description = "Product to search for returns"
 
     request_id = fields.Many2one(
-        comodel_name="stock.return.request", string="Return Request", ondelete="cascade", required=True, readonly=True,
+        comodel_name="stock.return.request",
+        string="Return Request",
+        ondelete="cascade",
+        required=True,
+        readonly=True,
     )
     product_id = fields.Many2one(
-        comodel_name="product.product", string="Product", required=True, domain=[("type", "=", "product")],
+        comodel_name="product.product",
+        string="Product",
+        required=True,
+        domain=[("type", "=", "product")],
     )
-    product_uom_id = fields.Many2one(comodel_name="uom.uom", related="product_id.uom_id", readonly=True,)
-    tracking = fields.Selection(related="product_id.tracking", readonly=True,)
-    lot_id = fields.Many2one(comodel_name="stock.production.lot", string="Lot / Serial",)
-    quantity = fields.Float(string="Quantiy to return", digits="Product Unit of Measure", required=True,)
-    max_quantity = fields.Float(string="Maximum available quantity", digits="Product Unit of Measure", readonly=True,)
+    product_uom_id = fields.Many2one(
+        comodel_name="uom.uom",
+        related="product_id.uom_id",
+        readonly=True,
+    )
+    tracking = fields.Selection(
+        related="product_id.tracking",
+        readonly=True,
+    )
+    lot_id = fields.Many2one(
+        comodel_name="stock.production.lot",
+        string="Lot / Serial",
+    )
+    quantity = fields.Float(
+        string="Quantiy to return",
+        digits="Product Unit of Measure",
+        required=True,
+    )
+    max_quantity = fields.Float(
+        string="Maximum available quantity",
+        digits="Product Unit of Measure",
+        readonly=True,
+    )
     returnable_move_ids = fields.Many2many(
-        comodel_name="stock.move", string="Returnable Move Lines", copy=False, readonly=True,
+        comodel_name="stock.move",
+        string="Returnable Move Lines",
+        copy=False,
+        readonly=True,
     )
 
     def _get_moves_domain(self):
@@ -352,16 +462,28 @@ class StockReturnRequestLine(models.Model):
         if self.request_id.from_date:
             domain += [("date", ">=", self.request_id.from_date)]
         if self.request_id.picking_types:
-            domain += [("picking_id.picking_type_id", "in", self.request_id.picking_types.ids)]
+            domain += [
+                ("picking_id.picking_type_id", "in", self.request_id.picking_types.ids)
+            ]
         return_type = self.request_id.return_type
         if return_type != "internal":
-            domain += [("picking_id.partner_id", "child_of", self.request_id.partner_id.commercial_partner_id.id,)]
+            domain += [
+                (
+                    "picking_id.partner_id",
+                    "child_of",
+                    self.request_id.partner_id.commercial_partner_id.id,
+                )
+            ]
         # Search for movements coming delivered to that location
         if return_type in ["internal", "customer"]:
-            domain += [("location_dest_id", "=", self.request_id.return_from_location.id)]
+            domain += [
+                ("location_dest_id", "=", self.request_id.return_from_location.id)
+            ]
         # Return to supplier. Search for moves that came from that location
         else:
-            domain += [("location_id", "child_of", self.request_id.return_to_location.id)]
+            domain += [
+                ("location_id", "child_of", self.request_id.return_to_location.id)
+            ]
         return domain
 
     def _get_returnable_move_ids(self):
@@ -377,12 +499,16 @@ class StockReturnRequestLine(models.Model):
         for line in self.filtered("quantity"):
             moves_for_return[line] = []
             precision = line.product_uom_id.rounding
-            moves = stock_move_obj.search(line._get_moves_domain(), order=line.request_id.return_order)
+            moves = stock_move_obj.search(
+                line._get_moves_domain(), order=line.request_id.return_order
+            )
             # Add moves up to desired quantity
             qty_to_complete = line.quantity
             for move in moves:
                 qty_returned = 0
-                return_moves = move.returned_move_ids.filtered(lambda x: x.state == "done")
+                return_moves = move.returned_move_ids.filtered(
+                    lambda x: x.state == "done"
+                )
                 # Don't count already returned
                 if return_moves:
                     qty_returned = -sum(
@@ -391,7 +517,9 @@ class StockReturnRequestLine(models.Model):
                         .mapped("qty_done")
                     )
                 quantity_done = sum(
-                    move.mapped("move_line_ids").filtered(lambda x: x.lot_id == line.lot_id).mapped("qty_done")
+                    move.mapped("move_line_ids")
+                    .filtered(lambda x: x.lot_id == line.lot_id)
+                    .mapped("qty_done")
                 )
                 qty_remaining = quantity_done - qty_returned
                 # We add the move to the list if there are units that haven't
@@ -409,7 +537,12 @@ class StockReturnRequestLine(models.Model):
                         "Not enough moves to return this product.\n"
                         "It wasn't possible to find enough moves to return %f %s"
                         "of %s. A maximum of %f can be returned."
-                        % (line.quantity, line.product_uom_id.name, line.product_id.display_name, qty_found,)
+                        % (
+                            line.quantity,
+                            line.product_uom_id.name,
+                            line.product_id.display_name,
+                            qty_found,
+                        )
                     )
                 )
         return moves_for_return
@@ -421,9 +554,21 @@ class StockReturnRequestLine(models.Model):
             [
                 ("product_id", "=", res.product_id.id),
                 ("request_id.state", "in", ["draft", "confirm"]),
-                ("request_id.return_from_location", "=", res.request_id.return_from_location.id,),
-                ("request_id.return_to_location", "=", res.request_id.return_to_location.id,),
-                ("request_id.partner_id", "child_of", res.request_id.partner_id.commercial_partner_id.id,),
+                (
+                    "request_id.return_from_location",
+                    "=",
+                    res.request_id.return_from_location.id,
+                ),
+                (
+                    "request_id.return_to_location",
+                    "=",
+                    res.request_id.return_to_location.id,
+                ),
+                (
+                    "request_id.partner_id",
+                    "child_of",
+                    res.request_id.partner_id.commercial_partner_id.id,
+                ),
                 ("lot_id", "=", res.lot_id.id),
             ]
         )

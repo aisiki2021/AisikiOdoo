@@ -15,34 +15,81 @@ class StockReturnRequestCase(SavepointCase):
         cls.product_obj3 = cls.env["product.product"]
         cls.company = cls.env.ref("base.main_company")
         cls.prod_1 = cls.product_obj.create(
-            {"name": "Test Product 1", "type": "product", "company_id": cls.company.id,}
+            {
+                "name": "Test Product 1",
+                "type": "product",
+                "company_id": cls.company.id,
+            }
         )
         cls.prod_2 = cls.product_obj2.create(
-            {"name": "Test Product 2", "type": "product", "company_id": cls.company.id,}
+            {
+                "name": "Test Product 2",
+                "type": "product",
+                "company_id": cls.company.id,
+            }
         )
         cls.prod_3 = cls.product_obj3.create(
-            {"name": "Test Product 3", "type": "product", "tracking": "lot", "company_id": cls.company.id,}
+            {
+                "name": "Test Product 3",
+                "type": "product",
+                "tracking": "lot",
+                "company_id": cls.company.id,
+            }
         )
         cls.prod_3_lot1 = cls.env["stock.production.lot"].create(
-            {"name": "TSTPROD3LOT0001", "product_id": cls.prod_3.id, "company_id": cls.company.id,}
+            {
+                "name": "TSTPROD3LOT0001",
+                "product_id": cls.prod_3.id,
+                "company_id": cls.company.id,
+            }
         )
-        cls.prod_3_lot2 = cls.prod_3_lot1.copy({"name": "TSTPROD3LOT0002",})
-        cls.prod_3_lot3 = cls.prod_3_lot1.copy({"name": "TSTPROD3LOT0003",})
-        cls.wh1 = cls.env["stock.warehouse"].create({"name": "TEST WH1", "code": "TST1", "company_id": cls.company.id,})
+        cls.prod_3_lot2 = cls.prod_3_lot1.copy(
+            {
+                "name": "TSTPROD3LOT0002",
+            }
+        )
+        cls.prod_3_lot3 = cls.prod_3_lot1.copy(
+            {
+                "name": "TSTPROD3LOT0003",
+            }
+        )
+        cls.wh1 = cls.env["stock.warehouse"].create(
+            {
+                "name": "TEST WH1",
+                "code": "TST1",
+                "company_id": cls.company.id,
+            }
+        )
         # Locations (WH1 locations are created automatically)
         location_obj = cls.env["stock.location"]
         cls.supplier_loc = location_obj.create(
-            {"name": "Test supplier location", "usage": "supplier", "company_id": cls.company.id,}
+            {
+                "name": "Test supplier location",
+                "usage": "supplier",
+                "company_id": cls.company.id,
+            }
         )
         cls.customer_loc = location_obj.create(
-            {"name": "Test customer location", "usage": "customer", "company_id": cls.company.id,}
+            {
+                "name": "Test customer location",
+                "usage": "customer",
+                "company_id": cls.company.id,
+            }
         )
         # Create child locations
         cls.location_child_1 = location_obj.create(
-            {"location_id": cls.wh1.lot_stock_id.id, "name": "Location child 1", "company_id": cls.company.id,}
+            {
+                "location_id": cls.wh1.lot_stock_id.id,
+                "name": "Location child 1",
+                "company_id": cls.company.id,
+            }
         )
         cls.location_child_2 = location_obj.create(
-            {"location_id": cls.wh1.lot_stock_id.id, "name": "Location child 2", "company_id": cls.company.id,}
+            {
+                "location_id": cls.wh1.lot_stock_id.id,
+                "name": "Location child 2",
+                "company_id": cls.company.id,
+            }
         )
         # Create partners
         cls.partner_customer = cls.env["res.partner"].create(
@@ -129,7 +176,9 @@ class StockReturnRequestCase(SavepointCase):
                 ],
             }
         )
-        move3 = cls.picking_supplier_1.move_lines.filtered(lambda x: x.product_id == cls.prod_3)
+        move3 = cls.picking_supplier_1.move_lines.filtered(
+            lambda x: x.product_id == cls.prod_3
+        )
         move3.write(
             {
                 "move_line_ids": [
@@ -204,7 +253,9 @@ class StockReturnRequestCase(SavepointCase):
                 ],
             }
         )
-        move3 = cls.picking_supplier_2.move_lines.filtered(lambda x: x.product_id == cls.prod_3)
+        move3 = cls.picking_supplier_2.move_lines.filtered(
+            lambda x: x.product_id == cls.prod_3
+        )
         move3.write(
             {
                 "move_line_ids": [
@@ -231,7 +282,9 @@ class StockReturnRequestCase(SavepointCase):
         # Test could run so fast that the move lines date would be in the same
         # second. We need to sort them by date, so we'll be faking the line
         # dates after the picking is done.
-        cls.picking_supplier_2.move_lines.write({"date": fields.Datetime.now() + relativedelta(seconds=1)})
+        cls.picking_supplier_2.move_lines.write(
+            {"date": fields.Datetime.now() + relativedelta(seconds=1)}
+        )
         # We'll have 100 units of each product
         # No we deliver some products
         cls.picking_customer_1 = cls.picking_obj.create(
@@ -304,7 +357,9 @@ class StockReturnRequestCase(SavepointCase):
         # Test could run so fast that the move lines date would be in the same
         # second. We need to sort them by date, so we'll be faking the line
         # dates after the picking is done.
-        cls.picking_customer_2.move_lines.write({"date": fields.Datetime.now() + relativedelta(seconds=1)})
+        cls.picking_customer_2.move_lines.write(
+            {"date": fields.Datetime.now() + relativedelta(seconds=1)}
+        )
         # Stock in wh1.lot_stock_id
         # prod_1: 80.0 / prod_2: 70.0 / prod_3: 100.0
         cls.return_request_obj = cls.env["stock.return.request"]

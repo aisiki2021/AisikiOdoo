@@ -28,12 +28,18 @@ class RestControllerType(ControllerType):
 
     # pylint: disable=E0213
     def __init__(cls, name, bases, attrs):  # noqa: B902
-        if "RestController" in globals() and RestController in bases and Controller not in bases:
+        if (
+            "RestController" in globals()
+            and RestController in bases
+            and Controller not in bases
+        ):
             # to be registered as a controller into the ControllerType,
             # our RestConrtroller must be a direct child of Controller
             bases += (Controller,)
         super(RestControllerType, cls).__init__(name, bases, attrs)
-        if "RestController" not in globals() or not any(issubclass(b, RestController) for b in bases):
+        if "RestController" not in globals() or not any(
+            issubclass(b, RestController) for b in bases
+        ):
             return
         # register the rest controller into the rest controllers registry
         root_path = getattr(cls, "_root_path", None)
@@ -41,10 +47,16 @@ class RestControllerType(ControllerType):
         if root_path and collection_name:
             cls._module = _get_addon_name(cls.__module__)
             _rest_controllers_per_module[cls._module].append(
-                {"root_path": root_path, "collection_name": collection_name, "controller_class": cls,}
+                {
+                    "root_path": root_path,
+                    "collection_name": collection_name,
+                    "controller_class": cls,
+                }
             )
             _logger.debug(
-                "Added rest controller %s for module %s", _rest_controllers_per_module[cls._module][-1], cls._module,
+                "Added rest controller %s for module %s",
+                _rest_controllers_per_module[cls._module][-1],
+                cls._module,
             )
 
 
@@ -159,7 +171,10 @@ class RestController(Controller, metaclass=RestControllerType):
         component_ctx = self._get_component_context(collection=collection)
         env = collection.env
         collection.env = env(
-            context=dict(env.context, authenticated_partner_id=component_ctx.get("authenticated_partner_id"),)
+            context=dict(
+                env.context,
+                authenticated_partner_id=component_ctx.get("authenticated_partner_id"),
+            )
         )
         yield WorkContext(model_name="rest.service.registration", **component_ctx)
 
@@ -178,12 +193,16 @@ class RestController(Controller, metaclass=RestControllerType):
     def _validate_method_name(self, method_name):
         if method_name.startswith("_"):
             _logger.error(
-                "REST API called with an unallowed method " "name: %s.\n Method can't start with '_'", method_name,
+                "REST API called with an unallowed method "
+                "name: %s.\n Method can't start with '_'",
+                method_name,
             )
             raise BadRequest()
         return True
 
-    def _process_method(self, service_name, method_name, *args, collection=None, params=None):
+    def _process_method(
+        self, service_name, method_name, *args, collection=None, params=None
+    ):
         self._validate_method_name(method_name)
         if isinstance(collection, models.Model) and not collection:
             raise request.not_found()
