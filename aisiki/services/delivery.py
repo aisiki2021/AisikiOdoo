@@ -802,7 +802,7 @@ class Delivery(Component):
             ],
             monthly=[
                 {
-                    "number_of_orders": 1,
+                    "number_of_orders": number_of_orders_monthly,
                     "number_of_completed_orders": number_of_completed_orders_monthly,
                     "number_of_incomplete_orders": number_of_incomplete_orders_monthly,
                     "amount_of_money_to_collect": amount_of_money_to_collect_monthly,
