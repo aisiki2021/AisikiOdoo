@@ -157,8 +157,12 @@ class StockReturnRequest(models.Model):
 
     def _prepare_return_picking(self, picking_dict, moves):
         """Extend to add more values if needed"""
-        picking_type = self.env["stock.picking.type"].browse(picking_dict.get("picking_type_id"))
-        return_picking_type = picking_type.return_picking_type_id or picking_type.return_picking_type_id
+        picking_type = self.env["stock.picking.type"].browse(
+            picking_dict.get("picking_type_id")
+        )
+        return_picking_type = (
+            picking_type.return_picking_type_id or picking_type.return_picking_type_id
+        )
         picking_dict.update(
             {
                 "move_lines": [(6, 0, moves.ids)],
@@ -183,8 +187,12 @@ class StockReturnRequest(models.Model):
                     "printed": False,
                 }
             )[0]
-            moves = picking_moves.filtered(lambda x: x.origin_returned_move_id.picking_id == picking)
-            new_picking = return_pickings.create(self._prepare_return_picking(picking_dict, moves))
+            moves = picking_moves.filtered(
+                lambda x: x.origin_returned_move_id.picking_id == picking
+            )
+            new_picking = return_pickings.create(
+                self._prepare_return_picking(picking_dict, moves)
+            )
             new_picking.message_post_with_view(
                 "mail.message_origin_link",
                 values={"self": new_picking, "origin": picking},
@@ -216,7 +224,9 @@ class StockReturnRequest(models.Model):
             "product_uom_id": line.product_uom_id.id,
             "lot_id": line.lot_id.id,
             "location_id": return_move.location_id.id,
-            "location_dest_id": return_move.location_dest_id._get_putaway_strategy(line.product_id).id
+            "location_dest_id": return_move.location_dest_id._get_putaway_strategy(
+                line.product_id
+            ).id
             or return_move.location_dest_id.id,
             "qty_done": qty,
         }
@@ -278,7 +288,9 @@ class StockReturnRequest(models.Model):
                                     (
                                         0,
                                         0,
-                                        self._prepare_move_line_values(line, return_move, q[1], q[0]),
+                                        self._prepare_move_line_values(
+                                            line, return_move, q[1], q[0]
+                                        ),
                                     )
                                 )
                         except UserError:
@@ -319,7 +331,12 @@ class StockReturnRequest(models.Model):
                     for x in failed_moves
                 ]
             )
-            raise ValidationError(_("It wasn't possible to assign stock for this returns:\n" "%s" % failed_moves_str))
+            raise ValidationError(
+                _(
+                    "It wasn't possible to assign stock for this returns:\n"
+                    "%s" % failed_moves_str
+                )
+            )
         # Finish move traceability
         for move in return_moves:
             vals = {}
@@ -359,7 +376,9 @@ class StockReturnRequest(models.Model):
     @api.model
     def create(self, vals):
         if "name" not in vals or vals["name"] == _("New"):
-            vals["name"] = self.env["ir.sequence"].next_by_code("stock.return.request") or _("New")
+            vals["name"] = self.env["ir.sequence"].next_by_code(
+                "stock.return.request"
+            ) or _("New")
         return super().create(vals)
 
     def action_view_pickings(self):
@@ -377,7 +396,9 @@ class StockReturnRequest(models.Model):
         return action
 
     def do_print_return_request(self):
-        return self.env.ref("stock_return_request" ".action_report_stock_return_request").report_action(self)
+        return self.env.ref(
+            "stock_return_request" ".action_report_stock_return_request"
+        ).report_action(self)
 
 
 class StockReturnRequestLine(models.Model):
@@ -441,7 +462,9 @@ class StockReturnRequestLine(models.Model):
         if self.request_id.from_date:
             domain += [("date", ">=", self.request_id.from_date)]
         if self.request_id.picking_types:
-            domain += [("picking_id.picking_type_id", "in", self.request_id.picking_types.ids)]
+            domain += [
+                ("picking_id.picking_type_id", "in", self.request_id.picking_types.ids)
+            ]
         return_type = self.request_id.return_type
         if return_type != "internal":
             domain += [
@@ -453,10 +476,14 @@ class StockReturnRequestLine(models.Model):
             ]
         # Search for movements coming delivered to that location
         if return_type in ["internal", "customer"]:
-            domain += [("location_dest_id", "=", self.request_id.return_from_location.id)]
+            domain += [
+                ("location_dest_id", "=", self.request_id.return_from_location.id)
+            ]
         # Return to supplier. Search for moves that came from that location
         else:
-            domain += [("location_id", "child_of", self.request_id.return_to_location.id)]
+            domain += [
+                ("location_id", "child_of", self.request_id.return_to_location.id)
+            ]
         return domain
 
     def _get_returnable_move_ids(self):
@@ -472,12 +499,16 @@ class StockReturnRequestLine(models.Model):
         for line in self.filtered("quantity"):
             moves_for_return[line] = []
             precision = line.product_uom_id.rounding
-            moves = stock_move_obj.search(line._get_moves_domain(), order=line.request_id.return_order)
+            moves = stock_move_obj.search(
+                line._get_moves_domain(), order=line.request_id.return_order
+            )
             # Add moves up to desired quantity
             qty_to_complete = line.quantity
             for move in moves:
                 qty_returned = 0
-                return_moves = move.returned_move_ids.filtered(lambda x: x.state == "done")
+                return_moves = move.returned_move_ids.filtered(
+                    lambda x: x.state == "done"
+                )
                 # Don't count already returned
                 if return_moves:
                     qty_returned = -sum(
@@ -486,7 +517,9 @@ class StockReturnRequestLine(models.Model):
                         .mapped("qty_done")
                     )
                 quantity_done = sum(
-                    move.mapped("move_line_ids").filtered(lambda x: x.lot_id == line.lot_id).mapped("qty_done")
+                    move.mapped("move_line_ids")
+                    .filtered(lambda x: x.lot_id == line.lot_id)
+                    .mapped("qty_done")
                 )
                 qty_remaining = quantity_done - qty_returned
                 # We add the move to the list if there are units that haven't

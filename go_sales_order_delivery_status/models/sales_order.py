@@ -26,8 +26,12 @@ class SalesOrder(models.Model):
     def _compute_delivery_status(self):
         for rec in self:
             pickings = self.env["stock.picking"].search([("sale_id", "=", rec.id)])
-            orderlines = rec.mapped("order_line").filtered(lambda x: x.product_id.type != "service")
-            service_orderlines = rec.mapped("order_line").filtered(lambda x: x.product_id.type == "service")
+            orderlines = rec.mapped("order_line").filtered(
+                lambda x: x.product_id.type != "service"
+            )
+            service_orderlines = rec.mapped("order_line").filtered(
+                lambda x: x.product_id.type == "service"
+            )
             if not pickings and not service_orderlines:
                 rec.delivery_status = "nothing"
             elif all(o.qty_delivered == 0 for o in orderlines):

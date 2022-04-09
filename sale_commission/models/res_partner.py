@@ -32,7 +32,9 @@ class ResPartner(models.Model):
         help="This is the default commission used in the sales where this "
         "agent is assigned. It can be changed on each operation if "
         "needed.",
-        default=lambda r: r.env.ref("sale_commission.commission_001", raise_if_not_found=False).id
+        default=lambda r: r.env.ref(
+            "sale_commission.commission_001", raise_if_not_found=False
+        ).id
         if r.env.ref("sale_commission.commission_001", raise_if_not_found=False)
         else False,
     )

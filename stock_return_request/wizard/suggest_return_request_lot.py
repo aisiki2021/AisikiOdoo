@@ -42,7 +42,9 @@ class SuggestReturnRequestLot(models.TransientModel):
         """Returns dict with returnable lots and qty"""
         if self.env.context.get("active_model", False) != "stock.return.request.line":
             return (False, False)
-        request_line = self.request_line_id or self.request_line_id.browse(self.env.context.get("active_id"))
+        request_line = self.request_line_id or self.request_line_id.browse(
+            self.env.context.get("active_id")
+        )
         if not request_line:
             return (False, False)
         moves = self.env["stock.move"].search(
@@ -71,7 +73,10 @@ class SuggestReturnRequestLot(models.TransientModel):
                 )
                 for ml in suggested_lots_moves.keys()
             ]
-        return [(x.id, "{} - {}".format(x.name, suggested_lots[x])) for x in suggested_lots.keys()]
+        return [
+            (x.id, "{} - {}".format(x.name, suggested_lots[x]))
+            for x in suggested_lots.keys()
+        ]
 
     def _get_suggested_lots_detail_selection(self):
         """Return selection tuple with lots selections and qtys"""
@@ -81,7 +86,9 @@ class SuggestReturnRequestLot(models.TransientModel):
         return [
             (
                 ml.lot_id.id,
-                "{} - {} - {} - {}".format(ml.date, ml.lot_id.name, ml.reference, suggested_lots_moves[ml]),
+                "{} - {} - {} - {}".format(
+                    ml.date, ml.lot_id.name, ml.reference, suggested_lots_moves[ml]
+                ),
             )
             for ml in suggested_lots_moves.keys()
         ]

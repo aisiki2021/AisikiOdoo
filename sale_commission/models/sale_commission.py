@@ -55,4 +55,6 @@ class SaleCommissionSection(models.Model):
     def _check_amounts(self):
         for section in self:
             if section.amount_to < section.amount_from:
-                raise exceptions.ValidationError(_("The lower limit cannot be greater than upper one."))
+                raise exceptions.ValidationError(
+                    _("The lower limit cannot be greater than upper one.")
+                )

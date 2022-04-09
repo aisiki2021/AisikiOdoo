@@ -41,7 +41,9 @@ class OrderingApp(Component):
             "origin": payload.origin,
             "password": payload.password,
             "email": payload.email,
-            "agentid": request.env["ir.sequence"].with_user(1).next_by_code("aisiki.agent.seq"),
+            "agentid": request.env["ir.sequence"]
+            .with_user(1)
+            .next_by_code("aisiki.agent.seq"),
         }
 
         try:
@@ -60,7 +62,9 @@ class OrderingApp(Component):
 
         except Exception as e:
 
-            return self.env.datamodels["datamodel.error.out"](message=str(e), error=True)
+            return self.env.datamodels["datamodel.error.out"](
+                message=str(e), error=True
+            )
 
     @restapi.method([(["/all_agents"], "GET")], auth="user", tags=["BusinessSaleForce"])
     def get_agents(self):
@@ -73,10 +77,16 @@ class OrderingApp(Component):
             "phone",
             "email",
         ]
-        agents = request.env["res.partner"].with_user(1).search_read(domain, fields=fields, limit=80)
+        agents = (
+            request.env["res.partner"]
+            .with_user(1)
+            .search_read(domain, fields=fields, limit=80)
+        )
         return agents
 
-    @restapi.method([(["/agents/<int:id>"], "GET")], auth="user", tags=["BusinessSaleForce"])
+    @restapi.method(
+        [(["/agents/<int:id>"], "GET")], auth="user", tags=["BusinessSaleForce"]
+    )
     def agent_by_id(self, id=None):
         domain = [("agent", "=", True), ("id", "=", id)]
         fields = [
@@ -88,10 +98,16 @@ class OrderingApp(Component):
             "email",
         ]
 
-        agents = request.env["res.partner"].with_user(1).search_read(domain, fields=fields, limit=80)
+        agents = (
+            request.env["res.partner"]
+            .with_user(1)
+            .search_read(domain, fields=fields, limit=80)
+        )
         return agents
 
-    @restapi.method([(["/agent/<int:id>/vendors"], "GET")], auth="user", tags=["BusinessSaleForce"])
+    @restapi.method(
+        [(["/agent/<int:id>/vendors"], "GET")], auth="user", tags=["BusinessSaleForce"]
+    )
     def agents_vendor(self, id=None):
         fields = [
             "name",
@@ -102,7 +118,11 @@ class OrderingApp(Component):
             "email",
         ]
         domain = [("parent_id", "=", id), ("parent_id.agent", "=", True)]
-        agents = request.env["res.partner"].with_user(1).search_read(domain, fields=fields, limit=80)
+        agents = (
+            request.env["res.partner"]
+            .with_user(1)
+            .search_read(domain, fields=fields, limit=80)
+        )
         return agents
 
     @restapi.method(
@@ -150,7 +170,9 @@ class OrderingApp(Component):
             )
 
         except Exception as e:
-            return self.env.datamodels["datamodel.error.out"](message=str(e), error=True)
+            return self.env.datamodels["datamodel.error.out"](
+                message=str(e), error=True
+            )
 
     @restapi.method([(["/getvendors"], "GET")], auth="user", tags=["BusinessSaleForce"])
     def getvendors(self):
@@ -164,16 +186,31 @@ class OrderingApp(Component):
             "email",
         ]
 
-        return request.env["res.partner"].with_user(1).search_read(domain, fields=fields, limit=80)
+        return (
+            request.env["res.partner"]
+            .with_user(1)
+            .search_read(domain, fields=fields, limit=80)
+        )
 
-    @restapi.method([(["/vendor/metric/<int:days>"], "GET")], auth="user", tags=["BusinessSaleForce"])
+    @restapi.method(
+        [(["/vendor/metric/<int:days>"], "GET")],
+        auth="user",
+        tags=["BusinessSaleForce"],
+    )
     def vendor_metric(self, days=1):
         """Metric in days default is 1"""
         date = fields.Date.today() - timedelta(days=days)
-        domain = [("parent_id", "=", request.env.user.partner_id.id), ("create_date", ">=", date)]
+        domain = [
+            ("parent_id", "=", request.env.user.partner_id.id),
+            ("create_date", ">=", date),
+        ]
         return {"count": request.env["res.partner"].with_user(1).search_count(domain)}
 
-    @restapi.method([(["/getvendor/<int:vendor_id>"], "GET")], auth="user", tags=["BusinessSaleForce"])
+    @restapi.method(
+        [(["/getvendor/<int:vendor_id>"], "GET")],
+        auth="user",
+        tags=["BusinessSaleForce"],
+    )
     def getvendor(self, vendor_id=None):
         domain = [("parent_id", "=", request.env.user.partner_id.id)]
         fields = [
@@ -186,7 +223,11 @@ class OrderingApp(Component):
         ]
         if vendor_id:
             domain.append(("id", "=", vendor_id))
-        agents = request.env["res.partner"].with_user(1).search_read(domain, fields=fields, limit=80)
+        agents = (
+            request.env["res.partner"]
+            .with_user(1)
+            .search_read(domain, fields=fields, limit=80)
+        )
         return agents
 
     @restapi.method(
@@ -210,7 +251,9 @@ class OrderingApp(Component):
             )
         )
         if not orders:
-            resp = request.make_response(json.dumps({"error": "There is no open order in cart or draft state"}))
+            resp = request.make_response(
+                json.dumps({"error": "There is no open order in cart or draft state"})
+            )
             resp.status_code = 400
             return resp
 
@@ -260,7 +303,11 @@ class OrderingApp(Component):
             limit = int(limit)
         if offset:
             offset = int(offset)
-        orders = request.env["sale.order"].with_user(1).search(domain, limit=limit, order="create_date", offset=offset)
+        orders = (
+            request.env["sale.order"]
+            .with_user(1)
+            .search(domain, limit=limit, order="create_date", offset=offset)
+        )
         total_order = request.env["sale.order"].with_user(1).search_count(domain)
         for order in orders:
             res.append(
@@ -305,7 +352,14 @@ class OrderingApp(Component):
         group_by = request.env.cr.fetchall()
         for group in group_by:
             partner_id = request.env["res.partner"].browse(group[0])
-            res.append({"id": partner_id.id, "name": partner_id.name, "total_sale": group[1], "count": group[2]})
+            res.append(
+                {
+                    "id": partner_id.id,
+                    "name": partner_id.name,
+                    "total_sale": group[1],
+                    "count": group[2],
+                }
+            )
         return res
 
     @restapi.method(
@@ -322,7 +376,9 @@ class OrderingApp(Component):
         domain = [
             ("partner_id", "in", ids),
         ]
-        orders = request.env["sale.order"].with_user(1).search(domain, order="create_date")
+        orders = (
+            request.env["sale.order"].with_user(1).search(domain, order="create_date")
+        )
         total_order = request.env["sale.order"].with_user(1).search_count(domain)
         for order in orders:
             res.append(
@@ -360,7 +416,11 @@ class OrderingApp(Component):
         """partner_id is the vendor or customer id"""
         data = []
         partner_id = request.env.user.partner_id
-        domain = [("partner_id.parent_id", "=", partner_id.id), ("id", "=", payload.cart_id), ("state", "=", "draft")]
+        domain = [
+            ("partner_id.parent_id", "=", partner_id.id),
+            ("id", "=", payload.cart_id),
+            ("state", "=", "draft"),
+        ]
         orders = request.env["sale.order"].with_user(1).search(domain, limit=1)
         if orders:
             for item in payload.items:
@@ -497,11 +557,17 @@ class OrderingApp(Component):
         try:
             if order:
                 order.action_cancel()
-                resp = request.make_response(json.dumps({"message": "sale.order %s has been cancelled" % (order_id,)}))
+                resp = request.make_response(
+                    json.dumps(
+                        {"message": "sale.order %s has been cancelled" % (order_id,)}
+                    )
+                )
                 resp.status_code = 200
                 return resp
             else:
-                resp = request.make_response(json.dumps({"error": "order %s not found" % (order_id,)}))
+                resp = request.make_response(
+                    json.dumps({"error": "order %s not found" % (order_id,)})
+                )
                 resp.status_code = 404
                 return resp
 
@@ -511,7 +577,9 @@ class OrderingApp(Component):
             resp.status_code = 400
             return resp
 
-    @restapi.method([(["/cart/<int:order_id>"], ["DELETE"])], auth="user", tags=["Cart"])
+    @restapi.method(
+        [(["/cart/<int:order_id>"], ["DELETE"])], auth="user", tags=["Cart"]
+    )
     def delete(self, order_id):
         items = []
         partner_id = request.env.user.partner_id.id
@@ -529,7 +597,9 @@ class OrderingApp(Component):
         )
 
         order.unlink()
-        resp = request.make_response(json.dumps({"message": "sale.order %s has been deleted" % (order_id,)}))
+        resp = request.make_response(
+            json.dumps({"message": "sale.order %s has been deleted" % (order_id,)})
+        )
         resp.status_code = 200
         return resp
 
@@ -567,7 +637,9 @@ class OrderingApp(Component):
         products = (
             request.env["product.product"]
             .with_user(1)
-            .search_read(domain, fields=fields, limit=limit, offset=offset, order="id desc")
+            .search_read(
+                domain, fields=fields, limit=limit, offset=offset, order="id desc"
+            )
         )
 
         res["data"] = products
@@ -595,7 +667,11 @@ class OrderingApp(Component):
         if partner_search_param.id:
             domain.append(("id", "=", partner_search_param.id))
         result = []
-        partner_ids = request.env["res.partner"].with_user(1).search(domain, limit=80, order="create_date desc")
+        partner_ids = (
+            request.env["res.partner"]
+            .with_user(1)
+            .search(domain, limit=80, order="create_date desc")
+        )
         for partner_id in partner_ids:
             res = {
                 "id": partner_id.id,
@@ -749,17 +825,32 @@ class OrderingApp(Component):
         vendor_today = (
             request.env["res.partner"]
             .with_user(1)
-            .search_count([("parent_id", "=", request.env.user.partner_id.id), ("create_date", ">=", today)])
+            .search_count(
+                [
+                    ("parent_id", "=", request.env.user.partner_id.id),
+                    ("create_date", ">=", today),
+                ]
+            )
         )
         vendor_week = (
             request.env["res.partner"]
             .with_user(1)
-            .search_count([("parent_id", "=", request.env.user.partner_id.id), ("create_date", ">=", this_week)])
+            .search_count(
+                [
+                    ("parent_id", "=", request.env.user.partner_id.id),
+                    ("create_date", ">=", this_week),
+                ]
+            )
         )
         vendor_month = (
             request.env["res.partner"]
             .with_user(1)
-            .search_count([("parent_id", "=", request.env.user.partner_id.id), ("create_date", ">=", this_month)])
+            .search_count(
+                [
+                    ("parent_id", "=", request.env.user.partner_id.id),
+                    ("create_date", ">=", this_month),
+                ]
+            )
         )
 
         sale_today = sum(
@@ -767,7 +858,12 @@ class OrderingApp(Component):
                 o.amount_total
                 for o in request.env["sale.order"]
                 .with_user(1)
-                .search([("partner_id.parent_id", "=", request.env.user.partner_id.id), ("create_date", ">=", today)])
+                .search(
+                    [
+                        ("partner_id.parent_id", "=", request.env.user.partner_id.id),
+                        ("create_date", ">=", today),
+                    ]
+                )
             ]
         )
         sale_week = sum(
@@ -776,7 +872,10 @@ class OrderingApp(Component):
                 for o in request.env["sale.order"]
                 .with_user(1)
                 .search(
-                    [("partner_id.parent_id", "=", request.env.user.partner_id.id), ("create_date", ">=", this_week)]
+                    [
+                        ("partner_id.parent_id", "=", request.env.user.partner_id.id),
+                        ("create_date", ">=", this_week),
+                    ]
                 )
             ]
         )
@@ -786,13 +885,31 @@ class OrderingApp(Component):
                 for o in request.env["sale.order"]
                 .with_user(1)
                 .search(
-                    [("partner_id.parent_id", "=", request.env.user.partner_id.id), ("create_date", ">=", this_month)]
+                    [
+                        ("partner_id.parent_id", "=", request.env.user.partner_id.id),
+                        ("create_date", ">=", this_month),
+                    ]
                 )
             ]
         )
 
         return self.env.datamodels["metrics.datamodel.out"](
-            today=[{"total_number_of_vendors": vendor_today, "total_amount_of_sales": sale_today}],
-            weekly=[{"total_number_of_vendors": vendor_week, "total_amount_of_sales": sale_week}],
-            monthly=[{"total_number_of_vendors": vendor_month, "total_amount_of_sales": sale_month}],
+            today=[
+                {
+                    "total_number_of_vendors": vendor_today,
+                    "total_amount_of_sales": sale_today,
+                }
+            ],
+            weekly=[
+                {
+                    "total_number_of_vendors": vendor_week,
+                    "total_amount_of_sales": sale_week,
+                }
+            ],
+            monthly=[
+                {
+                    "total_number_of_vendors": vendor_month,
+                    "total_amount_of_sales": sale_month,
+                }
+            ],
         )

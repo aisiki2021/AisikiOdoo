@@ -91,7 +91,10 @@ def wrapJsonException(exception, include_description=False, extra_info=None):
         httprequest = request.httprequest
         headers = dict(httprequest.headers)
         headers.pop("Api-Key", None)
-        message = "RESTFULL call to url %s with method %s and params %s " "raise the following error %s"
+        message = (
+            "RESTFULL call to url %s with method %s and params %s "
+            "raise the following error %s"
+        )
         args = (httprequest.url, httprequest.method, request.params, exception)
         extra = {
             "application": "REST Services",
@@ -122,7 +125,9 @@ class HttpRestRequest(HttpRequest):
         else:
             # We reparse the query_string in order to handle data structure
             # more information on https://github.com/aventurella/pyquerystring
-            self.params = pyquerystring.parse(self.httprequest.query_string.decode("utf-8"))
+            self.params = pyquerystring.parse(
+                self.httprequest.query_string.decode("utf-8")
+            )
         self._determine_context_lang()
 
     def _determine_context_lang(self):
@@ -183,7 +188,9 @@ class HttpRestRequest(HttpRequest):
             return wrapJsonException(Forbidden(ustr(e)), extra_info=extra_info)
         except (UserError, ValidationError) as e:
             extra_info = getattr(e, "rest_json_info", None)
-            return wrapJsonException(BadRequest(e.args[0]), include_description=True, extra_info=extra_info)
+            return wrapJsonException(
+                BadRequest(e.args[0]), include_description=True, extra_info=extra_info
+            )
         except HTTPException as e:
             extra_info = getattr(e, "rest_json_info", None)
             return wrapJsonException(e, extra_info=extra_info)

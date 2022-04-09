@@ -32,7 +32,9 @@ class StockMove(models.Model):
                     move.qty_returnable = move.reserved_availability
                 continue
             move.returned_move_ids._compute_qty_returnable()
-            move.qty_returnable = move.quantity_done - sum(move.returned_move_ids.mapped("qty_returnable"))
+            move.qty_returnable = move.quantity_done - sum(
+                move.returned_move_ids.mapped("qty_returnable")
+            )
 
     def _get_lot_returnable_qty(self, lot_id, qty=0):
         """Looks for chained returned moves to compute how much quantity

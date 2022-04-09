@@ -45,7 +45,9 @@ class Datamodel(restapi.RestMethodParam):
             json = [i.dump() for i in result]
         else:
             json = result.dump()
-        errors = ModelClass.validate(json, many=self._is_list, unknown=marshmallow.EXCLUDE)
+        errors = ModelClass.validate(
+            json, many=self._is_list, unknown=marshmallow.EXCLUDE
+        )
         if errors:
             raise SystemError(_("Invalid Response %s") % errors)
         return json
@@ -59,10 +61,22 @@ class Datamodel(restapi.RestMethodParam):
     # allows to add the definition of a schema only once into the specs
     # and use a reference to the schema into the parameters
     def to_openapi_requestbody(self, service):
-        return {"content": {"application/json": {"schema": self.to_json_schema(service, "input")}}}
+        return {
+            "content": {
+                "application/json": {"schema": self.to_json_schema(service, "input")}
+            }
+        }
 
     def to_openapi_responses(self, service):
-        return {"200": {"content": {"application/json": {"schema": self.to_json_schema(service, "output")}}}}
+        return {
+            "200": {
+                "content": {
+                    "application/json": {
+                        "schema": self.to_json_schema(service, "output")
+                    }
+                }
+            }
+        }
 
     def to_json_schema(self, service, direction):
         converter = self._get_converter()
