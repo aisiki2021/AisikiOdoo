@@ -9,7 +9,9 @@
     "license": "AGPL-3",
     "application": False,
     "installable": True,
-    "depends": ["stock",],
+    "depends": [
+        "stock",
+    ],
     "data": [
         "security/ir.model.access.csv",
         "data/stock_return_request_data.xml",

@@ -15,10 +15,16 @@ class SuggestReturnRequestLot(models.TransientModel):
         ondelete="cascade",
     )
     lot_suggestion_mode = fields.Selection(
-        selection=[("sum", "Total by lot"), ("detail", "Total by move"),], default="sum",
+        selection=[
+            ("sum", "Total by lot"),
+            ("detail", "Total by move"),
+        ],
+        default="sum",
     )
     suggested_lot = fields.Selection(
-        selection="_get_suggested_lots_selection", string="Suggested Lots", help="You can return these lots",
+        selection="_get_suggested_lots_selection",
+        string="Suggested Lots",
+        help="You can return these lots",
     )
     suggested_lot_detail = fields.Selection(
         selection="_get_suggested_lots_detail_selection",
@@ -36,7 +42,9 @@ class SuggestReturnRequestLot(models.TransientModel):
         """Returns dict with returnable lots and qty"""
         if self.env.context.get("active_model", False) != "stock.return.request.line":
             return (False, False)
-        request_line = self.request_line_id or self.request_line_id.browse(self.env.context.get("active_id"))
+        request_line = self.request_line_id or self.request_line_id.browse(
+            self.env.context.get("active_id")
+        )
         if not request_line:
             return (False, False)
         moves = self.env["stock.move"].search(
@@ -59,10 +67,16 @@ class SuggestReturnRequestLot(models.TransientModel):
             return
         if self.lot_suggestion_mode == "detail":
             return [
-                (ml.lot_id.id, "{} - {} - {}".format(ml.date, ml.name, suggested_lots_moves[ml]),)
+                (
+                    ml.lot_id.id,
+                    "{} - {} - {}".format(ml.date, ml.name, suggested_lots_moves[ml]),
+                )
                 for ml in suggested_lots_moves.keys()
             ]
-        return [(x.id, "{} - {}".format(x.name, suggested_lots[x])) for x in suggested_lots.keys()]
+        return [
+            (x.id, "{} - {}".format(x.name, suggested_lots[x]))
+            for x in suggested_lots.keys()
+        ]
 
     def _get_suggested_lots_detail_selection(self):
         """Return selection tuple with lots selections and qtys"""
@@ -70,7 +84,12 @@ class SuggestReturnRequestLot(models.TransientModel):
         if not suggested_lots_moves:
             return
         return [
-            (ml.lot_id.id, "{} - {} - {} - {}".format(ml.date, ml.lot_id.name, ml.reference, suggested_lots_moves[ml]),)
+            (
+                ml.lot_id.id,
+                "{} - {} - {} - {}".format(
+                    ml.date, ml.lot_id.name, ml.reference, suggested_lots_moves[ml]
+                ),
+            )
             for ml in suggested_lots_moves.keys()
         ]
 

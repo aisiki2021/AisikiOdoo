@@ -36,7 +36,10 @@ class OrderingApp(Component):
     """
 
     @restapi.method(
-        [(["/products"], "GET")], auth="user", input_param=Datamodel("product.datamodel.in"), tags=["Products"],
+        [(["/products"], "GET")],
+        auth="user",
+        input_param=Datamodel("product.datamodel.in"),
+        tags=["Products"],
     )
     def all_product(self, payload):
         res = {}
@@ -71,7 +74,9 @@ class OrderingApp(Component):
         products = (
             request.env["product.product"]
             .with_user(1)
-            .search_read(domain, fields=fields, limit=limit, offset=offset, order="id desc")
+            .search_read(
+                domain, fields=fields, limit=limit, offset=offset, order="id desc"
+            )
         )
 
         res["total"] = request.env["product.product"].with_user(1).search_count(domain)
@@ -101,7 +106,11 @@ class OrderingApp(Component):
             "virtual_available",
             "incoming_qty",
         ]
-        products = request.env["product.product"].with_user(1).search_read(domain, fields=fields)
+        products = (
+            request.env["product.product"]
+            .with_user(1)
+            .search_read(domain, fields=fields)
+        )
         res["data"] = products
         return res
 
@@ -110,22 +119,34 @@ class OrderingApp(Component):
         res = {}
         domain = []
         fields = ["name", "id"]
-        products = request.env["product.category"].with_user(1).search_read(domain, fields=fields)
+        products = (
+            request.env["product.category"]
+            .with_user(1)
+            .search_read(domain, fields=fields)
+        )
         res["data"] = products
         return res
 
     @restapi.method(
-        [(["/category/<int:categ_id>/products"], "GET")], auth="user", tags=["Products"],
+        [(["/category/<int:categ_id>/products"], "GET")],
+        auth="user",
+        tags=["Products"],
     )
     def category_products(self, categ_id=None):
         res = {}
         domain = [("categ_id", "=", categ_id)]
         fields = ["name", "id"]
-        products = request.env["product.product"].with_user(1).search_read(domain, fields=fields)
+        products = (
+            request.env["product.product"]
+            .with_user(1)
+            .search_read(domain, fields=fields)
+        )
         res["data"] = products
         return res
 
-    @restapi.method([(["/search/<string:query>"], "GET")], auth="user", tags=["Products"])
+    @restapi.method(
+        [(["/search/<string:query>"], "GET")], auth="user", tags=["Products"]
+    )
     def category_products(self, query=None):
         res = {}
         domain = ["|", ("name", "ilike", query), ("description_sale", "ilike", query)]
@@ -148,12 +169,18 @@ class OrderingApp(Component):
             "virtual_available",
             "incoming_qty",
         ]
-        products = request.env["product.product"].with_user(1).search_read(domain, fields=fields, limit=80)
+        products = (
+            request.env["product.product"]
+            .with_user(1)
+            .search_read(domain, fields=fields, limit=80)
+        )
         res["data"] = products
         res["count"] = len(products)
         return res
 
-    @restapi.method([(["/orders/metric/<int:days>"], "GET")], auth="user", tags=["Order"])
+    @restapi.method(
+        [(["/orders/metric/<int:days>"], "GET")], auth="user", tags=["Order"]
+    )
     def orders_metric(self, days=1):
         """Metric in days default is 1"""
         date = fields.Date.today() - timedelta(days=days)
@@ -162,7 +189,14 @@ class OrderingApp(Component):
             ("create_date", ">=", date),
             ("state", "=", "sale"),
         ]
-        return {"amount_total": sum([o.amount_total for o in request.env["sale.order"].with_user(1).search(domain)])}
+        return {
+            "amount_total": sum(
+                [
+                    o.amount_total
+                    for o in request.env["sale.order"].with_user(1).search(domain)
+                ]
+            )
+        }
 
     @restapi.method([(["/orders"], "GET")], auth="user", tags=["Order"])
     def orders(self):
@@ -196,23 +230,31 @@ class OrderingApp(Component):
         return res
 
     @restapi.method(
-        [(["/orders/<string:status>/status"], "GET")], auth="user", tags=["Order"],
+        [(["/orders/<string:status>/status"], "GET")],
+        auth="user",
+        tags=["Order"],
     )
     def orders_by_status(self, status):
-        """status: [nothing] | [to_deliver] | [partial] | [delivered] | [processing] """
+        """status: [nothing] | [to_deliver] | [partial] | [delivered] | [processing]"""
         res = {}
         domain = [
             ("partner_id", "=", request.env.user.partner_id.id),
             ("delivery_status", "=", status),
         ]
         fields = ["name", "date_order", "delivery_status"]
-        orders = request.env["sale.order"].with_user(1).search_read(domain, fields=fields, limit=80)
+        orders = (
+            request.env["sale.order"]
+            .with_user(1)
+            .search_read(domain, fields=fields, limit=80)
+        )
         res["data"] = orders
         res["count"] = len(orders)
         return res
 
     @restapi.method(
-        [(["/track/order/<int:id>"], "GET")], auth="user", tags=["Order"],
+        [(["/track/order/<int:id>"], "GET")],
+        auth="user",
+        tags=["Order"],
     )
     def orders_track(self, id):
         res = {}
@@ -222,7 +264,11 @@ class OrderingApp(Component):
             "delivery_status",
             "date_order",
         ]
-        orders = request.env["sale.order"].with_user(1).search_read(domain, fields=fields, limit=80)
+        orders = (
+            request.env["sale.order"]
+            .with_user(1)
+            .search_read(domain, fields=fields, limit=80)
+        )
         res["data"] = orders
         res["count"] = len(orders)
         return res
@@ -267,7 +313,10 @@ class OrderingApp(Component):
         return res
 
     @restapi.method(
-        [(["/balance"], "GET")], auth="user", tags=["Wallet"], output_param=Datamodel("wallet.balance.datamodel.out"),
+        [(["/balance"], "GET")],
+        auth="user",
+        tags=["Wallet"],
+        output_param=Datamodel("wallet.balance.datamodel.out"),
     )
     def getbalance(self):
         print(dir(request.env.user))
@@ -280,36 +329,55 @@ class OrderingApp(Component):
         payments = (
             request.env["account.payment"]
             .with_user(1)
-            .search_read([("partner_id", "=", partner_id)], fields=["payment_type", "amount", "date", "name"],)
+            .search_read(
+                [("partner_id", "=", partner_id)],
+                fields=["payment_type", "amount", "date", "name"],
+            )
         )
         return payments
 
-    @restapi.method([(["/paymentlink/<int:amount>"], ["GET"])], auth="user", tags=["Wallet"])
+    @restapi.method(
+        [(["/paymentlink/<int:amount>"], ["GET"])], auth="user", tags=["Wallet"]
+    )
     def wallet_paymentlink(self, amount):
         """Get checkout payment link."""
-        transaction = Transaction(authorization_key="sk_test_6613ae6de9e50d198ba22637e6df1fecf3611610")
+        transaction = Transaction(
+            authorization_key="sk_test_6613ae6de9e50d198ba22637e6df1fecf3611610"
+        )
         partner_id = request.env.user.partner_id
-        initialize = transaction.initialize(partner_id.email or request.user.login, amount * 100)
+        initialize = transaction.initialize(
+            partner_id.email or request.user.login, amount * 100
+        )
         return initialize[3]
 
     @restapi.method(
-        [(["/create"], "POST")], auth="user", tags=["Wallet"], input_param=Datamodel("wallet.addbalance.datamodel.in"),
+        [(["/create"], "POST")],
+        auth="user",
+        tags=["Wallet"],
+        input_param=Datamodel("wallet.addbalance.datamodel.in"),
     )
     def postbalance(self, payload):
         """Add wallet balance"""
-        transaction = Transaction(authorization_key="sk_test_6613ae6de9e50d198ba22637e6df1fecf3611610")
+        transaction = Transaction(
+            authorization_key="sk_test_6613ae6de9e50d198ba22637e6df1fecf3611610"
+        )
         response = transaction.verify(payload.payment_ref)
         try:
 
             if response[3]["status"] == "success":
-                wallet_id = request.env.ref("aisiki.aisiki_wallet_journal").with_user(request.env.user.id)
+                wallet_id = request.env.ref("aisiki.aisiki_wallet_journal").with_user(
+                    request.env.user.id
+                )
 
                 payment = request.env["account.payment"].with_user(1)
 
                 payment_type = (
                     request.env["account.payment.method"]
                     .with_user(1)
-                    .search([("code", "=", "manual"), ("payment_type", "=", "inbound")], limit=1,)
+                    .search(
+                        [("code", "=", "manual"), ("payment_type", "=", "inbound")],
+                        limit=1,
+                    )
                 )
 
                 payload = {
@@ -376,11 +444,17 @@ class OrderingApp(Component):
         try:
             if order:
                 order.action_cancel()
-                resp = request.make_response(json.dumps({"message": "sale.order %s has been cancelled" % (order_id,)}))
+                resp = request.make_response(
+                    json.dumps(
+                        {"message": "sale.order %s has been cancelled" % (order_id,)}
+                    )
+                )
                 resp.status_code = 200
                 return resp
             else:
-                resp = request.make_response(json.dumps({"error": "order %s not found" % (order_id,)}))
+                resp = request.make_response(
+                    json.dumps({"error": "order %s not found" % (order_id,)})
+                )
                 resp.status_code = 404
                 return resp
 
@@ -390,7 +464,9 @@ class OrderingApp(Component):
             resp.status_code = 400
             return resp
 
-    @restapi.method([(["/cart/<int:order_id>"], ["DELETE"])], auth="user", tags=["Cart"])
+    @restapi.method(
+        [(["/cart/<int:order_id>"], ["DELETE"])], auth="user", tags=["Cart"]
+    )
     def delete(self, order_id):
         items = []
         partner_id = request.env.user.partner_id.id
@@ -398,43 +474,67 @@ class OrderingApp(Component):
             request.env["sale.order"]
             .with_user(1)
             .search(
-                [("partner_id", "=", partner_id), ("state", "in", ["cancel", "draft"]), ("id", "=", order_id),],
+                [
+                    ("partner_id", "=", partner_id),
+                    ("state", "in", ["cancel", "draft"]),
+                    ("id", "=", order_id),
+                ],
                 limit=1,
             )
         )
 
         order.unlink()
-        resp = request.make_response(json.dumps({"message": "sale.order %s has been deleted" % (order_id,)}))
+        resp = request.make_response(
+            json.dumps({"message": "sale.order %s has been deleted" % (order_id,)})
+        )
         resp.status_code = 200
         return resp
 
     @restapi.method(
-        [(["/pay"], ["POST"])], input_param=Datamodel("list.order.datamodel.in"), auth="user", tags=["Cart"],
+        [(["/pay"], ["POST"])],
+        input_param=Datamodel("list.order.datamodel.in"),
+        auth="user",
+        tags=["Cart"],
     )
     def pay(self, payload):
         """Generate paystack payment link."""
-        transaction = Transaction(authorization_key="sk_test_6613ae6de9e50d198ba22637e6df1fecf3611610")
+        transaction = Transaction(
+            authorization_key="sk_test_6613ae6de9e50d198ba22637e6df1fecf3611610"
+        )
         partner_id = request.env.user.partner_id
         orders = (
             request.env["sale.order"]
             .with_user(1)
             .search(
-                [("partner_id", "=", partner_id.id), ("state", "=", "draft"), ("id", "in", payload.ids),],
+                [
+                    ("partner_id", "=", partner_id.id),
+                    ("state", "=", "draft"),
+                    ("id", "in", payload.ids),
+                ],
                 limit=len(payload.ids),
             )
         )
         if not orders:
-            resp = request.make_response(json.dumps({"error": "No other found for the given id(s) %s" % (payload.ids)}))
+            resp = request.make_response(
+                json.dumps(
+                    {"error": "No other found for the given id(s) %s" % (payload.ids)}
+                )
+            )
             resp.status_code = 401
             return resp
 
         total = sum([o.amount_total for o in orders]) * 100
 
-        initialize = transaction.initialize(partner_id.email or request.env.user.company_id.email, total)
+        initialize = transaction.initialize(
+            partner_id.email or request.env.user.company_id.email, total
+        )
         return initialize
 
     @restapi.method(
-        [(["/confirm"], ["POST"])], input_param=Datamodel("checkout.order.datamodel"), auth="user", tags=["Cart"],
+        [(["/confirm"], ["POST"])],
+        input_param=Datamodel("checkout.order.datamodel"),
+        auth="user",
+        tags=["Cart"],
     )
     def comfirm_payment(self, payload):
         partner_id = request.env.user.partner_id.id
@@ -442,15 +542,23 @@ class OrderingApp(Component):
             request.env["sale.order"]
             .with_user(1)
             .search(
-                [("partner_id", "=", partner_id), ("state", "=", "draft"), ("id", "in", payload.ids),],
+                [
+                    ("partner_id", "=", partner_id),
+                    ("state", "=", "draft"),
+                    ("id", "in", payload.ids),
+                ],
                 limit=len(payload.ids),
             )
         )
         if not orders:
-            resp = request.make_response(json.dumps({"error": "There is no open order in cart or draft state"}))
+            resp = request.make_response(
+                json.dumps({"error": "There is no open order in cart or draft state"})
+            )
             resp.status_code = 400
             return resp
-        transaction = Transaction(authorization_key="sk_test_6613ae6de9e50d198ba22637e6df1fecf3611610")
+        transaction = Transaction(
+            authorization_key="sk_test_6613ae6de9e50d198ba22637e6df1fecf3611610"
+        )
         response = transaction.verify(payload.payment_ref)
         state = "error"
         if response[3] != None and response[3]["status"] == "success":
@@ -476,7 +584,10 @@ class OrderingApp(Component):
         return response[3] if response[3] else error
 
     @restapi.method(
-        [(["/cart"], ["PUT"])], auth="user", input_param=Datamodel("update.cart.datamodel.in"), tags=["Cart"],
+        [(["/cart"], ["PUT"])],
+        auth="user",
+        input_param=Datamodel("update.cart.datamodel.in"),
+        tags=["Cart"],
     )
     def updatecart(self, payload):
         items = []
@@ -484,10 +595,19 @@ class OrderingApp(Component):
         order = (
             request.env["sale.order"]
             .with_user(1)
-            .search([("partner_id", "=", partner_id), ("state", "=", "draft"), ("id", "=", payload.cart_id),], limit=1,)
+            .search(
+                [
+                    ("partner_id", "=", partner_id),
+                    ("state", "=", "draft"),
+                    ("id", "=", payload.cart_id),
+                ],
+                limit=1,
+            )
         )
         if not order:
-            resp = request.make_response(json.dumps({"error": "There is no open order in cart or draft state"}))
+            resp = request.make_response(
+                json.dumps({"error": "There is no open order in cart or draft state"})
+            )
             resp.status_code = 400
         else:
             order.order_line.unlink()
@@ -533,7 +653,10 @@ class OrderingApp(Component):
         }
 
     @restapi.method(
-        [(["/cart"], ["POST"])], auth="user", input_param=Datamodel("cart.datamodel.in"), tags=["Cart"],
+        [(["/cart"], ["POST"])],
+        auth="user",
+        input_param=Datamodel("cart.datamodel.in"),
+        tags=["Cart"],
     )
     def createcart(self, payload):
         items = []

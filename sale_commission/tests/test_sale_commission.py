@@ -34,7 +34,9 @@ class TestSaleCommission(SavepointCase):
                 "name": "Section commission - Payment Based",
                 "commission_type": "section",
                 "invoice_state": "paid",
-                "section_ids": [(0, 0, {"amount_from": 1.0, "amount_to": 100.0, "percent": 10.0})],
+                "section_ids": [
+                    (0, 0, {"amount_from": 1.0, "amount_to": 100.0, "percent": 10.0})
+                ],
                 "amount_base_type": "net_amount",
             }
         )
@@ -42,7 +44,17 @@ class TestSaleCommission(SavepointCase):
             {
                 "name": "Section commission - Invoice Based",
                 "commission_type": "section",
-                "section_ids": [(0, 0, {"amount_from": 15000.0, "amount_to": 16000.0, "percent": 20.0,},)],
+                "section_ids": [
+                    (
+                        0,
+                        0,
+                        {
+                            "amount_from": 15000.0,
+                            "amount_to": 16000.0,
+                            "percent": 20.0,
+                        },
+                    )
+                ],
             }
         )
         cls.company = cls.env.ref("base.main_company")
@@ -60,7 +72,9 @@ class TestSaleCommission(SavepointCase):
             {"name": "Commission test product", "type": "service"}
         )
         cls.product.write({"invoice_policy": "order"})
-        cls.journal = cls.env["account.journal"].search([("type", "=", "purchase")], limit=1)
+        cls.journal = cls.env["account.journal"].search(
+            [("type", "=", "purchase")], limit=1
+        )
         cls.agent_monthly = cls.res_partner_model.create(
             {
                 "name": "Test Agent - Monthly",
@@ -80,13 +94,27 @@ class TestSaleCommission(SavepointCase):
             }
         )
         cls.agent_semi = cls.res_partner_model.create(
-            {"name": "Test Agent - Semi-annual", "agent": True, "settlement": "semi", "lang": "en_US",}
+            {
+                "name": "Test Agent - Semi-annual",
+                "agent": True,
+                "settlement": "semi",
+                "lang": "en_US",
+            }
         )
         cls.agent_annual = cls.res_partner_model.create(
-            {"name": "Test Agent - Annual", "agent": True, "settlement": "annual", "lang": "en_US",}
+            {
+                "name": "Test Agent - Annual",
+                "agent": True,
+                "settlement": "annual",
+                "lang": "en_US",
+            }
         )
         cls.income_account = cls.env["account.account"].search(
-            [("company_id", "=", cls.company.id), ("user_type_id.name", "=", "Income"),], limit=1,
+            [
+                ("company_id", "=", cls.company.id),
+                ("user_type_id.name", "=", "Income"),
+            ],
+            limit=1,
         )
 
     def _create_sale_order(self, agent, commission):
@@ -103,7 +131,16 @@ class TestSaleCommission(SavepointCase):
                             "product_uom_qty": 1.0,
                             "product_uom": self.ref("uom.product_uom_unit"),
                             "price_unit": self.product.lst_price,
-                            "agent_ids": [(0, 0, {"agent_id": agent.id, "commission_id": commission.id,},)],
+                            "agent_ids": [
+                                (
+                                    0,
+                                    0,
+                                    {
+                                        "agent_id": agent.id,
+                                        "commission_id": commission.id,
+                                    },
+                                )
+                            ],
                         },
                     )
                 ],
@@ -113,13 +150,18 @@ class TestSaleCommission(SavepointCase):
     def _invoice_sale_order(self, sale_order):
         wizard = self.advance_inv_model.create({"advance_payment_method": "delivered"})
         wizard.with_context(
-            {"active_model": "sale.order", "active_ids": [sale_order.id], "active_id": sale_order.id,}
+            {
+                "active_model": "sale.order",
+                "active_ids": [sale_order.id],
+                "active_id": sale_order.id,
+            }
         ).create_invoices()
 
     def _settle_agent(self, agent, period):
         vals = {
             "date_to": (
-                fields.Datetime.from_string(fields.Datetime.now()) + dateutil.relativedelta.relativedelta(months=period)
+                fields.Datetime.from_string(fields.Datetime.now())
+                + dateutil.relativedelta.relativedelta(months=period)
             ),
         }
         if agent:
@@ -138,15 +180,20 @@ class TestSaleCommission(SavepointCase):
         return sale_order
 
     def _check_full(self, agent, commission, period, initial_count):
-        sale_order = self._create_order_and_invoice_and_settle(agent, commission, period)
+        sale_order = self._create_order_and_invoice_and_settle(
+            agent, commission, period
+        )
         settlements = self.settle_model.search([("state", "=", "settled")])
         self.assertEqual(len(settlements), initial_count)
         journal = self.env["account.journal"].search(
-            [("type", "=", "cash"), ("company_id", "=", sale_order.company_id.id)], limit=1,
+            [("type", "=", "cash"), ("company_id", "=", sale_order.company_id.id)],
+            limit=1,
         )
         register_payments = (
             self.env["account.payment.register"]
-            .with_context(active_ids=sale_order.invoice_ids.id, active_model="account.move")
+            .with_context(
+                active_ids=sale_order.invoice_ids.id, active_model="account.move"
+            )
             .create({"journal_id": journal.id})
         )
         register_payments.action_create_payments()
@@ -169,10 +216,15 @@ class TestSaleCommission(SavepointCase):
 
     def test_sale_commission_gross_amount_payment(self):
         settlements = self._check_full(
-            self.env.ref("sale_commission.res_partner_pritesh_sale_agent"), self.commission_section_paid, 1, 0,
+            self.env.ref("sale_commission.res_partner_pritesh_sale_agent"),
+            self.commission_section_paid,
+            1,
+            0,
         )
         # Check report print - It shouldn't fail
-        self.env.ref("sale_commission.action_report_settlement")._render_qweb_html(settlements[0].ids)
+        self.env.ref("sale_commission.action_report_settlement")._render_qweb_html(
+            settlements[0].ids
+        )
 
     def test_sale_commission_gross_amount_payment_annual(self):
         self._check_full(self.agent_annual, self.commission_section_paid, 12, 0)
@@ -183,13 +235,17 @@ class TestSaleCommission(SavepointCase):
 
     def test_sale_commission_gross_amount_invoice(self):
         self._create_order_and_invoice_and_settle(
-            self.agent_quaterly, self.env.ref("sale_commission.demo_commission"), 1,
+            self.agent_quaterly,
+            self.env.ref("sale_commission.demo_commission"),
+            1,
         )
         settlements = self.settle_model.search([("state", "=", "invoiced")])
         settlements.make_invoices(self.journal, self.commission_product)
         for settlement in settlements:
             self.assertNotEqual(
-                len(settlement.invoice_id), 0, "Settlements need to be in Invoiced State.",
+                len(settlement.invoice_id),
+                0,
+                "Settlements need to be in Invoiced State.",
             )
 
     def test_wrong_section(self):
@@ -198,7 +254,9 @@ class TestSaleCommission(SavepointCase):
                 {
                     "name": "Section commission - Invoice Based",
                     "commission_type": "section",
-                    "section_ids": [(0, 0, {"amount_from": 5, "amount_to": 1, "percent": 20.0})],
+                    "section_ids": [
+                        (0, 0, {"amount_from": 5, "amount_to": 1, "percent": 20.0})
+                    ],
                 }
             )
 
@@ -206,7 +264,8 @@ class TestSaleCommission(SavepointCase):
         # Make sure user is in English
         self.env.user.lang = "en_US"
         sale_order = self._create_sale_order(
-            self.env.ref("sale_commission.res_partner_pritesh_sale_agent"), self.commission_section_invoice,
+            self.env.ref("sale_commission.res_partner_pritesh_sale_agent"),
+            self.commission_section_invoice,
         )
         self.assertIn("1", sale_order.order_line[0].commission_status)
         self.assertNotIn("agents", sale_order.order_line[0].commission_status)
@@ -217,7 +276,9 @@ class TestSaleCommission(SavepointCase):
                 0,
                 0,
                 {
-                    "agent_id": self.env.ref("sale_commission.res_partner_pritesh_sale_agent").id,
+                    "agent_id": self.env.ref(
+                        "sale_commission.res_partner_pritesh_sale_agent"
+                    ).id,
                     "commission_id": self.env.ref("sale_commission.demo_commission").id,
                 },
             ),
@@ -225,7 +286,9 @@ class TestSaleCommission(SavepointCase):
                 0,
                 0,
                 {
-                    "agent_id": self.env.ref("sale_commission.res_partner_eiffel_sale_agent").id,
+                    "agent_id": self.env.ref(
+                        "sale_commission.res_partner_eiffel_sale_agent"
+                    ).id,
                     "commission_id": self.env.ref("sale_commission.demo_commission").id,
                 },
             ),
@@ -235,7 +298,11 @@ class TestSaleCommission(SavepointCase):
         sale_order.action_confirm()
         wizard = self.advance_inv_model.create({"advance_payment_method": "delivered"})
         wizard.with_context(
-            {"active_model": "sale.order", "active_ids": [sale_order.id], "active_id": sale_order.id,}
+            {
+                "active_model": "sale.order",
+                "active_ids": [sale_order.id],
+                "active_id": sale_order.id,
+            }
         ).create_invoices()
         invoice = sale_order.invoice_ids
         self.assertIn("2", invoice.invoice_line_ids[0].commission_status)
@@ -254,7 +321,9 @@ class TestSaleCommission(SavepointCase):
     def test_supplier_invoice(self):
         """No agents should be populated on supplier invoices."""
         self.partner.agent_ids = self.agent_semi
-        move_form = Form(self.env["account.move"].with_context(default_move_type="in_invoice"))
+        move_form = Form(
+            self.env["account.move"].with_context(default_move_type="in_invoice")
+        )
         move_form.partner_id = self.partner
         move_form.ref = "sale_comission_TEST"
         with move_form.invoice_line_ids.new() as line_form:
@@ -285,9 +354,13 @@ class TestSaleCommission(SavepointCase):
         self.assertTrue(agent.commission_id, self.commission_section_invoice)
         # HACK: Remove constraints as in test mode it raises, but not on regular UI
         # TODO: Check why this is happening only in tests
-        self.env.cr.execute("ALTER TABLE sale_order_line_agent DROP CONSTRAINT " "sale_order_line_agent_unique_agent")
         self.env.cr.execute(
-            "ALTER TABLE account_invoice_line_agent DROP CONSTRAINT " "account_invoice_line_agent_unique_agent"
+            "ALTER TABLE sale_order_line_agent DROP CONSTRAINT "
+            "sale_order_line_agent_unique_agent"
+        )
+        self.env.cr.execute(
+            "ALTER TABLE account_invoice_line_agent DROP CONSTRAINT "
+            "account_invoice_line_agent_unique_agent"
         )
         # Check recomputation
         agent.unlink()
@@ -297,7 +370,9 @@ class TestSaleCommission(SavepointCase):
         self._invoice_sale_order(sale_order)
         agent = sale_order.invoice_ids.invoice_line_ids.agent_ids
         self._check_propagation(agent)
-        move_form = Form(self.env["account.move"].with_context(default_move_type="out_invoice"))
+        move_form = Form(
+            self.env["account.move"].with_context(default_move_type="out_invoice")
+        )
         move_form.partner_id = self.partner
         with move_form.invoice_line_ids.new() as line_form:
             line_form.currency_id = self.company.currency_id
@@ -322,13 +397,18 @@ class TestSaleCommission(SavepointCase):
         settlement = self.settle_model.search([("agent_id", "=", agent.id)])
         self.assertEqual(1, len(settlement))
         self.assertEqual(settlement.state, "settled")
-        commission_invoice = settlement.make_invoices(product=self.commission_product, journal=self.journal)
+        commission_invoice = settlement.make_invoices(
+            product=self.commission_product, journal=self.journal
+        )
         self.assertEqual(settlement.state, "invoiced")
         self.assertEqual(commission_invoice.move_type, "in_invoice")
         invoice = sale_order.invoice_ids
-        refund = invoice._reverse_moves(default_values_list=[{"invoice_date": invoice.invoice_date}],)
+        refund = invoice._reverse_moves(
+            default_values_list=[{"invoice_date": invoice.invoice_date}],
+        )
         self.assertEqual(
-            invoice.invoice_line_ids.agent_ids.agent_id, refund.invoice_line_ids.agent_ids.agent_id,
+            invoice.invoice_line_ids.agent_ids.agent_id,
+            refund.invoice_line_ids.agent_ids.agent_id,
         )
         refund.invoice_line_ids.agent_ids._compute_amount()
         refund.action_post()
@@ -338,7 +418,9 @@ class TestSaleCommission(SavepointCase):
         second_settlement = settlements.filtered(lambda r: r.total < 0)
         self.assertEqual(second_settlement.state, "settled")
         # Use invoice wizard for testing also this part
-        wizard = self.env["sale.commission.make.invoice"].create({"product_id": self.commission_product.id})
+        wizard = self.env["sale.commission.make.invoice"].create(
+            {"product_id": self.commission_product.id}
+        )
         action = wizard.button_create()
         commission_refund = self.env["account.move"].browse(action["domain"][0][2])
         self.assertEqual(second_settlement.state, "invoiced")
@@ -370,10 +452,15 @@ class TestSaleCommission(SavepointCase):
 
     def test_res_partner_agent_propagation(self):
         partner = self.env["res.partner"].create(
-            {"name": "Test partner", "agent_ids": [(4, self.agent_monthly.id), (4, self.agent_quaterly.id)],}
+            {
+                "name": "Test partner",
+                "agent_ids": [(4, self.agent_monthly.id), (4, self.agent_quaterly.id)],
+            }
         )
         # Create
-        child = self.env["res.partner"].create({"name": "Test child", "parent_id": partner.id})
+        child = self.env["res.partner"].create(
+            {"name": "Test child", "parent_id": partner.id}
+        )
         self.assertEqual(set(child.agent_ids.ids), set(partner.agent_ids.ids))
         # Write
         partner.agent_ids = [(4, self.agent_monthly.id)]

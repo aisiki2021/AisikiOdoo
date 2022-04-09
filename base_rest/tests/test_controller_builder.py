@@ -105,7 +105,10 @@ class TestControllerBuilder(TransactionRestServiceRegistryCase):
                 "auth": "public",
                 "cors": None,
                 "csrf": False,
-                "routes": ["/test_controller/ping/<int:id>/get", "/test_controller/ping/<int:id>",],
+                "routes": [
+                    "/test_controller/ping/<int:id>/get",
+                    "/test_controller/ping/<int:id>",
+                ],
                 "save_session": True,
             },
         )
@@ -131,7 +134,10 @@ class TestControllerBuilder(TransactionRestServiceRegistryCase):
                 "auth": "public",
                 "cors": None,
                 "csrf": False,
-                "routes": ["/test_controller/ping/<int:id>/update", "/test_controller/ping/<int:id>",],
+                "routes": [
+                    "/test_controller/ping/<int:id>/update",
+                    "/test_controller/ping/<int:id>",
+                ],
                 "save_session": True,
             },
         )
@@ -263,7 +269,9 @@ class TestControllerBuilder(TransactionRestServiceRegistryCase):
 
         routes = self._get_controller_route_methods(controller)
         self.assertSetEqual(
-            set(routes.keys()), {"get_get", "get_get_name", "post_update_name"} | self._controller_route_method_names,
+            set(routes.keys()),
+            {"get_get", "get_get_name", "post_update_name"}
+            | self._controller_route_method_names,
         )
 
         method = routes["get_get"]
@@ -274,7 +282,10 @@ class TestControllerBuilder(TransactionRestServiceRegistryCase):
                 "auth": "public",
                 "cors": None,
                 "csrf": False,
-                "routes": ["/test_controller/partner/<int:id>/get", "/test_controller/partner/<int:id>",],
+                "routes": [
+                    "/test_controller/partner/<int:id>/get",
+                    "/test_controller/partner/<int:id>",
+                ],
                 "save_session": True,
             },
         )
@@ -352,7 +363,9 @@ class TestControllerBuilder(TransactionRestServiceRegistryCase):
 
         routes = self._get_controller_route_methods(controller)
         self.assertSetEqual(
-            set(routes.keys()), {"get_get", "get_get_name", "post_update_name"} | self._controller_route_method_names,
+            set(routes.keys()),
+            {"get_get", "get_get_name", "post_update_name"}
+            | self._controller_route_method_names,
         )
 
         method = routes["get_get"]
@@ -363,7 +376,10 @@ class TestControllerBuilder(TransactionRestServiceRegistryCase):
                 "auth": "public",
                 "cors": None,
                 "csrf": False,
-                "routes": ["/test_controller/partner/<int:id>/get", "/test_controller/partner/<int:id>",],
+                "routes": [
+                    "/test_controller/partner/<int:id>/get",
+                    "/test_controller/partner/<int:id>",
+                ],
                 "save_session": True,
             },
         )
@@ -461,16 +477,25 @@ class TestControllerBuilder2(TransactionRestServiceRegistryCase):
             ("save_session", default_save_session),
         ]:
             self.assertEqual(
-                routes["get_new_api_method_without"].routing[attr], default, "wrong %s" % attr,
+                routes["get_new_api_method_without"].routing[attr],
+                default,
+                "wrong %s" % attr,
             )
         self.assertEqual(routes["get_new_api_method_with"].routing["auth"], "public")
-        self.assertEqual(routes["get_new_api_method_with"].routing["cors"], "http://my_site")
-        self.assertEqual(routes["get_new_api_method_with"].routing["csrf"], not default_csrf)
         self.assertEqual(
-            routes["get_new_api_method_with"].routing["save_session"], not default_save_session,
+            routes["get_new_api_method_with"].routing["cors"], "http://my_site"
+        )
+        self.assertEqual(
+            routes["get_new_api_method_with"].routing["csrf"], not default_csrf
+        )
+        self.assertEqual(
+            routes["get_new_api_method_with"].routing["save_session"],
+            not default_save_session,
         )
 
-        self.assertEqual(routes["get_get"].routing["auth"], default_auth, "wrong auth for get_get")
+        self.assertEqual(
+            routes["get_get"].routing["auth"], default_auth, "wrong auth for get_get"
+        )
 
         for attr, default in [
             ("auth", default_auth),
@@ -479,7 +504,9 @@ class TestControllerBuilder2(TransactionRestServiceRegistryCase):
             ("save_session", default_save_session),
         ]:
             self.assertEqual(
-                routes["my_controller_route_without"].routing[attr], default, "wrong %s" % attr,
+                routes["my_controller_route_without"].routing[attr],
+                default,
+                "wrong %s" % attr,
             )
 
         routing = routes["my_controller_route_with"].routing
@@ -491,7 +518,9 @@ class TestControllerBuilder2(TransactionRestServiceRegistryCase):
         ]:
 
             self.assertEqual(
-                routing[attr], value, "wrong %s" % attr,
+                routing[attr],
+                value,
+                "wrong %s" % attr,
             )
         self.assertEqual(
             routes["my_controller_route_without_auth_2"].routing["auth"],
@@ -516,7 +545,9 @@ class TestControllerBuilder2(TransactionRestServiceRegistryCase):
             _collection = self._collection_name
             _description = "test"
 
-            @restapi.method([(["/new_api_method_with_public_or"], "GET")], auth="public_or_default")
+            @restapi.method(
+                [(["/new_api_method_with_public_or"], "GET")], auth="public_or_default"
+            )
             def new_api_method_with_public_or(self, _id):
                 return {"name": self.env["res.partner"].browse(_id).name}
 
@@ -527,7 +558,9 @@ class TestControllerBuilder2(TransactionRestServiceRegistryCase):
 
         # delare the auth méthod on ir.http
         with _add_method(
-            self.env["ir.http"], "_auth_method_public_or_my_default_auth", lambda a: True,
+            self.env["ir.http"],
+            "_auth_method_public_or_my_default_auth",
+            lambda a: True,
         ):
             self._build_services(self, TestService)
 
@@ -535,7 +568,8 @@ class TestControllerBuilder2(TransactionRestServiceRegistryCase):
         routes = self._get_controller_route_methods(controller)
 
         self.assertEqual(
-            routes["get_new_api_method_with_public_or"].routing["auth"], "public_or_my_default_auth",
+            routes["get_new_api_method_with_public_or"].routing["auth"],
+            "public_or_my_default_auth",
         )
 
     def test_06(self):
@@ -556,7 +590,9 @@ class TestControllerBuilder2(TransactionRestServiceRegistryCase):
             _collection = self._collection_name
             _description = "test"
 
-            @restapi.method([(["/new_api_method_with_public_or"], "GET")], auth="public_or_default")
+            @restapi.method(
+                [(["/new_api_method_with_public_or"], "GET")], auth="public_or_default"
+            )
             def new_api_method_with_public_or(self, _id):
                 return {"name": self.env["res.partner"].browse(_id).name}
 
@@ -570,7 +606,8 @@ class TestControllerBuilder2(TransactionRestServiceRegistryCase):
         routes = self._get_controller_route_methods(controller)
 
         self.assertEqual(
-            routes["get_new_api_method_with_public_or"].routing["auth"], "my_default_auth",
+            routes["get_new_api_method_with_public_or"].routing["auth"],
+            "my_default_auth",
         )
 
 

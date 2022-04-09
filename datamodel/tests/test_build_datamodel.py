@@ -64,7 +64,9 @@ class TestBuildDatamodel(DatamodelRegistryCase):
         # them in the datamodels registry
         Datamodel1._build_datamodel(self.datamodel_registry)
         Datamodel2._build_datamodel(self.datamodel_registry)
-        self.assertEqual(["base", "datamodel1", "datamodel2"], list(self.datamodel_registry))
+        self.assertEqual(
+            ["base", "datamodel1", "datamodel2"], list(self.datamodel_registry)
+        )
 
     def test_inherit_bases(self):
         """Check __bases__ of Datamodel with _inherit"""
@@ -116,14 +118,23 @@ class TestBuildDatamodel(DatamodelRegistryCase):
         Datamodel3._build_datamodel(self.datamodel_registry)
         Datamodel4._build_datamodel(self.datamodel_registry)
         self.assertEqual(
-            (Datamodel1, self.env.datamodels["base"]), self.env.datamodels["datamodel1"].__bases__,
+            (Datamodel1, self.env.datamodels["base"]),
+            self.env.datamodels["datamodel1"].__bases__,
         )
         self.assertEqual(
-            (Datamodel2, self.env.datamodels["datamodel1"], self.env.datamodels["base"],),
+            (
+                Datamodel2,
+                self.env.datamodels["datamodel1"],
+                self.env.datamodels["base"],
+            ),
             self.env.datamodels["datamodel2"].__bases__,
         )
         self.assertEqual(
-            (Datamodel3, self.env.datamodels["datamodel1"], self.env.datamodels["base"],),
+            (
+                Datamodel3,
+                self.env.datamodels["datamodel1"],
+                self.env.datamodels["base"],
+            ),
             self.env.datamodels["datamodel3"].__bases__,
         )
         self.assertEqual(
@@ -169,10 +180,13 @@ class TestBuildDatamodel(DatamodelRegistryCase):
         Datamodel4 = self.env.datamodels["datamodel4"]
 
         self.assertEqual(Datamodel1().dump(), {"field_int": 1})
-        self.assertDictEqual(Datamodel2().dump(), {"field_boolean": True, "field_int": 2})
+        self.assertDictEqual(
+            Datamodel2().dump(), {"field_boolean": True, "field_int": 2}
+        )
         self.assertDictEqual(Datamodel3().dump(), {"field_float": 0.3, "field_int": 1})
         self.assertDictEqual(
-            Datamodel4().dump(), {"field_boolean": True, "field_int": 2, "field_float": 0.3},
+            Datamodel4().dump(),
+            {"field_boolean": True, "field_int": 2, "field_float": 0.3},
         )
 
     def test_custom_build(self):
@@ -281,7 +295,12 @@ class TestBuildDatamodel(DatamodelRegistryCase):
         Datamodel2bis._build_datamodel(self.datamodel_registry)
 
         self.assertEqual(
-            (Datamodel2bis, Datamodel2, self.env.datamodels["datamodel1"], self.env.datamodels.registry.get("base"),),
+            (
+                Datamodel2bis,
+                Datamodel2,
+                self.env.datamodels["datamodel1"],
+                self.env.datamodels.registry.get("base"),
+            ),
             self.env.datamodels["datamodel2"].__bases__,
         )
 
@@ -308,7 +327,8 @@ class TestBuildDatamodel(DatamodelRegistryCase):
 
         Datamodel2 = self.env.datamodels["datamodel2"]
         self.assertDictEqual(
-            Datamodel2().dump(), {"field_str1": "str1", "field_str2": "str2", "field_str3": "str3"},
+            Datamodel2().dump(),
+            {"field_str1": "str1", "field_str2": "str2", "field_str3": "str3"},
         )
 
     def test_recursion(self):
@@ -340,7 +360,9 @@ class TestBuildDatamodel(DatamodelRegistryCase):
 
         instance = Parent(name="Parent", child=Child(field_str="My other string"))
         res = instance.dump()
-        self.assertDictEqual(res, {"child": {"field_str": "My other string"}, "name": "Parent"})
+        self.assertDictEqual(
+            res, {"child": {"field_str": "My other string"}, "name": "Parent"}
+        )
         new_instance = instance.load(res)
         self.assertEqual(new_instance.name, instance.name)
         self.assertEqual(new_instance.child.field_str, instance.child.field_str)
@@ -372,7 +394,10 @@ class TestBuildDatamodel(DatamodelRegistryCase):
         self.assertDictEqual(
             res,
             {
-                "list_child": [{"field_str": "My 1st other string"}, {"field_str": "My 2nd other string"},],
+                "list_child": [
+                    {"field_str": "My 1st other string"},
+                    {"field_str": "My 2nd other string"},
+                ],
                 "name": "Parent",
             },
         )

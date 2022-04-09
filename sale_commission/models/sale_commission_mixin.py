@@ -6,7 +6,9 @@ from odoo import _, api, fields, models
 
 class SaleCommissionMixin(models.AbstractModel):
     _name = "sale.commission.mixin"
-    _description = "Mixin model for applying to any object that wants to handle commissions"
+    _description = (
+        "Mixin model for applying to any object that wants to handle commissions"
+    )
 
     agent_ids = fields.One2many(
         comodel_name="sale.commission.line.mixin",
@@ -20,9 +22,15 @@ class SaleCommissionMixin(models.AbstractModel):
     )
     product_id = fields.Many2one(comodel_name="product.product", string="Product")
     commission_free = fields.Boolean(
-        string="Comm. free", related="product_id.commission_free", store=True, readonly=True,
+        string="Comm. free",
+        related="product_id.commission_free",
+        store=True,
+        readonly=True,
     )
-    commission_status = fields.Char(compute="_compute_commission_status", string="Commission",)
+    commission_status = fields.Char(
+        compute="_compute_commission_status",
+        string="Commission",
+    )
 
     def _prepare_agent_vals(self, agent):
         return {"agent_id": agent.id, "commission_id": agent.commission_id.id}
@@ -46,7 +54,9 @@ class SaleCommissionMixin(models.AbstractModel):
             elif len(line.agent_ids) == 1:
                 line.commission_status = _("1 commission agent")
             else:
-                line.commission_status = _("%s commission agents") % (len(line.agent_ids),)
+                line.commission_status = _("%s commission agents") % (
+                    len(line.agent_ids),
+                )
 
     def recompute_agents(self):
         self._compute_agent_ids()
@@ -70,16 +80,32 @@ class SaleCommissionMixin(models.AbstractModel):
 
 class SaleCommissionLineMixin(models.AbstractModel):
     _name = "sale.commission.line.mixin"
-    _description = "Mixin model for having commission agent lines in " "any object inheriting from this one"
+    _description = (
+        "Mixin model for having commission agent lines in "
+        "any object inheriting from this one"
+    )
     _rec_name = "agent_id"
 
-    _sql_constraints = [("unique_agent", "UNIQUE(object_id, agent_id)", "You can only add one time each agent.",)]
+    _sql_constraints = [
+        (
+            "unique_agent",
+            "UNIQUE(object_id, agent_id)",
+            "You can only add one time each agent.",
+        )
+    ]
 
     object_id = fields.Many2one(
-        comodel_name="sale.commission.mixin", ondelete="cascade", required=True, copy=False, string="Parent",
+        comodel_name="sale.commission.mixin",
+        ondelete="cascade",
+        required=True,
+        copy=False,
+        string="Parent",
     )
     agent_id = fields.Many2one(
-        comodel_name="res.partner", domain="[('agent', '=', True)]", ondelete="restrict", required=True,
+        comodel_name="res.partner",
+        domain="[('agent', '=', True)]",
+        ondelete="restrict",
+        required=True,
     )
     commission_id = fields.Many2one(
         comodel_name="sale.commission",
@@ -90,7 +116,11 @@ class SaleCommissionLineMixin(models.AbstractModel):
         readonly=False,
         copy=True,
     )
-    amount = fields.Monetary(string="Commission Amount", compute="_compute_amount", store=True,)
+    amount = fields.Monetary(
+        string="Commission Amount",
+        compute="_compute_amount",
+        store=True,
+    )
     # Fields to be overriden with proper source (via related or computed field)
     currency_id = fields.Many2one(comodel_name="res.currency")
 

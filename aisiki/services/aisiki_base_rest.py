@@ -21,7 +21,9 @@ def _rotate_session(httprequest):
         root.session_store.delete(httprequest.session)
         httprequest.session.sid = root.session_store.generate_key()
         if httprequest.session.uid:
-            httprequest.session.session_token = security.compute_session_token(httprequest.session, request.env)
+            httprequest.session.session_token = security.compute_session_token(
+                httprequest.session, request.env
+            )
         httprequest.session.modified = True
 
 
@@ -41,14 +43,16 @@ class AisikiBaseRest(Component):
         params = request.params
         db_name = params.get("db", db_monodb())
         try:
-            uid = request.session.authenticate(db_name, params["phone"], params["password"])
+            uid = request.session.authenticate(
+                db_name, params["phone"], params["password"]
+            )
             result = request.env["ir.http"].session_info()
             user = request.env["res.users"].with_user(1).browse(uid)
             _rotate_session(request)
             request.session.rotate = False
             expiration = datetime.datetime.utcnow() + datetime.timedelta(days=1)
-            if user.origin == params.get('origin'):
-    
+            if user.origin == params.get("origin"):
+
                 return {
                     "session_id": request.session.sid,
                     "expires_at": fields.Datetime.to_string(expiration),
@@ -59,7 +63,7 @@ class AisikiBaseRest(Component):
                     "registration_stage": user.registration_stage,
                 }
             else:
-                raise ValidationError('Access Denied')
+                raise ValidationError("Access Denied")
         except Exception as e:
             data = json.dumps({"error": str(e)})
             resp = request.make_response(data)
@@ -67,11 +71,17 @@ class AisikiBaseRest(Component):
             return resp
 
     @restapi.method(
-        [(["/otp/<string:phone>"], "GET")], auth="public", tags=["Authentication"],
+        [(["/otp/<string:phone>"], "GET")],
+        auth="public",
+        tags=["Authentication"],
     )
     def getotpcode(self, phone):
         phone = phone.strip()
-        user = request.env["res.users"].with_user(1).search([("login", "=", phone)], limit=1)
+        user = (
+            request.env["res.users"]
+            .with_user(1)
+            .search([("login", "=", phone)], limit=1)
+        )
         if not user:
             data = json.dumps({"error": "phone number not found"})
             resp = request.make_response(data)
@@ -81,19 +91,31 @@ class AisikiBaseRest(Component):
         sms = (
             request.env["sms.sms"]
             .with_user(1)
-            .create({"body": "Your Aisiki verification code is %s." % (totp.now(),), "number": phone,})
+            .create(
+                {
+                    "body": "Your Aisiki verification code is %s." % (totp.now(),),
+                    "number": phone,
+                }
+            )
             .aisiki_send()
         )
         return sms.get("response", [])
 
     @restapi.method(
-        [(["/otpverify"], "POST")], auth="public", input_param=Datamodel("otp.datamodel.in"), tags=["Authentication"],
+        [(["/otpverify"], "POST")],
+        auth="public",
+        input_param=Datamodel("otp.datamodel.in"),
+        tags=["Authentication"],
     )
     def otpverify(self, payload):
         try:
             phone = payload.phone.strip()
             otp = payload.otp.strip()
-            user = request.env["res.users"].with_user(1).search([("login", "=", phone)], limit=1)
+            user = (
+                request.env["res.users"]
+                .with_user(1)
+                .search([("login", "=", phone)], limit=1)
+            )
             if not user:
                 data = json.dumps({"error": "phone number not found"})
                 resp = request.make_response(data)
@@ -175,9 +197,15 @@ class AisikiBaseRest(Component):
     )
     def forgotpassword(self, payload):
         phone = payload.phone.strip()
-        user = request.env["res.users"].with_user(1).search([("login", "=", phone)], limit=1)
+        user = (
+            request.env["res.users"]
+            .with_user(1)
+            .search([("login", "=", phone)], limit=1)
+        )
         user.action_reset_password()
-        return self.env.datamodels["forgotpassword.datamodel.out"](password_reset_url=user.password_reset_url)
+        return self.env.datamodels["forgotpassword.datamodel.out"](
+            password_reset_url=user.password_reset_url
+        )
 
     @restapi.method(
         [(["/passwordchange"], "GET")],
@@ -192,7 +220,9 @@ class AisikiBaseRest(Component):
         try:
             res = request.env.user.change_password(old_passwd, new_passwd)
             return {
-                "message": "Password Successful changed" if res else "Something went wrong",
+                "message": "Password Successful changed"
+                if res
+                else "Something went wrong",
                 "old_passwd": old_passwd,
                 "new_passwd": new_passwd,
             }
@@ -203,7 +233,9 @@ class AisikiBaseRest(Component):
             return resp
 
     @restapi.method(
-        [(["/profile"], "GET")], auth="user", tags=["Authentication"],
+        [(["/profile"], "GET")],
+        auth="user",
+        tags=["Authentication"],
     )
     def profile(self):
         partner_id = request.env.user.partner_id
@@ -240,8 +272,12 @@ class AisikiBaseRest(Component):
                 "name": payload.name if payload.name else partner_id.name,
                 "street": payload.street if payload.street else partner_id.street,
                 "phone": payload.phone if payload.phone else partner_id.phone,
-                "partner_latitude": payload.latitude if payload.latitude else partner_id.partner_latitude,
-                "partner_longitude": payload.longitude if payload.longitude else partner_id.partner_longitude,
+                "partner_latitude": payload.latitude
+                if payload.latitude
+                else partner_id.partner_latitude,
+                "partner_longitude": payload.longitude
+                if payload.longitude
+                else partner_id.partner_longitude,
             }
         )
         res = {

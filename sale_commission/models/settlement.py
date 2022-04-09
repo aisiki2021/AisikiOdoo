@@ -18,7 +18,9 @@ class Settlement(models.Model):
     total = fields.Float(compute="_compute_total", readonly=True, store=True)
     date_from = fields.Date(string="From")
     date_to = fields.Date(string="To")
-    agent_id = fields.Many2one(comodel_name="res.partner", domain="[('agent', '=', True)]")
+    agent_id = fields.Many2one(
+        comodel_name="res.partner", domain="[('agent', '=', True)]"
+    )
     agent_type = fields.Selection(related="agent_id.agent_type")
     line_ids = fields.One2many(
         comodel_name="sale.commission.settlement.line",
@@ -38,13 +40,24 @@ class Settlement(models.Model):
         default="settled",
     )
     invoice_ids = fields.One2many(
-        comodel_name="account.move", inverse_name="settlement_id", string="Generated invoice", readonly=True,
+        comodel_name="account.move",
+        inverse_name="settlement_id",
+        string="Generated invoice",
+        readonly=True,
     )
     # TODO: To be removed
-    invoice_id = fields.Many2one(store=True, comodel_name="account.move", compute="_compute_invoice_id",)
-    currency_id = fields.Many2one(comodel_name="res.currency", readonly=True, default=_default_currency)
+    invoice_id = fields.Many2one(
+        store=True,
+        comodel_name="account.move",
+        compute="_compute_invoice_id",
+    )
+    currency_id = fields.Many2one(
+        comodel_name="res.currency", readonly=True, default=_default_currency
+    )
     company_id = fields.Many2one(
-        comodel_name="res.company", default=lambda self: self.env.user.company_id, required=True,
+        comodel_name="res.company",
+        default=lambda self: self.env.user.company_id,
+        required=True,
     )
 
     @api.depends("line_ids", "line_ids.settled_amount")
@@ -82,7 +95,9 @@ class Settlement(models.Model):
     def _prepare_invoice(self, journal, product, date=False):
         self.ensure_one()
         move_type = "in_invoice" if self.total >= 0 else "in_refund"
-        move_form = Form(self.env["account.move"].with_context(default_move_type=move_type))
+        move_form = Form(
+            self.env["account.move"].with_context(default_move_type=move_type)
+        )
         if date:
             move_form.invoice_date = date
         move_form.partner_id = self.agent_id
@@ -93,14 +108,18 @@ class Settlement(models.Model):
             line_form.price_unit = abs(self.total)
             # Put period string
             partner = self.agent_id
-            lang = self.env["res.lang"].search([("code", "=", partner.lang or self.env.context.get("lang", "en_US"))])
+            lang = self.env["res.lang"].search(
+                [("code", "=", partner.lang or self.env.context.get("lang", "en_US"))]
+            )
             date_from = fields.Date.from_string(self.date_from)
             date_to = fields.Date.from_string(self.date_to)
             line_form.name += "\n" + _("Period: from %s to %s") % (
                 date_from.strftime(lang.date_format),
                 date_to.strftime(lang.date_format),
             )
-            line_form.currency_id = self.currency_id  # todo or compute agent currency_id?
+            line_form.currency_id = (
+                self.currency_id
+            )  # todo or compute agent currency_id?
         vals = move_form._values_to_save(all_fields=True)
         vals["settlement_id"] = self.id
         return vals
@@ -119,7 +138,9 @@ class SettlementLine(models.Model):
     _name = "sale.commission.settlement.line"
     _description = "Line of a commission settlement"
 
-    settlement_id = fields.Many2one("sale.commission.settlement", readonly=True, ondelete="cascade", required=True)
+    settlement_id = fields.Many2one(
+        "sale.commission.settlement", readonly=True, ondelete="cascade", required=True
+    )
     agent_line = fields.Many2many(
         comodel_name="account.invoice.line.agent",
         relation="settlement_agent_line_rel",
@@ -129,13 +150,32 @@ class SettlementLine(models.Model):
     )
     date = fields.Date(related="agent_line.invoice_date", store=True)
     invoice_line_id = fields.Many2one(
-        comodel_name="account.move.line", store=True, related="agent_line.object_id", string="Source invoice line",
+        comodel_name="account.move.line",
+        store=True,
+        related="agent_line.object_id",
+        string="Source invoice line",
     )
-    agent_id = fields.Many2one(comodel_name="res.partner", readonly=True, related="agent_line.agent_id", store=True,)
-    settled_amount = fields.Monetary(related="agent_line.amount", readonly=True, store=True)
-    currency_id = fields.Many2one(related="agent_line.currency_id", store=True, readonly=True,)
-    commission_id = fields.Many2one(comodel_name="sale.commission", related="agent_line.commission_id")
-    company_id = fields.Many2one(comodel_name="res.company", related="settlement_id.company_id",)
+    agent_id = fields.Many2one(
+        comodel_name="res.partner",
+        readonly=True,
+        related="agent_line.agent_id",
+        store=True,
+    )
+    settled_amount = fields.Monetary(
+        related="agent_line.amount", readonly=True, store=True
+    )
+    currency_id = fields.Many2one(
+        related="agent_line.currency_id",
+        store=True,
+        readonly=True,
+    )
+    commission_id = fields.Many2one(
+        comodel_name="sale.commission", related="agent_line.commission_id"
+    )
+    company_id = fields.Many2one(
+        comodel_name="res.company",
+        related="settlement_id.company_id",
+    )
 
     @api.constrains("settlement_id", "agent_line")
     def _check_company(self):
