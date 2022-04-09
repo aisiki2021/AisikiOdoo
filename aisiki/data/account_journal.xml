@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data noupdate="1">
+        <record id="aisiki_wallet_journal" model="account.journal">
+            <field name="name">Customer Wallet</field>
+            <field name="code">WALLT</field>
+            <field name="type">bank</field>
+            <field name="sequence">10</field>
+            <field name="alias_name">purchase_expense</field>
+        </record>
+
+        <record id="sequence_agent_seq" model="ir.sequence">
+            <field name="name">Aisiki Agent Sequence</field>
+            <field name="code">aisiki.agent.seq</field>
+            <field name="prefix">A</field>
+            <field eval="1" name="number_next"/>
+            <field eval="1" name="number_increment"/>
+            <field eval="False" name="company_id"/>
+        </record>
+    </data>
+</odoo>

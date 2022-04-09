@@ -15,7 +15,7 @@ class TestWorkOn(SavepointComponentRegistryCase):
     """
 
     def test_collection_work_on(self):
-        """ Create a new instance and test attributes access """
+        """Create a new instance and test attributes access"""
         collection_record = self.collection.new()
         with collection_record.work_on("res.partner") as work:
             self.assertEqual(collection_record, work.collection)
@@ -25,11 +25,9 @@ class TestWorkOn(SavepointComponentRegistryCase):
             self.assertEqual(self.env, work.env)
 
     def test_collection_work_on_registry_via_context(self):
-        """ Test propagation of registry via context """
+        """Test propagation of registry via context"""
         registry = ComponentRegistry()
-        collection_record = self.collection.with_context(
-            components_registry=registry
-        ).new()
+        collection_record = self.collection.with_context(components_registry=registry).new()
         with collection_record.work_on("res.partner") as work:
             self.assertEqual(collection_record, work.collection)
             self.assertEqual("collection.base", work.collection._name)
@@ -39,7 +37,7 @@ class TestWorkOn(SavepointComponentRegistryCase):
             self.assertEqual(work.components_registry, registry)
 
     def test_propagate_work_on(self):
-        """ Check custom attributes and their propagation """
+        """Check custom attributes and their propagation"""
         registry = ComponentRegistry()
         work = WorkContext(
             model_name="res.partner",

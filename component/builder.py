@@ -50,9 +50,7 @@ class ComponentBuilder(models.AbstractModel):
         components_registry.ready = True
 
     def _init_global_registry(self):
-        components_registry = ComponentRegistry(
-            cachesize=self._components_registry_cache_size
-        )
+        components_registry = ComponentRegistry(cachesize=self._components_registry_cache_size)
         _component_databases[self.env.cr.dbname] = components_registry
         return components_registry
 
@@ -90,7 +88,5 @@ class ComponentBuilder(models.AbstractModel):
         :param registry: the registry in which we want to put the Component
         :type registry: :py:class:`~.core.ComponentRegistry`
         """
-        components_registry = (
-            components_registry or _component_databases[self.env.cr.dbname]
-        )
+        components_registry = components_registry or _component_databases[self.env.cr.dbname]
         components_registry.load_components(module)

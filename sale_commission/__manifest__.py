@@ -1,9 +1,6 @@
-# Copyright 2014-2020 Tecnativa - Pedro M. Baeza
-# Copyright 2020 Tecnativa - Manuel Calero
 {
     "name": "Sales commissions",
-    "version": "14.0.1.1.5",
-    "author": "Tecnativa," "Odoo Community Association (OCA)",
+    "version": "14.0.1.2.8",
     "category": "Sales Management",
     "license": "AGPL-3",
     "depends": ["account", "product", "sale_management"],
@@ -25,7 +22,7 @@
         "report/sale_commission_analysis_report_view.xml",
         "wizard/wizard_settle.xml",
         "wizard/wizard_invoice.xml",
+        "data/commission.xml",
     ],
-    "demo": ["demo/sale_agent_demo.xml"],
     "installable": True,
 }

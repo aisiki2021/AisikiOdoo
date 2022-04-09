@@ -77,9 +77,7 @@ class OrderingApp(Component):
             )
 
         except Exception as e:
-            return self.env.datamodels["datamodel.error.out"](
-                message=str(e), error=True
-            )
+            return self.env.datamodels["datamodel.error.out"](message=str(e), error=True)
 
     @restapi.method(
         [(["/customers"], "GET")],
@@ -92,9 +90,7 @@ class OrderingApp(Component):
         limit = int(payload.limit) or 80
         offset = int(payload.offset) or 0
         partner_ids = (
-            request.env["res.partner"]
-            .with_user(1)
-            .search([], limit=limit, offset=offset, order="create_date desc")
+            request.env["res.partner"].with_user(1).search([], limit=limit, offset=offset, order="create_date desc")
         )
         for partner_id in partner_ids:
             res = {
@@ -119,9 +115,7 @@ class OrderingApp(Component):
         """."""
         res = []
         domain = [("id", "=", int(order_id))]
-        orders = (
-            request.env["sale.order"].with_user(1).search(domain, order="create_date")
-        )
+        orders = request.env["sale.order"].with_user(1).search(domain, order="create_date")
         total_order = request.env["sale.order"].with_user(1).search_count(domain)
         for order in orders:
             res.append(
@@ -160,9 +154,7 @@ class OrderingApp(Component):
         res = []
         limit = int(payload.limit) or 80
         offset = int(payload.offset) or 0
-        orders = (
-            request.env["sale.order"].with_user(1).search([], order="create_date desc")
-        )
+        orders = request.env["sale.order"].with_user(1).search([], order="create_date desc")
         total_order = request.env["sale.order"].with_user(1).search_count([])
         for order in orders:
             res.append(
@@ -194,7 +186,9 @@ class OrderingApp(Component):
         [(["/createorder"], "POST")],
         auth="user",
         input_param=Datamodel("create.orders.datamodel.in"),
-        output_param=Datamodel("create.orders.datamodel.out",),
+        output_param=Datamodel(
+            "create.orders.datamodel.out",
+        ),
     )
     def createorder(self, payload):
         data = []
@@ -242,9 +236,7 @@ class OrderingApp(Component):
         offset = int(payload.offset) or 0
         domain = [("aisiki_product_type", "!=", False)]
         products = (
-            request.env["product.product"]
-            .with_user(1)
-            .search(domain, limit=limit, offset=offset, order="id desc")
+            request.env["product.product"].with_user(1).search(domain, limit=limit, offset=offset, order="id desc")
         )
         for product in products:
             res.append(
@@ -263,7 +255,14 @@ class OrderingApp(Component):
         return res
 
     @restapi.method(
-        [(["/customersearch",], "GET")],
+        [
+            (
+                [
+                    "/customersearch",
+                ],
+                "GET",
+            )
+        ],
         input_param=restapi.Datamodel("partner.search.param"),
         output_param=restapi.Datamodel("partner.short.info", is_list=True),
         auth="public",
@@ -275,11 +274,7 @@ class OrderingApp(Component):
         if partner_search_param.id:
             domain.append(("id", "=", partner_search_param.id))
         result = []
-        partner_ids = (
-            request.env["res.partner"]
-            .with_user(1)
-            .search(domain, limit=80, order="create_date desc")
-        )
+        partner_ids = request.env["res.partner"].with_user(1).search(domain, limit=80, order="create_date desc")
         for partner_id in partner_ids:
             res = {
                 "id": partner_id.id,

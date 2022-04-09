@@ -101,9 +101,7 @@ class SavepointDatamodelCase(common.SavepointCase, DatamodelMixin):
         DatamodelMixin.setUp(self)
 
 
-class DatamodelRegistryCase(
-    common.TreeCase, common.MetaCase("DummyCase", (object,), {})
-):
+class DatamodelRegistryCase(common.TreeCase, common.MetaCase("DummyCase", (object,), {})):
     """This test case can be used as a base for writings tests on datamodels
 
     This test case is meant to test datamodels in a special datamodel registry,
@@ -192,7 +190,7 @@ class DatamodelRegistryCase(
 
 
 class TransactionDatamodelRegistryCase(common.TransactionCase, DatamodelRegistryCase):
-    """ Adds Odoo Transaction in the base Datamodel TestCase """
+    """Adds Odoo Transaction in the base Datamodel TestCase"""
 
     # pylint: disable=W8106
     def setUp(self):
@@ -208,7 +206,7 @@ class TransactionDatamodelRegistryCase(common.TransactionCase, DatamodelRegistry
 
 
 class SavepointDatamodelRegistryCase(common.SavepointCase, DatamodelRegistryCase):
-    """ Adds Odoo Transaction with Savepoint in the base Datamodel TestCase """
+    """Adds Odoo Transaction with Savepoint in the base Datamodel TestCase"""
 
     # pylint: disable=W8106
     def setUp(self):

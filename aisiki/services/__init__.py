@@ -1,4 +1,6 @@
+from . import aisiki_base_rest
 from . import orderingapp
-from . import authenticate
 from . import saleforce
-from . import product
+from . import delivery
+
+# from . import product_product

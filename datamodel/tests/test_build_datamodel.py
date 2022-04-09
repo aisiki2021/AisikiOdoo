@@ -64,9 +64,7 @@ class TestBuildDatamodel(DatamodelRegistryCase):
         # them in the datamodels registry
         Datamodel1._build_datamodel(self.datamodel_registry)
         Datamodel2._build_datamodel(self.datamodel_registry)
-        self.assertEqual(
-            ["base", "datamodel1", "datamodel2"], list(self.datamodel_registry)
-        )
+        self.assertEqual(["base", "datamodel1", "datamodel2"], list(self.datamodel_registry))
 
     def test_inherit_bases(self):
         """Check __bases__ of Datamodel with _inherit"""
@@ -180,9 +178,7 @@ class TestBuildDatamodel(DatamodelRegistryCase):
         Datamodel4 = self.env.datamodels["datamodel4"]
 
         self.assertEqual(Datamodel1().dump(), {"field_int": 1})
-        self.assertDictEqual(
-            Datamodel2().dump(), {"field_boolean": True, "field_int": 2}
-        )
+        self.assertDictEqual(Datamodel2().dump(), {"field_boolean": True, "field_int": 2})
         self.assertDictEqual(Datamodel3().dump(), {"field_float": 0.3, "field_int": 1})
         self.assertDictEqual(
             Datamodel4().dump(),
@@ -360,9 +356,7 @@ class TestBuildDatamodel(DatamodelRegistryCase):
 
         instance = Parent(name="Parent", child=Child(field_str="My other string"))
         res = instance.dump()
-        self.assertDictEqual(
-            res, {"child": {"field_str": "My other string"}, "name": "Parent"}
-        )
+        self.assertDictEqual(res, {"child": {"field_str": "My other string"}, "name": "Parent"})
         new_instance = instance.load(res)
         self.assertEqual(new_instance.name, instance.name)
         self.assertEqual(new_instance.child.field_str, instance.child.field_str)

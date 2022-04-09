@@ -43,12 +43,8 @@ class TestCerberusValidator(TreeCase, MetaCase("DummyCase", (object,), {})):
             },
             "is_company": {"type": "boolean"},
         }
-        cls.simple_schema_cerberus_validator = CerberusValidator(
-            schema=cls.simple_schema
-        )
-        cls.nested_schema_cerberus_validator = CerberusValidator(
-            schema=cls.nested_schema
-        )
+        cls.simple_schema_cerberus_validator = CerberusValidator(schema=cls.simple_schema)
+        cls.nested_schema_cerberus_validator = CerberusValidator(schema=cls.nested_schema)
 
     def test_to_openapi_responses(self):
         res = self.simple_schema_cerberus_validator.to_openapi_responses(None)
@@ -288,9 +284,7 @@ class TestCerberusValidator(TreeCase, MetaCase("DummyCase", (object,), {})):
     def test_schema_lookup_from_string_custom_validator(self):
         class MyService(object):
             def _get_simple_schema(self):
-                return Validator(
-                    {"name": {"type": "string", "required": False}}, require_all=True
-                )
+                return Validator({"name": {"type": "string", "required": False}}, require_all=True)
 
             def component(self, *args, **kwargs):
                 return BaseRestCerberusValidator(unittest.mock.Mock())
@@ -311,9 +305,7 @@ class TestCerberusValidator(TreeCase, MetaCase("DummyCase", (object,), {})):
                 assertEq(method_name, "my_endpoint")
                 assertEq(direction, "input")
                 # A callable with no parameter is expected.
-                return lambda: Validator(
-                    {"name": {"type": "string", "required": False}}, require_all=True
-                )
+                return lambda: Validator({"name": {"type": "string", "required": False}}, require_all=True)
 
             def has_validator_handler(self, service, method_name, direction):
                 return True
@@ -362,7 +354,11 @@ class TestCerberusValidator(TreeCase, MetaCase("DummyCase", (object,), {})):
                 "valuesrules": {
                     "type": "dict",
                     "schema": {
-                        "id": {"type": "integer", "required": True, "nullable": False,},
+                        "id": {
+                            "type": "integer",
+                            "required": True,
+                            "nullable": False,
+                        },
                         "name": {"type": "string"},
                     },
                 },
@@ -382,7 +378,10 @@ class TestCerberusValidator(TreeCase, MetaCase("DummyCase", (object,), {})):
                             "type": "object",
                             "required": ["id"],
                             "properties": {
-                                "id": {"nullable": False, "type": "integer",},
+                                "id": {
+                                    "nullable": False,
+                                    "type": "integer",
+                                },
                                 "name": {"type": "string"},
                             },
                         },
@@ -400,10 +399,8 @@ class TestCerberusValidator(TreeCase, MetaCase("DummyCase", (object,), {})):
                     "name used to fill the index and value is the "
                     "index name",
                     "example": {
-                        "shopinvader.category": "demo_elasticsearch_backend_"
-                        "shopinvader_category_en_US",
-                        "shopinvader.variant": "demo_elasticsearch_backend_"
-                        "shopinvader_variant_en_US",
+                        "shopinvader.category": "demo_elasticsearch_backend_" "shopinvader_category_en_US",
+                        "shopinvader.variant": "demo_elasticsearch_backend_" "shopinvader_variant_en_US",
                     },
                 },
                 "required": True,
@@ -424,10 +421,8 @@ class TestCerberusValidator(TreeCase, MetaCase("DummyCase", (object,), {})):
                         "name used to fill the index and value is "
                         "the index name",
                         "example": {
-                            "shopinvader.category": "demo_elasticsearch_backend_"
-                            "shopinvader_category_en_US",
-                            "shopinvader.variant": "demo_elasticsearch_backend_"
-                            "shopinvader_variant_en_US",
+                            "shopinvader.category": "demo_elasticsearch_backend_" "shopinvader_category_en_US",
+                            "shopinvader.variant": "demo_elasticsearch_backend_" "shopinvader_variant_en_US",
                         },
                         "nullable": True,
                         "type": "object",

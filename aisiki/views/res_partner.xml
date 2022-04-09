@@ -6,8 +6,9 @@
         <field name="inherit_id" ref="base.view_partner_form" />
         <field name="arch" type="xml">
             <xpath expr="//field[@name='website']" position="before">
+                <field name="delivery_agent" />
                 <field name="business_category" />
-                <field name="number_of_offices"/>
+                <field name="number_of_offices" />
             </xpath>
             <xpath expr="//field[@name='type']" position="after">
                 <field name="contact_person" />
@@ -18,6 +19,19 @@
                         <field name="common_product_ids" />
                     </group>
                 </page>
+            </xpath>
+        </field>
+    </record>
+    <record id="view_users_form" model="ir.ui.view">
+        <field name="name">res.users.inherit</field>
+        <field name="model">res.users</field>
+        <field name="inherit_id" ref="base.view_users_form" />
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='action_id']" position="after">
+                <field name="referral_code" />
+                <field name="toc" />
+                <field name="origin" />
+                <field name="registration_stage" />
             </xpath>
         </field>
     </record>

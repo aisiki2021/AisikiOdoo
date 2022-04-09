@@ -11,7 +11,9 @@ class AccountMove(models.Model):
     _inherit = "account.move"
 
     commission_total = fields.Float(
-        string="Commissions", compute="_compute_commission_total", store=True,
+        string="Commissions",
+        compute="_compute_commission_total",
+        store=True,
     )
     settlement_id = fields.Many2one(
         comodel_name="sale.commission.settlement",
@@ -45,14 +47,15 @@ class AccountMove(models.Model):
         self.mapped("invoice_line_ids").recompute_agents()
 
     @api.model
-    def fields_view_get(
-        self, view_id=None, view_type="form", toolbar=False, submenu=False
-    ):
+    def fields_view_get(self, view_id=None, view_type="form", toolbar=False, submenu=False):
         """Inject in this method the needed context for not removing other
         possible context values.
         """
         res = super(AccountMove, self).fields_view_get(
-            view_id=view_id, view_type=view_type, toolbar=toolbar, submenu=submenu,
+            view_id=view_id,
+            view_type=view_type,
+            toolbar=toolbar,
+            submenu=submenu,
         )
         if view_type == "form":
             invoice_xml = etree.XML(res["arch"])
@@ -60,7 +63,9 @@ class AccountMove(models.Model):
             if invoice_line_fields:
                 invoice_line_field = invoice_line_fields[0]
                 context = invoice_line_field.attrib.get("context", "{}").replace(
-                    "{", "{'partner_id': partner_id, ", 1,
+                    "{",
+                    "{'partner_id': partner_id, ",
+                    1,
                 )
                 invoice_line_field.attrib["context"] = context
                 res["arch"] = etree.tostring(invoice_xml)
@@ -85,13 +90,9 @@ class AccountMoveLine(models.Model):
     @api.depends("move_id.partner_id")
     def _compute_agent_ids(self):
         self.agent_ids = False  # for resetting previous agents
-        for record in self.filtered(
-            lambda x: x.move_id.partner_id and x.move_id.move_type[:3] == "out"
-        ):
+        for record in self.filtered(lambda x: x.move_id.partner_id and x.move_id.move_type[:3] == "out"):
             if not record.commission_free and record.product_id:
-                record.agent_ids = record._prepare_agents_vals_partner(
-                    record.move_id.partner_id
-                )
+                record.agent_ids = record._prepare_agents_vals_partner(record.move_id.partner_id)
 
 
 class AccountInvoiceLineAgent(models.Model):
@@ -107,7 +108,10 @@ class AccountInvoiceLineAgent(models.Model):
         store=True,
     )
     invoice_date = fields.Date(
-        string="Invoice date", related="invoice_id.date", store=True, readonly=True,
+        string="Invoice date",
+        related="invoice_id.date",
+        store=True,
+        readonly=True,
     )
     agent_line = fields.Many2many(
         comodel_name="sale.commission.settlement.line",
@@ -118,9 +122,14 @@ class AccountInvoiceLineAgent(models.Model):
     )
     settled = fields.Boolean(compute="_compute_settled", store=True)
     company_id = fields.Many2one(
-        comodel_name="res.company", compute="_compute_company", store=True,
+        comodel_name="res.company",
+        compute="_compute_company",
+        store=True,
     )
-    currency_id = fields.Many2one(related="object_id.currency_id", readonly=True,)
+    currency_id = fields.Many2one(
+        related="object_id.currency_id",
+        readonly=True,
+    )
 
     @api.depends(
         "object_id.price_subtotal",
@@ -140,16 +149,12 @@ class AccountInvoiceLineAgent(models.Model):
             if line.invoice_id.move_type and "refund" in line.invoice_id.move_type:
                 line.amount = -line.amount
 
-    @api.depends(
-        "agent_line", "agent_line.settlement_id.state", "invoice_id", "invoice_id.state"
-    )
+    @api.depends("agent_line", "agent_line.settlement_id.state", "invoice_id", "invoice_id.state")
     def _compute_settled(self):
         # Count lines of not open or paid invoices as settled for not
         # being included in settlements
         for line in self:
-            line.settled = any(
-                x.settlement_id.state != "cancel" for x in line.agent_line
-            )
+            line.settled = any(x.settlement_id.state != "cancel" for x in line.agent_line)
 
     @api.depends("object_id", "object_id.company_id")
     def _compute_company(self):
@@ -160,7 +165,9 @@ class AccountInvoiceLineAgent(models.Model):
     def _check_settle_integrity(self):
         for record in self:
             if any(record.mapped("settled")):
-                raise exceptions.ValidationError(_("You can't modify a settled line"),)
+                raise exceptions.ValidationError(
+                    _("You can't modify a settled line"),
+                )
 
     def _skip_settlement(self):
         """This function should return False if the commission can be paid.
@@ -169,6 +176,5 @@ class AccountInvoiceLineAgent(models.Model):
         """
         self.ensure_one()
         return (
-            self.commission_id.invoice_state == "paid"
-            and self.invoice_id.payment_state not in ["in_payment", "paid"]
+            self.commission_id.invoice_state == "paid" and self.invoice_id.payment_state not in ["in_payment", "paid"]
         ) or self.invoice_id.state != "posted"
