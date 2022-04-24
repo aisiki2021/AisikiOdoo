@@ -61,6 +61,14 @@ class SingupOut(Datamodel):
     email = fields.Email(required=False, allow_none=True)
 
 
+class CreateVendorBulk(Datamodel):
+    _name = "create.vendor.bulk.datamode.in"
+
+    vendor_list = fields.List(
+        NestedModel("create.vendor.datamode.in"), required=True, allow_none=False
+    )
+
+
 class CreateVendor(Datamodel):
     _name = "create.vendor.datamode.in"
 

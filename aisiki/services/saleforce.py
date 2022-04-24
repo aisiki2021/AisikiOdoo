@@ -174,6 +174,51 @@ class OrderingApp(Component):
                 message=str(e), error=True
             )
 
+    @restapi.method(
+        [(["/vendors"], "POST")],
+        auth="user",
+        tags=["BusinessSaleForce"],
+        input_param=Datamodel("create.vendor.bulk.datamode.in"),
+        # output_param=Datamodel("create.vendor.datamode.out"),
+    )
+    def createvendors(self, payload):
+        vendor = []
+        vendor_list = payload.vendor_list
+        for payload in vendor_list:
+            values = {
+                "name": payload.name,
+                "purchase_frequency": payload.purchase_frequency,
+                "partner_longitude": payload.longitude,
+                "partner_latitude": payload.latitude,
+                "phone": payload.phone,
+                "email": payload.email,
+                "business_type": payload.business_type,
+                "agent_ids": [(6, 0, [request.env.user.partner_id.id])],
+                "parent_id": request.env.user.partner_id.id,
+                "business_name": payload.business_name,
+                "business_branch": payload.business_branch,
+                "addressline": payload.addressline,
+                "state": payload.state,
+                "business_category": payload.business_category,
+                "emergency_firstname": payload.emergency_firstname,
+                "emergency_lastname": payload.emergency_lastname,
+                "emergency_relationship": payload.emergency_relationship,
+                "emergency_phonenumber": payload.emergency_phonenumber,
+                "emergency_address": payload.emergency_address,
+                "emergency_state": payload.emergency_state,
+                "emergency_city": payload.emergency_city,
+            }
+
+            try:
+                p = request.env["res.partner"].with_user(1).create(values)
+                vendor.append({'name': p.name, 'id': p.id})
+            except Exception as e:
+                return self.env.datamodels["datamodel.error.out"](
+                    message=str(e), error=True
+                )
+        return vendor
+        
+
     @restapi.method([(["/getvendors"], "GET")], auth="user", tags=["BusinessSaleForce"])
     def getvendors(self):
         domain = [("parent_id", "=", request.env.user.partner_id.id)]

@@ -16,7 +16,7 @@ class Picking(models.Model):
         selection=[
             ("new", "New"),
             ("assigned", "Assigned"),
-            ("in_transist", "In Transist"),
+            ("in_transit", "In Transit"),
             ("completed", "Completed"),
         ],
         default="new",
