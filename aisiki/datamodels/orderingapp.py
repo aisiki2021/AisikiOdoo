@@ -159,3 +159,9 @@ class CheckoutOrderDatamodel(Datamodel):
 class ConfirmOrder(Datamodel):
     _name = "confirm.order.datamodel"
     ids = fields.List(fields.Integer(), required=True, allow_none=False)
+
+
+class DeliveryStatusDatamodelIn(Datamodel):
+    _name = "delivery.status.datamodel.in"
+    id = fields.Integer(required=True, allow_none=False)
+    delivery_status = fields.String(required=True, allow_none=False)

@@ -323,6 +323,47 @@ class Delivery(Component):
             )
         return res
 
+    @restapi.method(
+        [(["/change_status"], "GET")],
+        auth="user",
+        tags=["Delivery"],
+        input_param=Datamodel("delivery.status.datamodel.in"),
+    )
+    def delivery_change_status(self, payload):
+        """new | assigned | in_transit | completed"""
+        _id = request.env.user.partner_id.id
+        domain = [("id", "=", payload.id)]
+        order = request.env["stock.picking"].with_user(1).search(domain, limit=1)
+        order.write({"delivery_status": payload.delivery_status.strip()})
+
+        return {
+            "id": order.id,
+            "name": order.name,
+            "delivery_address": order.partner_id._display_address(without_company=True),
+            "customer": order.partner_id.name,
+            "phone": order.partner_id.phone,
+            "lat": order.partner_id.partner_latitude,
+            "lng": order.partner_id.partner_longitude,
+            "email": order.partner_id.phone,
+            "delivery_status": order.delivery_status,
+            "mobile": order.partner_id.phone,
+            "scheduled_date": order.scheduled_date,
+            "create_date": str(order.create_date),
+            "amount_total": order.sale_id.amount_total,
+            "payment_term": order.payment_term_id.name,
+            "items": [
+                {
+                    "image_url": item.product_id.image_url,
+                    "product_id": item.product_id.id,
+                    "quantity": item.product_uom_qty,
+                    "price_subtotal": item.sale_line_id.price_subtotal,
+                    "quantity_done": item.quantity_done,
+                    "description": item.description_picking,
+                }
+                for item in order.move_ids_without_package
+            ],
+        }
+
     @restapi.method([(["/search/<string:query>"], "GET")], auth="user", tags=["Order"])
     def search(self, query=None):
         _id = request.env.user.partner_id.id
