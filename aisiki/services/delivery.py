@@ -324,7 +324,7 @@ class Delivery(Component):
         return res
 
     @restapi.method(
-        [(["/change_status"], "GET")],
+        [(["/change_status"], "PATCH")],
         auth="user",
         tags=["Delivery"],
         input_param=Datamodel("delivery.status.datamodel.in"),
