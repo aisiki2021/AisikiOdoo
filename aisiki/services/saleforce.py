@@ -560,10 +560,12 @@ class OrderingApp(Component):
     def cartitem(self):
         res = {}
         data = []
-        domain = [
-            ("partner_id.parent_id", "=", request.env.user.partner_id.id),
+        domain = ["|",
+            ("partner_id", "=", request.env.user.partner_id.id),
+            ("partner_id", "in", request.env.user.partner_id.ids),
             ("state", "=", "draft"),
         ]
+        print('!!!!!!!!!!!!!!!!!!!!!!!!!!!', domain)
         orders = request.env["sale.order"].with_user(1).search(domain, limit=80)
         for order in orders:
             data.append(
