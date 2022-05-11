@@ -38,9 +38,7 @@ class TestServiceContextProvider(TransactionRestServiceRegistryCase):
 
         self._build_services(self, TestServiceNewApi)
         controller = self._get_controller_for(TestServiceNewApi)
-        with MockRequest(self.env), controller().service_component(
-            "partner"
-        ) as service:
+        with MockRequest(self.env), controller().service_component("partner") as service:
             self.assertFalse(service.work.authenticated_partner_id)
 
     def test_02(self):
@@ -60,9 +58,7 @@ class TestServiceContextProvider(TransactionRestServiceRegistryCase):
             ]
             _usage = "test_component_context_provider"
 
-        self._BaseTestController._component_context_provider = (
-            "test_component_context_provider"
-        )
+        self._BaseTestController._component_context_provider = "test_component_context_provider"
 
         # pylint: disable=R7980
         class TestServiceNewApi(Component):
@@ -83,12 +79,8 @@ class TestServiceContextProvider(TransactionRestServiceRegistryCase):
         self._build_components(TestComponentContextprovider)
         self._build_services(self, TestServiceNewApi)
         controller = self._get_controller_for(TestServiceNewApi)
-        with MockRequest(self.env), controller().service_component(
-            "partner"
-        ) as service:
-            self.assertEqual(
-                service.work.authenticated_partner_id, self.env.user.partner_id.id
-            )
+        with MockRequest(self.env), controller().service_component("partner") as service:
+            self.assertEqual(service.work.authenticated_partner_id, self.env.user.partner_id.id)
 
     def test_03(self):
         """Test authenticated_partner_id
@@ -106,9 +98,7 @@ class TestServiceContextProvider(TransactionRestServiceRegistryCase):
             def _get_authenticated_partner_id(self):
                 return 9999
 
-        self._BaseTestController._component_context_provider = (
-            "test_component_context_provider"
-        )
+        self._BaseTestController._component_context_provider = "test_component_context_provider"
 
         # pylint: disable=R7980
         class TestServiceNewApi(Component):
@@ -129,7 +119,5 @@ class TestServiceContextProvider(TransactionRestServiceRegistryCase):
         self._build_components(TestComponentContextprovider)
         self._build_services(self, TestServiceNewApi)
         controller = self._get_controller_for(TestServiceNewApi)
-        with MockRequest(self.env), controller().service_component(
-            "partner"
-        ) as service:
+        with MockRequest(self.env), controller().service_component("partner") as service:
             self.assertEqual(service.work.authenticated_partner_id, 9999)

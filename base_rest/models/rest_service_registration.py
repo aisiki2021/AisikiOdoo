@@ -62,9 +62,7 @@ class RestServiceRegistration(models.AbstractModel):
         # we also have to remove the RestController from the
         # controller_per_module registry since it's an abstract controller
         controllers = http.controllers_per_module["base_rest"]
-        controllers = [
-            (name, cls) for name, cls in controllers if "RestController" not in name
-        ]
+        controllers = [(name, cls) for name, cls in controllers if "RestController" not in name]
         http.controllers_per_module["base_rest"] = controllers
         # create the final controller providing the http routes for
         # the services available into the current database
@@ -84,9 +82,7 @@ class RestServiceRegistration(models.AbstractModel):
         _logger.debug("Build service %s for controller_def %s", service, controller_def)
         base_controller_cls = controller_def["controller_class"]
         # build our new controller class
-        ctrl_cls = RestApiServiceControllerGenerator(
-            service, base_controller_cls
-        ).generate()
+        ctrl_cls = RestApiServiceControllerGenerator(service, base_controller_cls).generate()
 
         # generate an addon name used to register our new controller for
         # the current database
@@ -141,9 +137,7 @@ class RestServiceRegistration(models.AbstractModel):
                 auth = routing["auth"]
                 if auth == "public_or_default":
                     alternative_auth = "public_or_" + default_auth
-                    if getattr(
-                        self.env["ir.http"], "_auth_method_%s" % alternative_auth, None
-                    ):
+                    if getattr(self.env["ir.http"], "_auth_method_%s" % alternative_auth, None):
                         routing["auth"] = alternative_auth
                     else:
                         _logger.debug(
@@ -167,14 +161,10 @@ class RestServiceRegistration(models.AbstractModel):
 
     def _get_services(self, collection_name):
         collection = _PseudoCollection(collection_name, self.env)
-        work = WorkContext(
-            model_name="rest.service.registration", collection=collection
-        )
+        work = WorkContext(model_name="rest.service.registration", collection=collection)
         component_classes = work._lookup_components(usage=None, model_name=None)
         # removes component without collection that are not a rest service
-        component_classes = [
-            c for c in component_classes if self._filter_service_component(c)
-        ]
+        component_classes = [c for c in component_classes if self._filter_service_component(c)]
         return [comp(work) for comp in component_classes]
 
     @staticmethod
@@ -213,21 +203,14 @@ class RestServiceRegistration(models.AbstractModel):
         controller_defs = _rest_controllers_per_module.get(module, [])
         for controller_def in controller_defs:
             root_path = controller_def["root_path"]
-            is_base_contoller = not getattr(
-                controller_def["controller_class"], "_generated", False
-            )
+            is_base_contoller = not getattr(controller_def["controller_class"], "_generated", False)
             if is_base_contoller:
                 current_controller = (
-                    services_registry[root_path]["controller_class"]
-                    if root_path in services_registry
-                    else None
+                    services_registry[root_path]["controller_class"] if root_path in services_registry else None
                 )
                 services_registry[controller_def["root_path"]] = controller_def
                 self._register_rest_route(controller_def["root_path"])
-                if (
-                    current_controller
-                    and current_controller != controller_def["controller_class"]
-                ):
+                if current_controller and current_controller != controller_def["controller_class"]:
                     _logger.error(
                         "Only one REST controller can be safely declared for root path %s\n "
                         "Registering controller %s\n "
@@ -288,9 +271,9 @@ class RestApiMethodTransformer(object):
         routes = self._method_to_routes(method)
         input_param = self._method_to_input_param(method)
         output_param = self._method_to_output_param(method)
-        decorated_method = restapi.method(
-            routes=routes, input_param=input_param, output_param=output_param
-        )(getattr(self._service.__class__, method_name))
+        decorated_method = restapi.method(routes=routes, input_param=input_param, output_param=output_param)(
+            getattr(self._service.__class__, method_name)
+        )
         setattr(self._service.__class__, method_name, decorated_method)
 
     def _method_to_routes(self, method):
@@ -339,9 +322,7 @@ class RestApiMethodTransformer(object):
 
     def _method_to_param(self, validator_method_name, direction):
         validator_component = self._service.component(usage="cerberus.validator")
-        if validator_component.has_validator_handler(
-            self._service, validator_method_name, direction
-        ):
+        if validator_component.has_validator_handler(self._service, validator_method_name, direction):
             return restapi.CerberusValidator(schema=validator_method_name)
         return None
 
@@ -368,18 +349,14 @@ class RestApiServiceControllerGenerator(object):
     @property
     def _new_cls_name(self):
         controller_name = self._base_controller.__name__
-        return "{}{}".format(
-            controller_name, self._service._usage.title().replace(".", "_")
-        )
+        return "{}{}".format(controller_name, self._service._usage.title().replace(".", "_"))
 
     def generate(self):
         """
         :return: A new controller child of base_controller defining the routes
         required to serve the method of the services.
         """
-        controller = type(
-            self._new_cls_name, (self._base_controller,), self._generate_methods()
-        )
+        controller = type(self._new_cls_name, (self._base_controller,), self._generate_methods())
         controller._generated = True
         return controller
 

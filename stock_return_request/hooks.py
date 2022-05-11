@@ -75,9 +75,7 @@ def post_init_hook(cr, registry):
         )
         while remaining_moves:
             _logger.info("{} moves left...".format(len(remaining_moves)))
-            remaining_moves, updated_moves = update_qty_returnable(
-                cr, remaining_moves, updated_moves
-            )
+            remaining_moves, updated_moves = update_qty_returnable(cr, remaining_moves, updated_moves)
 
 
 def update_qty_returnable(cr, remaining_moves, updated_moves):

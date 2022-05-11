@@ -224,9 +224,7 @@ class Datamodel(MarshmallowModel, metaclass=MetaDatamodel):
 
     @classmethod
     def validate(cls, data, context=None, many=None, partial=None, unknown=None):
-        schema = cls.__get_schema_class__(
-            context=context, partial=partial, unknown=unknown
-        )
+        schema = cls.__get_schema_class__(context=context, partial=partial, unknown=unknown)
         all_schemas = _get_nested_schemas(schema)
         with ExitStack() as stack:
             # propagate 'unknown' to each nested schema during validate
@@ -328,10 +326,7 @@ class Datamodel(MarshmallowModel, metaclass=MetaDatamodel):
         bases = LastOrderedSet([cls])
         for parent in parents:
             if parent not in registry:
-                raise TypeError(
-                    "Datamodel %r inherits from non-existing datamodel %r."
-                    % (name, parent)
-                )
+                raise TypeError("Datamodel %r inherits from non-existing datamodel %r." % (name, parent))
             parent_class = registry[parent]
             if parent == name:
                 for base in parent_class.__bases__:
@@ -366,9 +361,7 @@ class Datamodel(MarshmallowModel, metaclass=MetaDatamodel):
 
         setattr(DatamodelClass.__schema_class__, "_registry", registry)  # noqa: B010
         setattr(DatamodelClass.__schema_class__, "_datamodel_name", name)  # noqa: B010
-        setattr(
-            DatamodelClass.__schema_class__, "__make_object__", __make_object__
-        )  # noqa: B010
+        setattr(DatamodelClass.__schema_class__, "__make_object__", __make_object__)  # noqa: B010
         DatamodelClass._complete_datamodel_build()
 
         registry[name] = DatamodelClass

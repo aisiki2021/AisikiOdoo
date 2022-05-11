@@ -50,12 +50,8 @@ class ForgotPasswordDatamodelOut(Datamodel):
 class CorporateRegisterIn(Datamodel):
     _name = "register.datamodel.in"
 
-    name = fields.String(
-        required=False, allow_none=False, load_default="Babatope Ajepe"
-    )
-    contact_person = fields.String(
-        required=False, allow_none=False, load_default="Esanju Babatunde"
-    )
+    name = fields.String(required=False, allow_none=False, load_default="Babatope Ajepe")
+    contact_person = fields.String(required=False, allow_none=False, load_default="Esanju Babatunde")
     business_category = fields.Integer(required=False, allow_none=False, load_default=1)
     password = fields.String(required=False, allow_none=False, load_default="password")
     number_of_offices = fields.Integer(required=False, allow_none=False, load_default=1)
@@ -104,9 +100,7 @@ class CartItems(Datamodel):
     quantity = fields.Integer(required=False, allow_none=False, load_default=5)
     discount = fields.Integer(required=False, allow_none=False, load_default=10)
     price_unit = fields.Float(required=False, allow_none=False, load_default=700)
-    name = fields.String(
-        required=False, allow_none=True, load_default="Default Order Description"
-    )
+    name = fields.String(required=False, allow_none=True, load_default="Default Order Description")
 
 
 class CartIn(Datamodel):

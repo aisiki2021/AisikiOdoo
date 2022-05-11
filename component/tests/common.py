@@ -42,9 +42,7 @@ class ComponentMixin(object):
             current_addon = _get_addon_name(cls.__module__)
             env["component.builder"].load_components(current_addon)
             if hasattr(cls, "env"):
-                cls.env.context = dict(
-                    cls.env.context, components_registry=cls._components_registry
-                )
+                cls.env.context = dict(cls.env.context, components_registry=cls._components_registry)
 
     # pylint: disable=W8106
     def setUp(self):
@@ -78,9 +76,7 @@ class TransactionComponentCase(common.TransactionCase, ComponentMixin):
         common.TransactionCase.setUp(self)
         ComponentMixin.setUp(self)
         # There's no env on setUpClass of TransactionCase, must do it here.
-        self.env.context = dict(
-            self.env.context, components_registry=self._components_registry
-        )
+        self.env.context = dict(self.env.context, components_registry=self._components_registry)
 
 
 class SavepointComponentCase(common.SavepointCase, ComponentMixin):
@@ -105,9 +101,7 @@ class SavepointComponentCase(common.SavepointCase, ComponentMixin):
         ComponentMixin.setUp(self)
 
 
-class ComponentRegistryCase(
-    unittest.TestCase, common.MetaCase("DummyCase", (object,), {})
-):
+class ComponentRegistryCase(unittest.TestCase, common.MetaCase("DummyCase", (object,), {})):
     """This test case can be used as a base for writings tests on components
 
     This test case is meant to test components in a special component registry,
@@ -183,9 +177,7 @@ class ComponentRegistryCase(
         # keep the original classes registered by the metaclass
         # so we'll restore them at the end of the tests, it avoid
         # to pollute it with Stub / Test components
-        class_or_instance._original_components = copy.deepcopy(
-            MetaComponent._modules_components
-        )
+        class_or_instance._original_components = copy.deepcopy(MetaComponent._modules_components)
 
         # it will be our temporary component registry for our test session
         class_or_instance.comp_registry = ComponentRegistry()

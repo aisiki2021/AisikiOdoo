@@ -101,9 +101,7 @@ class SavepointDatamodelCase(common.SavepointCase, DatamodelMixin):
         DatamodelMixin.setUp(self)
 
 
-class DatamodelRegistryCase(
-    common.TreeCase, common.MetaCase("DummyCase", (object,), {})
-):
+class DatamodelRegistryCase(common.TreeCase, common.MetaCase("DummyCase", (object,), {})):
     """This test case can be used as a base for writings tests on datamodels
 
     This test case is meant to test datamodels in a special datamodel registry,

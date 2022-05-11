@@ -47,9 +47,7 @@ class AccountMove(models.Model):
         self.mapped("invoice_line_ids").recompute_agents()
 
     @api.model
-    def fields_view_get(
-        self, view_id=None, view_type="form", toolbar=False, submenu=False
-    ):
+    def fields_view_get(self, view_id=None, view_type="form", toolbar=False, submenu=False):
         """Inject in this method the needed context for not removing other
         possible context values.
         """
@@ -92,13 +90,9 @@ class AccountMoveLine(models.Model):
     @api.depends("move_id.partner_id")
     def _compute_agent_ids(self):
         self.agent_ids = False  # for resetting previous agents
-        for record in self.filtered(
-            lambda x: x.move_id.partner_id and x.move_id.move_type[:3] == "out"
-        ):
+        for record in self.filtered(lambda x: x.move_id.partner_id and x.move_id.move_type[:3] == "out"):
             if not record.commission_free and record.product_id:
-                record.agent_ids = record._prepare_agents_vals_partner(
-                    record.move_id.partner_id
-                )
+                record.agent_ids = record._prepare_agents_vals_partner(record.move_id.partner_id)
 
 
 class AccountInvoiceLineAgent(models.Model):
@@ -155,16 +149,12 @@ class AccountInvoiceLineAgent(models.Model):
             if line.invoice_id.move_type and "refund" in line.invoice_id.move_type:
                 line.amount = -line.amount
 
-    @api.depends(
-        "agent_line", "agent_line.settlement_id.state", "invoice_id", "invoice_id.state"
-    )
+    @api.depends("agent_line", "agent_line.settlement_id.state", "invoice_id", "invoice_id.state")
     def _compute_settled(self):
         # Count lines of not open or paid invoices as settled for not
         # being included in settlements
         for line in self:
-            line.settled = any(
-                x.settlement_id.state != "cancel" for x in line.agent_line
-            )
+            line.settled = any(x.settlement_id.state != "cancel" for x in line.agent_line)
 
     @api.depends("object_id", "object_id.company_id")
     def _compute_company(self):
@@ -186,6 +176,5 @@ class AccountInvoiceLineAgent(models.Model):
         """
         self.ensure_one()
         return (
-            self.commission_id.invoice_state == "paid"
-            and self.invoice_id.payment_state not in ["in_payment", "paid"]
+            self.commission_id.invoice_state == "paid" and self.invoice_id.payment_state not in ["in_payment", "paid"]
         ) or self.invoice_id.state != "posted"

@@ -126,8 +126,7 @@ class BaseRestService(AbstractComponent):
         output_param = routing["output_param"]
         if not output_param:
             _logger.warning(
-                "DEPRECATED: You must define an output schema for method %s "
-                "in service %s",
+                "DEPRECATED: You must define an output schema for method %s " "in service %s",
                 method_name,
                 self._name,
             )
@@ -194,15 +193,9 @@ class BaseRestService(AbstractComponent):
     def _get_openapi_default_responses(self):
         return {
             "400": {"description": "One of the given parameter is not valid"},
-            "401": {
-                "description": "The user is not authorized. Authentication "
-                "is required"
-            },
+            "401": {"description": "The user is not authorized. Authentication " "is required"},
             "404": {"description": "Requested resource not found"},
-            "403": {
-                "description": "You don't have the permission to access the "
-                "requested resource."
-            },
+            "403": {"description": "You don't have the permission to access the " "requested resource."},
         }
 
     @property
