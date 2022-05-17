@@ -12,9 +12,7 @@ class SaleCommissionMakeSettle(models.TransientModel):
     _description = "Wizard for settling commissions in invoices"
 
     date_to = fields.Date("Up to", required=True, default=fields.Date.today())
-    agent_ids = fields.Many2many(
-        comodel_name="res.partner", domain="[('agent', '=', True)]"
-    )
+    agent_ids = fields.Many2many(comodel_name="res.partner", domain="[('agent', '=', True)]")
 
     def _get_period_start(self, agent, date_to):
         if agent.settlement == "monthly":
@@ -85,9 +83,7 @@ class SaleCommissionMakeSettle(models.TransientModel):
                 order="invoice_date",
             )
             for company in agent_lines.mapped("company_id"):
-                agent_lines_company = agent_lines.filtered(
-                    lambda r: r.object_id.company_id == company
-                )
+                agent_lines_company = agent_lines.filtered(lambda r: r.object_id.company_id == company)
                 pos = 0
                 sett_to = date(year=1900, month=1, day=1)
                 while pos < len(agent_lines_company):
@@ -101,14 +97,10 @@ class SaleCommissionMakeSettle(models.TransientModel):
                             agent,
                             sett_from,
                         ) - timedelta(days=1)
-                        settlement = self._get_settlement(
-                            agent, company, sett_from, sett_to
-                        )
+                        settlement = self._get_settlement(agent, company, sett_from, sett_to)
                         if not settlement:
                             settlement = settlement_obj.create(
-                                self._prepare_settlement_vals(
-                                    agent, company, sett_from, sett_to
-                                )
+                                self._prepare_settlement_vals(agent, company, sett_from, sett_to)
                             )
                         settlement_ids.append(settlement.id)
                     settlement_line_obj.create(

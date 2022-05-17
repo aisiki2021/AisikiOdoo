@@ -176,9 +176,7 @@ class StockReturnRequestCase(SavepointCase):
                 ],
             }
         )
-        move3 = cls.picking_supplier_1.move_lines.filtered(
-            lambda x: x.product_id == cls.prod_3
-        )
+        move3 = cls.picking_supplier_1.move_lines.filtered(lambda x: x.product_id == cls.prod_3)
         move3.write(
             {
                 "move_line_ids": [
@@ -253,9 +251,7 @@ class StockReturnRequestCase(SavepointCase):
                 ],
             }
         )
-        move3 = cls.picking_supplier_2.move_lines.filtered(
-            lambda x: x.product_id == cls.prod_3
-        )
+        move3 = cls.picking_supplier_2.move_lines.filtered(lambda x: x.product_id == cls.prod_3)
         move3.write(
             {
                 "move_line_ids": [
@@ -282,9 +278,7 @@ class StockReturnRequestCase(SavepointCase):
         # Test could run so fast that the move lines date would be in the same
         # second. We need to sort them by date, so we'll be faking the line
         # dates after the picking is done.
-        cls.picking_supplier_2.move_lines.write(
-            {"date": fields.Datetime.now() + relativedelta(seconds=1)}
-        )
+        cls.picking_supplier_2.move_lines.write({"date": fields.Datetime.now() + relativedelta(seconds=1)})
         # We'll have 100 units of each product
         # No we deliver some products
         cls.picking_customer_1 = cls.picking_obj.create(
@@ -357,9 +351,7 @@ class StockReturnRequestCase(SavepointCase):
         # Test could run so fast that the move lines date would be in the same
         # second. We need to sort them by date, so we'll be faking the line
         # dates after the picking is done.
-        cls.picking_customer_2.move_lines.write(
-            {"date": fields.Datetime.now() + relativedelta(seconds=1)}
-        )
+        cls.picking_customer_2.move_lines.write({"date": fields.Datetime.now() + relativedelta(seconds=1)})
         # Stock in wh1.lot_stock_id
         # prod_1: 80.0 / prod_2: 70.0 / prod_3: 100.0
         cls.return_request_obj = cls.env["stock.return.request"]

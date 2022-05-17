@@ -100,8 +100,7 @@ def _get_field_props(spec):  # noqa: C901
             rule_value_type = spec["keysrules"].get("type", "string")
             if rule_value_type != "string":
                 _logger.debug(
-                    "Openapi only support key/value mapping definition where"
-                    " the keys are strings. Received %s",
+                    "Openapi only support key/value mapping definition where" " the keys are strings. Received %s",
                     rule_value_type,
                 )
         if "valuesrules" in spec:

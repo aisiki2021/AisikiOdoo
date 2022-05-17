@@ -6,9 +6,7 @@ from odoo import _, api, fields, models
 
 class SaleCommissionMixin(models.AbstractModel):
     _name = "sale.commission.mixin"
-    _description = (
-        "Mixin model for applying to any object that wants to handle commissions"
-    )
+    _description = "Mixin model for applying to any object that wants to handle commissions"
 
     agent_ids = fields.One2many(
         comodel_name="sale.commission.line.mixin",
@@ -54,9 +52,7 @@ class SaleCommissionMixin(models.AbstractModel):
             elif len(line.agent_ids) == 1:
                 line.commission_status = _("1 commission agent")
             else:
-                line.commission_status = _("%s commission agents") % (
-                    len(line.agent_ids),
-                )
+                line.commission_status = _("%s commission agents") % (len(line.agent_ids),)
 
     def recompute_agents(self):
         self._compute_agent_ids()
@@ -80,10 +76,7 @@ class SaleCommissionMixin(models.AbstractModel):
 
 class SaleCommissionLineMixin(models.AbstractModel):
     _name = "sale.commission.line.mixin"
-    _description = (
-        "Mixin model for having commission agent lines in "
-        "any object inheriting from this one"
-    )
+    _description = "Mixin model for having commission agent lines in " "any object inheriting from this one"
     _rec_name = "agent_id"
 
     _sql_constraints = [

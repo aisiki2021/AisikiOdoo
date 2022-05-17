@@ -28,18 +28,12 @@ class RestControllerType(ControllerType):
 
     # pylint: disable=E0213
     def __init__(cls, name, bases, attrs):  # noqa: B902
-        if (
-            "RestController" in globals()
-            and RestController in bases
-            and Controller not in bases
-        ):
+        if "RestController" in globals() and RestController in bases and Controller not in bases:
             # to be registered as a controller into the ControllerType,
             # our RestConrtroller must be a direct child of Controller
             bases += (Controller,)
         super(RestControllerType, cls).__init__(name, bases, attrs)
-        if "RestController" not in globals() or not any(
-            issubclass(b, RestController) for b in bases
-        ):
+        if "RestController" not in globals() or not any(issubclass(b, RestController) for b in bases):
             return
         # register the rest controller into the rest controllers registry
         root_path = getattr(cls, "_root_path", None)
@@ -193,16 +187,13 @@ class RestController(Controller, metaclass=RestControllerType):
     def _validate_method_name(self, method_name):
         if method_name.startswith("_"):
             _logger.error(
-                "REST API called with an unallowed method "
-                "name: %s.\n Method can't start with '_'",
+                "REST API called with an unallowed method " "name: %s.\n Method can't start with '_'",
                 method_name,
             )
             raise BadRequest()
         return True
 
-    def _process_method(
-        self, service_name, method_name, *args, collection=None, params=None
-    ):
+    def _process_method(self, service_name, method_name, *args, collection=None, params=None):
         self._validate_method_name(method_name)
         if isinstance(collection, models.Model) and not collection:
             raise request.not_found()

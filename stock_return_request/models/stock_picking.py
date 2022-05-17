@@ -16,7 +16,5 @@ class StockPicking(models.Model):
         backorders = super()._create_backorder()
         rbo = backorders.filtered("backorder_id.stock_return_request_id")
         for backorder in rbo:
-            backorder.stock_return_request_id = (
-                backorder.backorder_id.stock_return_request_id
-            )
+            backorder.stock_return_request_id = backorder.backorder_id.stock_return_request_id
         return backorders

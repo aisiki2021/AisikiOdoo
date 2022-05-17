@@ -34,17 +34,13 @@ class Users(models.Model):
         # no time limit for initial invitation, only for reset password
         expiration = False if create_mode else now(days=+1)
 
-        self.mapped("partner_id").signup_prepare(
-            signup_type="reset", expiration=expiration
-        )
+        self.mapped("partner_id").signup_prepare(signup_type="reset", expiration=expiration)
 
         # send email to users with their signup url
         template = False
         if create_mode:
             try:
-                template = self.env.ref(
-                    "auth_signup.set_password_email", raise_if_not_found=False
-                )
+                template = self.env.ref("auth_signup.set_password_email", raise_if_not_found=False)
             except ValueError:
                 pass
         if not template:
@@ -67,9 +63,7 @@ class Users(models.Model):
             # TDE FIXME: make this template technical (qweb)
             with self.env.cr.savepoint():
                 force_send = not (self.env.context.get("import_file", False))
-                template.send_mail(
-                    user.id, force_send=force_send, raise_exception=False
-                )
+                template.send_mail(user.id, force_send=force_send, raise_exception=False)
             _logger.info(
                 "Password reset email sent for user <%s> to <%s>",
                 user.login,
@@ -83,9 +77,7 @@ class ResPartner(models.Model):
     common_product_ids = fields.Many2many(comodel_name="product.product")
     contact_person = fields.Char(string="Contact Person")
     number_of_offices = fields.Char(string="Number of Offices")
-    referral_code = fields.Char(
-        string="Referral Code", related="user_id.referral_code", store=True
-    )
+    referral_code = fields.Char(string="Referral Code", related="user_id.referral_code", store=True)
     city = fields.Char(related="user_id.city")
     agentid = fields.Char(related="user_id.agentid", store=True)
     toc = fields.Char(related="user_id.toc", store=True)
@@ -108,13 +100,23 @@ class ResPartner(models.Model):
     emergency_state = fields.Char()
     emergency_city = fields.Char()
 
+    image_url = fields.Char(string="Image URL", compute="_compute_image_url_link")
+
+    def _compute_image_url_link(self):
+        base_url = self.env["ir.config_parameter"].sudo().get_param("web.base.url")
+
+        for rec in self:
+            rec.image_url = "%s/web/image/%s/%s/image_1024" % (
+                base_url,
+                rec._name,
+                rec.id,
+            )
+
 
 class ProductTemplate(models.Model):
     _inherit = "product.template"
 
-    aisiki_product_type = fields.Selection(
-        selection=[("fresh", "Fresh Food"), ("fmcg", "FMCG")], string="Aisiki Type"
-    )
+    aisiki_product_type = fields.Selection(selection=[("fresh", "Fresh Food"), ("fmcg", "FMCG")], string="Aisiki Type")
 
     image_url = fields.Char(string="Image URL", compute="_compute_image_url_link")
 
