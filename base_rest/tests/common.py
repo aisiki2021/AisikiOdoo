@@ -41,15 +41,11 @@ class RegistryMixin(object):
             # modules, not 'to install', which means we load only the
             # dependencies of the tested addons, not the siblings or
             # children addons
-            service_registration.build_registry(
-                services_registry, states=("installed",)
-            )
+            service_registration.build_registry(services_registry, states=("installed",))
             # build the services of the current tested addon
             current_addon = _get_addon_name(cls.__module__)
             service_registration.load_services(current_addon, services_registry)
-            env["rest.service.registration"]._build_controllers_routes(
-                services_registry
-            )
+            env["rest.service.registration"]._build_controllers_routes(services_registry)
 
 
 class RestServiceRegistryCase(ComponentRegistryCase):
@@ -64,9 +60,7 @@ class RestServiceRegistryCase(ComponentRegistryCase):
         controllers = http.controllers_per_module
         http.controllers_per_module = controllers
 
-        class_or_instance._controllers_per_module = copy.deepcopy(
-            http.controllers_per_module
-        )
+        class_or_instance._controllers_per_module = copy.deepcopy(http.controllers_per_module)
         class_or_instance._original_addon_rest_controllers_per_module = copy.deepcopy(
             _rest_controllers_per_module[_get_addon_name(class_or_instance.__module__)]
         )
@@ -76,9 +70,7 @@ class RestServiceRegistryCase(ComponentRegistryCase):
         _component_databases[db_name] = class_or_instance.comp_registry
 
         # makes the test service registry available for the db name
-        class_or_instance._original_services_registry = _rest_services_databases.get(
-            db_name, {}
-        )
+        class_or_instance._original_services_registry = _rest_services_databases.get(db_name, {})
         _rest_services_databases[db_name] = class_or_instance._service_registry
 
         # build the services and controller of every installed addons
@@ -94,9 +86,7 @@ class RestServiceRegistryCase(ComponentRegistryCase):
                 states=("installed",),
                 exclude_addons=[current_addon],
             )
-            RestServiceRegistration._build_controllers_routes(
-                class_or_instance._service_registry
-            )
+            RestServiceRegistration._build_controllers_routes(class_or_instance._service_registry)
 
         # register our components
         class_or_instance.comp_registry.load_components("base_rest")
@@ -141,9 +131,7 @@ class RestServiceRegistryCase(ComponentRegistryCase):
         http.controllers_per_module = class_or_instance._controllers_per_module
         db_name = get_db_name()
         _component_databases[db_name] = class_or_instance._original_components
-        _rest_services_databases[
-            db_name
-        ] = class_or_instance._original_services_registry
+        _rest_services_databases[db_name] = class_or_instance._original_services_registry
         class_or_instance._service_registry = {}
         _rest_controllers_per_module[
             _get_addon_name(class_or_instance.__module__)
@@ -155,12 +143,8 @@ class RestServiceRegistryCase(ComponentRegistryCase):
         with new_rollbacked_env() as env:
             RestServiceRegistration = env["rest.service.registration"]
             current_addon = _get_addon_name(class_or_instance.__module__)
-            RestServiceRegistration.load_services(
-                current_addon, class_or_instance._service_registry
-            )
-            RestServiceRegistration._build_controllers_routes(
-                class_or_instance._service_registry
-            )
+            RestServiceRegistration.load_services(current_addon, class_or_instance._service_registry)
+            RestServiceRegistration._build_controllers_routes(class_or_instance._service_registry)
 
     @staticmethod
     def _get_controller_for(service):
@@ -184,9 +168,7 @@ class RestServiceRegistryCase(ComponentRegistryCase):
 
     @staticmethod
     def _get_service_component(class_or_instance, usage):
-        collection = _PseudoCollection(
-            class_or_instance._collection_name, class_or_instance.env
-        )
+        collection = _PseudoCollection(class_or_instance._collection_name, class_or_instance.env)
         work = WorkContext(
             model_name="rest.service.registration",
             collection=collection,

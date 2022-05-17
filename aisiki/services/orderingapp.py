@@ -74,9 +74,7 @@ class OrderingApp(Component):
         products = (
             request.env["product.product"]
             .with_user(1)
-            .search_read(
-                domain, fields=fields, limit=limit, offset=offset, order="id desc"
-            )
+            .search_read(domain, fields=fields, limit=limit, offset=offset, order="id desc")
         )
 
         res["total"] = request.env["product.product"].with_user(1).search_count(domain)
@@ -106,11 +104,7 @@ class OrderingApp(Component):
             "virtual_available",
             "incoming_qty",
         ]
-        products = (
-            request.env["product.product"]
-            .with_user(1)
-            .search_read(domain, fields=fields)
-        )
+        products = request.env["product.product"].with_user(1).search_read(domain, fields=fields)
         res["data"] = products
         return res
 
@@ -119,11 +113,7 @@ class OrderingApp(Component):
         res = {}
         domain = []
         fields = ["name", "id"]
-        products = (
-            request.env["product.category"]
-            .with_user(1)
-            .search_read(domain, fields=fields)
-        )
+        products = request.env["product.category"].with_user(1).search_read(domain, fields=fields)
         res["data"] = products
         return res
 
@@ -136,17 +126,11 @@ class OrderingApp(Component):
         res = {}
         domain = [("categ_id", "=", categ_id)]
         fields = ["name", "id"]
-        products = (
-            request.env["product.product"]
-            .with_user(1)
-            .search_read(domain, fields=fields)
-        )
+        products = request.env["product.product"].with_user(1).search_read(domain, fields=fields)
         res["data"] = products
         return res
 
-    @restapi.method(
-        [(["/search/<string:query>"], "GET")], auth="user", tags=["Products"]
-    )
+    @restapi.method([(["/search/<string:query>"], "GET")], auth="user", tags=["Products"])
     def category_products(self, query=None):
         res = {}
         domain = ["|", ("name", "ilike", query), ("description_sale", "ilike", query)]
@@ -169,18 +153,12 @@ class OrderingApp(Component):
             "virtual_available",
             "incoming_qty",
         ]
-        products = (
-            request.env["product.product"]
-            .with_user(1)
-            .search_read(domain, fields=fields, limit=80)
-        )
+        products = request.env["product.product"].with_user(1).search_read(domain, fields=fields, limit=80)
         res["data"] = products
         res["count"] = len(products)
         return res
 
-    @restapi.method(
-        [(["/orders/metric/<int:days>"], "GET")], auth="user", tags=["Order"]
-    )
+    @restapi.method([(["/orders/metric/<int:days>"], "GET")], auth="user", tags=["Order"])
     def orders_metric(self, days=1):
         """Metric in days default is 1"""
         date = fields.Date.today() - timedelta(days=days)
@@ -189,14 +167,7 @@ class OrderingApp(Component):
             ("create_date", ">=", date),
             ("state", "=", "sale"),
         ]
-        return {
-            "amount_total": sum(
-                [
-                    o.amount_total
-                    for o in request.env["sale.order"].with_user(1).search(domain)
-                ]
-            )
-        }
+        return {"amount_total": sum([o.amount_total for o in request.env["sale.order"].with_user(1).search(domain)])}
 
     @restapi.method([(["/orders"], "GET")], auth="user", tags=["Order"])
     def orders(self):
@@ -242,11 +213,7 @@ class OrderingApp(Component):
             ("delivery_status", "=", status),
         ]
         fields = ["name", "date_order", "delivery_status"]
-        orders = (
-            request.env["sale.order"]
-            .with_user(1)
-            .search_read(domain, fields=fields, limit=80)
-        )
+        orders = request.env["sale.order"].with_user(1).search_read(domain, fields=fields, limit=80)
         res["data"] = orders
         res["count"] = len(orders)
         return res
@@ -264,11 +231,7 @@ class OrderingApp(Component):
             "delivery_status",
             "date_order",
         ]
-        orders = (
-            request.env["sale.order"]
-            .with_user(1)
-            .search_read(domain, fields=fields, limit=80)
-        )
+        orders = request.env["sale.order"].with_user(1).search_read(domain, fields=fields, limit=80)
         res["data"] = orders
         res["count"] = len(orders)
         return res
@@ -336,18 +299,13 @@ class OrderingApp(Component):
         )
         return payments
 
-    @restapi.method(
-        [(["/paymentlink/<int:amount>"], ["GET"])], auth="user", tags=["Wallet"]
-    )
+    @restapi.method([(["/paymentlink/<int:amount>"], ["GET"])], auth="user", tags=["Wallet"])
     def wallet_paymentlink(self, amount):
         """Get checkout payment link."""
-        transaction = Transaction(
-            authorization_key="sk_test_6613ae6de9e50d198ba22637e6df1fecf3611610"
-        )
+        paystack_key = self.env["ir.config_parameter"].sudo().get_param("paystack.key")
+        transaction = Transaction(authorization_key=paystack_key)
         partner_id = request.env.user.partner_id
-        initialize = transaction.initialize(
-            partner_id.email or request.user.login, amount * 100
-        )
+        initialize = transaction.initialize(partner_id.email or request.user.login, amount * 100)
         return initialize[3]
 
     @restapi.method(
@@ -358,16 +316,13 @@ class OrderingApp(Component):
     )
     def postbalance(self, payload):
         """Add wallet balance"""
-        transaction = Transaction(
-            authorization_key="sk_test_6613ae6de9e50d198ba22637e6df1fecf3611610"
-        )
+        paystack_key = self.env["ir.config_parameter"].sudo().get_param("paystack.key")
+        transaction = Transaction(authorization_key=paystack_key)
         response = transaction.verify(payload.payment_ref)
         try:
 
             if response[3]["status"] == "success":
-                wallet_id = request.env.ref("aisiki.aisiki_wallet_journal").with_user(
-                    request.env.user.id
-                )
+                wallet_id = request.env.ref("aisiki.aisiki_wallet_journal").with_user(request.env.user.id)
 
                 payment = request.env["account.payment"].with_user(1)
 
@@ -444,17 +399,11 @@ class OrderingApp(Component):
         try:
             if order:
                 order.action_cancel()
-                resp = request.make_response(
-                    json.dumps(
-                        {"message": "sale.order %s has been cancelled" % (order_id,)}
-                    )
-                )
+                resp = request.make_response(json.dumps({"message": "sale.order %s has been cancelled" % (order_id,)}))
                 resp.status_code = 200
                 return resp
             else:
-                resp = request.make_response(
-                    json.dumps({"error": "order %s not found" % (order_id,)})
-                )
+                resp = request.make_response(json.dumps({"error": "order %s not found" % (order_id,)}))
                 resp.status_code = 404
                 return resp
 
@@ -464,9 +413,7 @@ class OrderingApp(Component):
             resp.status_code = 400
             return resp
 
-    @restapi.method(
-        [(["/cart/<int:order_id>"], ["DELETE"])], auth="user", tags=["Cart"]
-    )
+    @restapi.method([(["/cart/<int:order_id>"], ["DELETE"])], auth="user", tags=["Cart"])
     def delete(self, order_id):
         items = []
         partner_id = request.env.user.partner_id.id
@@ -484,9 +431,7 @@ class OrderingApp(Component):
         )
 
         order.unlink()
-        resp = request.make_response(
-            json.dumps({"message": "sale.order %s has been deleted" % (order_id,)})
-        )
+        resp = request.make_response(json.dumps({"message": "sale.order %s has been deleted" % (order_id,)}))
         resp.status_code = 200
         return resp
 
@@ -498,9 +443,9 @@ class OrderingApp(Component):
     )
     def pay(self, payload):
         """Generate paystack payment link."""
-        transaction = Transaction(
-            authorization_key="sk_test_6613ae6de9e50d198ba22637e6df1fecf3611610"
-        )
+        paystack_key = self.env["ir.config_parameter"].sudo().get_param("paystack.key")
+        # sk_test_6613ae6de9e50d198ba22637e6df1fecf3611610
+        transaction = Transaction(authorization_key=paystack_key)
         partner_id = request.env.user.partner_id
         orders = (
             request.env["sale.order"]
@@ -515,19 +460,13 @@ class OrderingApp(Component):
             )
         )
         if not orders:
-            resp = request.make_response(
-                json.dumps(
-                    {"error": "No other found for the given id(s) %s" % (payload.ids)}
-                )
-            )
+            resp = request.make_response(json.dumps({"error": "No other found for the given id(s) %s" % (payload.ids)}))
             resp.status_code = 401
             return resp
 
         total = sum([o.amount_total for o in orders]) * 100
 
-        initialize = transaction.initialize(
-            partner_id.email or request.env.user.company_id.email, total
-        )
+        initialize = transaction.initialize(partner_id.email or request.env.user.company_id.email, total)
         return initialize
 
     @restapi.method(
@@ -551,14 +490,12 @@ class OrderingApp(Component):
             )
         )
         if not orders:
-            resp = request.make_response(
-                json.dumps({"error": "There is no open order in cart or draft state"})
-            )
+            resp = request.make_response(json.dumps({"error": "There is no open order in cart or draft state"}))
             resp.status_code = 400
             return resp
-        transaction = Transaction(
-            authorization_key="sk_test_6613ae6de9e50d198ba22637e6df1fecf3611610"
-        )
+        paystack_key = self.env["ir.config_parameter"].sudo().get_param("paystack.key")
+        # sk_test_6613ae6de9e50d198ba22637e6df1fecf3611610
+        transaction = Transaction(authorization_key=paystack_key)
         response = transaction.verify(payload.payment_ref)
         state = "error"
         if response[3] != None and response[3]["status"] == "success":
@@ -569,7 +506,7 @@ class OrderingApp(Component):
                     order.action_confirm(),
                     order.with_user(1)._create_payment_transaction(
                         {
-                            "acquirer_id": 14,
+                            "acquirer_id": self.env.ref("aisiki.payment_acquirer_aisiki").id,
                             "acquirer_reference": response[3]["reference"],
                             "state": state,
                             "state_message": response[3],
@@ -579,6 +516,12 @@ class OrderingApp(Component):
                 ]
                 for order in orders
             ]
+        invoices = [order._create_invoices() for order in orders]
+        for order in orders:
+            transaction_ids = order.transaction_ids
+            for transaction_id in transaction_ids:
+                transaction_id._reconcile_after_transaction_done()
+
         error = request.make_response(json.dumps(response))
         error.status_code = 401
         return response[3] if response[3] else error
@@ -605,9 +548,7 @@ class OrderingApp(Component):
             )
         )
         if not order:
-            resp = request.make_response(
-                json.dumps({"error": "There is no open order in cart or draft state"})
-            )
+            resp = request.make_response(json.dumps({"error": "There is no open order in cart or draft state"}))
             resp.status_code = 400
         else:
             order.order_line.unlink()

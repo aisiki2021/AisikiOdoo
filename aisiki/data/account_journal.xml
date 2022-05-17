@@ -8,14 +8,24 @@
             <field name="sequence">10</field>
             <field name="alias_name">purchase_expense</field>
         </record>
-
         <record id="sequence_agent_seq" model="ir.sequence">
             <field name="name">Aisiki Agent Sequence</field>
             <field name="code">aisiki.agent.seq</field>
             <field name="prefix">A</field>
-            <field eval="1" name="number_next"/>
-            <field eval="1" name="number_increment"/>
-            <field eval="False" name="company_id"/>
+            <field eval="1" name="number_next" />
+            <field eval="1" name="number_increment" />
+            <field eval="False" name="company_id" />
+        </record>
+        <record id="payment_acquirer_aisiki" model="payment.acquirer">
+            <field name="name">AISIKI</field>
+            <field name="sequence">2</field>
+            <field name="view_template_id" ref="payment.default_acquirer_button" />
+            <field name="pending_msg">&lt;i&gt;Pending&lt;/i&gt;... The order will be validated after the payment.</field>
+            <field name="description" type="html">
+                <p>
+                    Provide instructions to customers so that they can pay their orders manually.
+                </p>
+            </field>
         </record>
     </data>
 </odoo>

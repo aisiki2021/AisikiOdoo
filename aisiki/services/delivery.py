@@ -41,9 +41,7 @@ class Delivery(Component):
             "password": payload.password,
             "email": payload.email,
             "delivery_agent": True,
-            "agentid": request.env["ir.sequence"]
-            .with_user(1)
-            .next_by_code("aisiki.agent.seq"),
+            "agentid": request.env["ir.sequence"].with_user(1).next_by_code("aisiki.agent.seq"),
             "origin": payload.origin,
         }
 
@@ -63,28 +61,16 @@ class Delivery(Component):
 
         except Exception as e:
 
-            return self.env.datamodels["datamodel.error.out"](
-                message=str(e), error=True
-            )
+            return self.env.datamodels["datamodel.error.out"](message=str(e), error=True)
 
     @restapi.method([(["/agents"], "GET")], auth="user", tags=["Delivery"])
     def get_agents(self):
         domain = [("delivery_agent", "=", True)]
-        fields = [
-            "name",
-            "phone",
-            "email",
-        ]
-        agents = (
-            request.env["res.partner"]
-            .with_user(1)
-            .search_read(domain, fields=fields, limit=80)
-        )
+        fields = ["name", "phone", "email", "image_url"]
+        agents = request.env["res.partner"].with_user(1).search_read(domain, fields=fields, limit=80)
         return agents
 
-    @restapi.method(
-        [(["/orders/<string:order_id>"], "GET")], auth="user", tags=["Order"]
-    )
+    @restapi.method([(["/orders/<string:order_id>"], "GET")], auth="user", tags=["Order"])
     def order(self, order_id):
         """."""
         res = []
@@ -99,12 +85,16 @@ class Delivery(Component):
 
         res = []
         for order in orders:
+            payment_status = (
+                "paid"
+                if order.sale_id.invoice_ids.filtered(lambda r: r.state == "posted").payment_state
+                in ["in_payment", "paid"]
+                else "not paid"
+            )
             res.append(
                 {
                     "name": order.name,
-                    "delivery_address": order.partner_id._display_address(
-                        without_company=True
-                    ),
+                    "delivery_address": order.partner_id._display_address(without_company=True),
                     "customer": order.partner_id.name,
                     "phone": order.partner_id.phone,
                     "lat": order.partner_id.partner_latitude,
@@ -114,7 +104,8 @@ class Delivery(Component):
                     "mobile": order.partner_id.phone,
                     "scheduled_date": order.scheduled_date,
                     "create_date": str(order.create_date),
-                    "amount_total": order.sale_id.amount_total,
+                    "amount_to_collect": order.sale_id.amount_total if payment_status == "not paid" else 0.0,
+                    "payment_status": payment_status,
                     "payment_term": order.payment_term_id.name,
                     "items": [
                         {
@@ -154,20 +145,23 @@ class Delivery(Component):
         if offset:
             offset = int(offset)
         orders = (
-            request.env["stock.picking"]
-            .with_user(1)
-            .search(domain, limit=limit, order="create_date", offset=offset)
+            request.env["stock.picking"].with_user(1).search(domain, limit=limit, order="create_date", offset=offset)
         )
 
         res = []
         for order in orders:
+
+            payment_status = (
+                "paid"
+                if order.sale_id.invoice_ids.filtered(lambda r: r.state == "posted").payment_state
+                in ["in_payment", "paid"]
+                else "not paid"
+            )
             res.append(
                 {
                     "id": order.id,
                     "name": order.name,
-                    "delivery_address": order.partner_id._display_address(
-                        without_company=True
-                    ),
+                    "delivery_address": order.partner_id._display_address(without_company=True),
                     "customer": order.partner_id.name,
                     "phone": order.partner_id.phone,
                     "create_date": str(order.create_date),
@@ -178,7 +172,8 @@ class Delivery(Component):
                     "mobile": order.partner_id.phone,
                     "scheduled_date": order.scheduled_date,
                     "create_date": str(order.create_date),
-                    "amount_total": order.sale_id.amount_total,
+                    "amount_to_collect": order.sale_id.amount_total if payment_status == "not paid" else 0.0,
+                    "payment_status": payment_status,
                     "payment_term": order.payment_term_id.name,
                     "items": [
                         {
@@ -220,19 +215,21 @@ class Delivery(Component):
         if offset:
             offset = int(offset)
         orders = (
-            request.env["stock.picking"]
-            .with_user(1)
-            .search(domain, limit=limit, order="create_date", offset=offset)
+            request.env["stock.picking"].with_user(1).search(domain, limit=limit, order="create_date", offset=offset)
         )
         res = []
         for order in orders:
+            payment_status = (
+                "paid"
+                if order.sale_id.invoice_ids.filtered(lambda r: r.state == "posted").payment_state
+                in ["in_payment", "paid"]
+                else "not paid"
+            )
             res.append(
                 {
                     "id": order.id,
                     "name": order.name,
-                    "delivery_address": order.partner_id._display_address(
-                        without_company=True
-                    ),
+                    "delivery_address": order.partner_id._display_address(without_company=True),
                     "customer": order.partner_id.name,
                     "phone": order.partner_id.phone,
                     "delivery_status": order.delivery_status,
@@ -242,7 +239,8 @@ class Delivery(Component):
                     "mobile": order.partner_id.phone,
                     "scheduled_date": order.scheduled_date,
                     "create_date": str(order.create_date),
-                    "amount_total": order.sale_id.amount_total,
+                    "amount_to_collect": order.sale_id.amount_total if payment_status == "not paid" else 0.0,
+                    "payment_status": payment_status,
                     "items": [
                         {
                             "image_url": item.product_id.image_url,
@@ -283,20 +281,22 @@ class Delivery(Component):
         if offset:
             offset = int(offset)
         orders = (
-            request.env["stock.picking"]
-            .with_user(1)
-            .search(domain, limit=limit, order="create_date", offset=offset)
+            request.env["stock.picking"].with_user(1).search(domain, limit=limit, order="create_date", offset=offset)
         )
 
         res = []
         for order in orders:
+            payment_status = (
+                "paid"
+                if order.sale_id.invoice_ids.filtered(lambda r: r.state == "posted").payment_state
+                in ["in_payment", "paid"]
+                else "not paid"
+            )
             res.append(
                 {
                     "id": order.id,
                     "name": order.name,
-                    "delivery_address": order.partner_id._display_address(
-                        without_company=True
-                    ),
+                    "delivery_address": order.partner_id._display_address(without_company=True),
                     "customer": order.partner_id.name,
                     "phone": order.partner_id.phone,
                     "lat": order.partner_id.partner_latitude,
@@ -306,7 +306,8 @@ class Delivery(Component):
                     "mobile": order.partner_id.phone,
                     "scheduled_date": order.scheduled_date,
                     "create_date": str(order.create_date),
-                    "amount_total": order.sale_id.amount_total,
+                    "amount_to_collect": order.sale_id.amount_total if payment_status == "not paid" else 0.0,
+                    "payment_status": payment_status,
                     "payment_term": order.payment_term_id.name,
                     "items": [
                         {
@@ -335,6 +336,12 @@ class Delivery(Component):
         domain = [("id", "=", payload.id)]
         order = request.env["stock.picking"].with_user(1).search(domain, limit=1)
         order.write({"delivery_status": payload.delivery_status.strip()})
+        payment_status = (
+                "paid"
+                if order.sale_id.invoice_ids.filtered(lambda r: r.state == "posted").payment_state
+                in ["in_payment", "paid"]
+                else "not paid"
+            )
 
         return {
             "id": order.id,
@@ -349,7 +356,8 @@ class Delivery(Component):
             "mobile": order.partner_id.phone,
             "scheduled_date": order.scheduled_date,
             "create_date": str(order.create_date),
-            "amount_total": order.sale_id.amount_total,
+            "amount_to_collect": order.sale_id.amount_total if payment_status == "not paid" else 0.0,
+            "payment_status": payment_status,
             "payment_term": order.payment_term_id.name,
             "items": [
                 {
@@ -379,13 +387,17 @@ class Delivery(Component):
         orders = request.env["stock.picking"].with_user(1).search(domain, limit=25)
         res = []
         for order in orders:
+            payment_status = (
+                "paid"
+                if order.sale_id.invoice_ids.filtered(lambda r: r.state == "posted").payment_state
+                in ["in_payment", "paid"]
+                else "not paid"
+            )
             res.append(
                 {
                     "id": order.id,
                     "name": order.name,
-                    "delivery_address": order.partner_id._display_address(
-                        without_company=True
-                    ),
+                    "delivery_address": order.partner_id._display_address(without_company=True),
                     "customer": order.partner_id.name,
                     "phone": order.partner_id.phone,
                     "delivery_status": order.delivery_status,
@@ -395,7 +407,8 @@ class Delivery(Component):
                     "mobile": order.partner_id.phone,
                     "scheduled_date": order.scheduled_date,
                     "create_date": str(order.create_date),
-                    "amount_total": order.sale_id.amount_total,
+                    "amount_to_collect": order.sale_id.amount_total if payment_status == "not paid" else 0.0,
+                    "payment_status": payment_status,
                     "payment_term": order.payment_term_id.name,
                     "items": [
                         {
@@ -412,32 +425,37 @@ class Delivery(Component):
             )
         return res
 
-    @restapi.method(
-        [(["/delivered/<int:order_id>"], "PATCH")], auth="user", tags=["Delivery"]
-    )
-    def delivered(self, order_id):
+    @restapi.method([(["/delivered"], "PATCH")], auth="user", tags=["Delivery"], input_param=Datamodel("delivery.delivered.datamodel.in"))
+    def delivered(self, payload):
         """To mark an order as delivered"""
         _id = request.env.user.partner_id.id
         domain = [
             ("delivery_agent_id", "=", _id),
-            ("id", "=", order_id),
+            ("id", "=", payload.order_id),
             ("delivery_status", "!=", "completed"),
         ]
         order = request.env["stock.picking"].with_user(1).search(domain, limit=1)
         if order:
+            payment_status = (
+                "paid"
+                if order.sale_id.invoice_ids.filtered(lambda r: r.state == "posted").payment_state
+                in ["in_payment", "paid"]
+                else "not paid"
+            )
             for move_id in order.move_lines:
                 move_id.write({"quantity_done": move_id.product_uom_qty})
                 move_id._action_assign()
             order._compute_state()
             order.button_validate()
             order.write({"delivery_status": "completed"})
+            if not order.sale_id.invoice_ids:
+                order.sale_id._create_invoices()
+                [inv.write({"ref": payload.ref}) for inv in order.sale_id.invoice_ids]
             return {
                 "id": order.id,
                 "name": order.name,
                 "state": order.state,
-                "delivery_address": order.partner_id._display_address(
-                    without_company=True
-                ),
+                "delivery_address": order.partner_id._display_address(without_company=True),
                 "delivery_status": order.delivery_status,
                 "customer": order.partner_id.name,
                 "phone": order.partner_id.phone,
@@ -447,7 +465,8 @@ class Delivery(Component):
                 "mobile": order.partner_id.phone,
                 "scheduled_date": order.scheduled_date,
                 "create_date": str(order.create_date),
-                "amount_total": order.sale_id.amount_total,
+                "amount_to_collect": order.sale_id.amount_total if payment_status == "not paid" else 0.0,
+                "payment_status": payment_status,
                 "payment_term": order.payment_term_id.name,
                 "items": [
                     {
@@ -461,7 +480,7 @@ class Delivery(Component):
                     for item in order.move_ids_without_package
                 ],
             }
-        data = json.dumps({"error": "order with id %s is not found" % (order_id,)})
+        data = json.dumps({"error": "order with id %s is not found" % (payload.order_id,)})
         resp = request.make_response(data)
         resp.status_code = 400
         return resp
@@ -493,20 +512,23 @@ class Delivery(Component):
         if offset:
             offset = int(offset)
         orders = (
-            request.env["stock.picking"]
-            .with_user(1)
-            .search(domain, limit=limit, order="create_date", offset=offset)
+            request.env["stock.picking"].with_user(1).search(domain, limit=limit, order="create_date", offset=offset)
         )
+
 
         res = []
         for order in orders:
+            payment_status = (
+                "paid"
+                if order.sale_id.invoice_ids.filtered(lambda r: r.state == "posted").payment_state
+                in ["in_payment", "paid"]
+                else "not paid"
+            )
             res.append(
                 {
                     "id": order.id,
                     "name": order.name,
-                    "delivery_address": order.partner_id._display_address(
-                        without_company=True
-                    ),
+                    "delivery_address": order.partner_id._display_address(without_company=True),
                     "customer": order.partner_id.name,
                     "phone": order.partner_id.phone,
                     "delivery_status": order.delivery_status,
@@ -517,7 +539,8 @@ class Delivery(Component):
                     "mobile": order.partner_id.phone,
                     "scheduled_date": order.scheduled_date,
                     "create_date": str(order.create_date),
-                    "amount_total": order.sale_id.amount_total,
+                    "amount_to_collect": order.sale_id.amount_total if payment_status == "not paid" else 0.0,
+                    "payment_status": payment_status,
                     "payment_term": order.payment_term_id.name,
                     "items": [
                         {
@@ -549,7 +572,7 @@ class Delivery(Component):
         domain = [
             ("delivery_agent_id", "=", _id),
             ("picking_type_id.sequence_code", "=", "OUT"),
-            ("delivery_status", "=", "in_transist"),
+            ("delivery_status", "=", "in_transit"),
             ("create_date", ">=", date),
         ]
         limit = payload.limit or 80
@@ -559,20 +582,22 @@ class Delivery(Component):
         if offset:
             offset = int(offset)
         orders = (
-            request.env["stock.picking"]
-            .with_user(1)
-            .search(domain, limit=limit, order="create_date", offset=offset)
+            request.env["stock.picking"].with_user(1).search(domain, limit=limit, order="create_date", offset=offset)
         )
 
         res = []
         for order in orders:
+            payment_status = (
+                "paid"
+                if order.sale_id.invoice_ids.filtered(lambda r: r.state == "posted").payment_state
+                in ["in_payment", "paid"]
+                else "not paid"
+            )
             res.append(
                 {
                     "id": order.id,
                     "name": order.name,
-                    "delivery_address": order.partner_id._display_address(
-                        without_company=True
-                    ),
+                    "delivery_address": order.partner_id._display_address(without_company=True),
                     "customer": order.partner_id.name,
                     "phone": order.partner_id.phone,
                     "delivery_status": order.delivery_status,
@@ -583,7 +608,8 @@ class Delivery(Component):
                     "mobile": order.partner_id.phone,
                     "scheduled_date": order.scheduled_date,
                     "create_date": str(order.create_date),
-                    "amount_total": order.sale_id.amount_total,
+                    "amount_to_collect": order.sale_id.amount_total if payment_status == "not paid" else 0.0,
+                    "payment_status": payment_status,
                     "payment_term": order.payment_term_id.name,
                     "items": [
                         {

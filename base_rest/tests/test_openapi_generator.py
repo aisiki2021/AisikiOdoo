@@ -106,9 +106,7 @@ class TestOpenAPIGenerator(TransactionRestServiceRegistryCase):
             _collection = self._collection_name
             _description = "Sercice description"
 
-            @restapi.method(
-                [(["/<int:id>/update_name/<string:name>"], "POST")], auth="public"
-            )
+            @restapi.method([(["/<int:id>/update_name/<string:name>"], "POST")], auth="public")
             def update_name(self, _id, _name):
                 """update_name"""
 
@@ -174,9 +172,7 @@ class TestOpenAPIGenerator(TransactionRestServiceRegistryCase):
             _collection = self._collection_name
             _description = "Sercice description"
 
-            @restapi.method(
-                [(["/<int:id>/update_name/<string:name>"], "POST")], auth="public"
-            )
+            @restapi.method([(["/<int:id>/update_name/<string:name>"], "POST")], auth="public")
             def update_name(self, _id, _name):
                 """update_name"""
 

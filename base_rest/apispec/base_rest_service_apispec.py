@@ -23,11 +23,7 @@ class BaseRestServiceAPISpec(APISpec):
             title="%s REST services" % self._service._usage,
             version="",
             openapi_version="3.0.0",
-            info={
-                "description": textwrap.dedent(
-                    getattr(self._service, "_description", "") or ""
-                )
-            },
+            info={"description": textwrap.dedent(getattr(self._service, "_description", "") or "")},
             servers=self._get_servers(),
             plugins=self._get_plugins(),
         )
