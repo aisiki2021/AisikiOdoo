@@ -307,7 +307,7 @@ class OrderingApp(Component):
         res = []
         ids = request.env.user.partner_id.child_ids.ids
         ids.append(request.env.user.partner_id.id)
-        domain = [("partner_id", "in", ids), ("state", "=", "sale")]
+        domain = [("partner_id", "in", ids), ("state", "in", ["sale", "done"])]
         limit = payload.limit or 80
         offset = payload.offset or 0
         if limit:
