@@ -71,6 +71,7 @@ class OrderingApp(Component):
             "partner_longitude",
             "partner_latitude",
             "phone",
+            "image_url",
             "email",
         ]
         agents = request.env["res.partner"].with_user(1).search_read(domain, fields=fields, limit=80)
@@ -84,9 +85,9 @@ class OrderingApp(Component):
             "purchase_frequency",
             "partner_longitude",
             "partner_latitude",
+            "image_url",
             "phone",
             "email",
-            "image_url",
         ]
 
         agents = request.env["res.partner"].with_user(1).search_read(domain, fields=fields, limit=80)
@@ -239,7 +240,6 @@ class OrderingApp(Component):
             "partner_latitude",
             "phone",
             "email",
-            "image_url",
         ]
         if vendor_id:
             domain.append(("id", "=", vendor_id))
@@ -338,7 +338,7 @@ class OrderingApp(Component):
                             "price_unit": item.price_unit,
                             "discount": item.discount,
                             "name": item.name,
-                            "image_url": item.image_url
+                            "image_url": item.product_id.image_url,
                         }
                         for item in order.order_line
                     ],
@@ -408,7 +408,7 @@ class OrderingApp(Component):
                             "price_unit": item.price_unit,
                             "discount": item.discount,
                             "name": item.name,
-                            "image_url": item.image_url
+                            "image_url": item.product_id.image_url,
                         }
                         for item in order.order_line
                     ],
