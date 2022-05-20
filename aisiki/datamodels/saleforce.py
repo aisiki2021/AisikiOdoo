@@ -122,7 +122,7 @@ class OrderOut(Datamodel):
     amount_untaxed = fields.Decimal(required=True)
     items = fields.List(NestedModel("cart.datamodel.items"), required=False, allow_none=False)
     total_order = fields.Integer(required=True)
-    state = fields.String(required=True)
+    image_url = fields.String(required=True)
 
 
 class OrderIn(Datamodel):
