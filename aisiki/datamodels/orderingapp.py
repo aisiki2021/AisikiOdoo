@@ -101,6 +101,7 @@ class CartItems(Datamodel):
     discount = fields.Integer(required=False, allow_none=False, load_default=10)
     price_unit = fields.Float(required=False, allow_none=False, load_default=700)
     name = fields.String(required=False, allow_none=True, load_default="Default Order Description")
+    image_url = fields.String(required=False)
 
 
 class CartIn(Datamodel):
