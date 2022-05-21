@@ -71,6 +71,7 @@ class OrderingApp(Component):
             "partner_longitude",
             "partner_latitude",
             "phone",
+            "image_url",
             "email",
         ]
         agents = request.env["res.partner"].with_user(1).search_read(domain, fields=fields, limit=80)
@@ -84,6 +85,7 @@ class OrderingApp(Component):
             "purchase_frequency",
             "partner_longitude",
             "partner_latitude",
+            "image_url",
             "phone",
             "email",
         ]
@@ -100,6 +102,7 @@ class OrderingApp(Component):
             "partner_latitude",
             "phone",
             "email",
+            "image_url",
         ]
         domain = [("parent_id", "=", id), ("parent_id.agent", "=", True)]
         agents = request.env["res.partner"].with_user(1).search_read(domain, fields=fields, limit=80)
@@ -135,6 +138,7 @@ class OrderingApp(Component):
             "emergency_address": payload.emergency_address,
             "emergency_state": payload.emergency_state,
             "emergency_city": payload.emergency_city,
+            "image_1024": payload.image,
         }
 
         try:
@@ -185,6 +189,7 @@ class OrderingApp(Component):
                 "emergency_address": payload.emergency_address,
                 "emergency_state": payload.emergency_state,
                 "emergency_city": payload.emergency_city,
+                "image_1024": payload.image,
             }
 
             try:
@@ -307,7 +312,7 @@ class OrderingApp(Component):
         res = []
         ids = request.env.user.partner_id.child_ids.ids
         ids.append(request.env.user.partner_id.id)
-        domain = [("partner_id", "in", ids), ("state", "=", "sale")]
+        domain = [("partner_id", "in", ids), ("state", "in", ["sale", "done"])]
         limit = payload.limit or 80
         offset = payload.offset or 0
         if limit:
@@ -335,6 +340,7 @@ class OrderingApp(Component):
                             "price_unit": item.price_unit,
                             "discount": item.discount,
                             "name": item.name,
+                            "image_url": item.product_id.image_url,
                         }
                         for item in order.order_line
                     ],
@@ -404,6 +410,7 @@ class OrderingApp(Component):
                             "price_unit": item.price_unit,
                             "discount": item.discount,
                             "name": item.name,
+                            "image_url": item.product_id.image_url,
                         }
                         for item in order.order_line
                     ],
