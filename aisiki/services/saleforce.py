@@ -138,7 +138,7 @@ class OrderingApp(Component):
             "emergency_address": payload.emergency_address,
             "emergency_state": payload.emergency_state,
             "emergency_city": payload.emergency_city,
-            "image_1024": payload.image,
+            "image_1920": payload.image,
         }
 
         try:
@@ -189,7 +189,7 @@ class OrderingApp(Component):
                 "emergency_address": payload.emergency_address,
                 "emergency_state": payload.emergency_state,
                 "emergency_city": payload.emergency_city,
-                "image_1024": payload.image,
+                "image_1920": payload.image,
             }
 
             try:
