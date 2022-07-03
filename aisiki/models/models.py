@@ -99,6 +99,7 @@ class ResPartner(models.Model):
     emergency_address = fields.Char()
     emergency_state = fields.Char()
     emergency_city = fields.Char()
+    procurement_agent = fields.Boolean()
 
     image_url = fields.Char(string="Image URL", compute="_compute_image_url_link")
 
