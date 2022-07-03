@@ -19,3 +19,8 @@ class ProductController(main.RestController):
 class DeliveryController(main.RestController):
     _root_path = "/dl/"
     _collection_name = "delivery"
+
+
+class Procurement(main.RestController):
+    _root_path = "/p/"
+    _collection_name = "CollectionApp"
