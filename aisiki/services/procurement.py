@@ -22,12 +22,11 @@ from odoo.exceptions import (
 
 
 
-
 class CollectionApp(Component):
     _inherit = "aisiki.base.rest"
     _name = "procurement"
-    _usage = "CollectionApp"
-    _collection = "CollectionApp"
+    _usage = "collection"
+    _collection = "collection"
     _description = """
         CollectionApp
         
@@ -40,7 +39,6 @@ class CollectionApp(Component):
         tags=["Authentication"],
     )
     def register(self, payload):
-        print('@@@@@@@@@@@@@@@@@@@@@@@@@@@')
         values = {
             "name": payload.name,
             "login": payload.login,
@@ -247,3 +245,127 @@ class CollectionApp(Component):
             domain.append(("id", "=", vendor_id))
         agents = request.env["res.partner"].with_user(1).search_read(domain, fields=fields, limit=80)
         return agents
+
+
+    @restapi.method([(["/orders"], "GET")], auth="user", tags=["Procurement"])
+    def orders(self):
+        res = {}
+        domain = [("partner_id", "in", request.env.user.partner_id.child_ids.ids)]
+        domain = []
+        orders = request.env["purchase.order"].with_user(1).search(domain, limit=80)
+
+        details = [
+            {
+                "id": order.id,
+                "name": order.name,
+                "amount_total": order.amount_total,
+                "state": order.state,
+                "vendor": order.partner_id.name,
+                "date_order": order.date_order,
+                "date_planned": order.date_planned,
+                "items": [
+                    {
+                        "product_id": line.product_id.id,
+                        "description": line.name,
+                        "quantity": line.product_uom_qty,
+                        "price_unit": line.price_unit,
+                        "subtotal": line.price_subtotal,
+                        "image_url": line.product_id.image_url,
+                    }
+                    for line in order.order_line
+                ],
+            }
+            for order in orders
+        ]
+        res["data"] = details
+        res["count"] = len(orders)
+        return res
+
+    @restapi.method([(["/orders/<int:id>"], "GET")], auth="user", tags=["Procurement"])
+    def orders_by_id(self, id):
+        res = {}
+        # domain = [("partner_id", "=", request.env.user.partner_id.id), ("id", "=", id)]
+        domain = [("id", "=", id)]
+        fields = [
+            "name",
+            "amount_total",
+            "state",
+            "partner_id",
+            "date_order",
+            "delivery_status",
+        ]
+        orders = request.env["sale.order"].with_user(1).search(domain, limit=80)
+        details = [
+            {
+                "name": order.name,
+                "amount_total": order.amount_total,
+                "state": order.state,
+                "delivery_status": order.delivery_status,
+                "customer": order.partner_id.name,
+                "date_order": order.date_order,
+                "items": [
+                    {
+                        "product_id": line.product_id.id,
+                        "description": line.name,
+                        "quantity": line.product_uom_qty,
+                        "price_unit": line.price_unit,
+                        "subtotal": line.price_subtotal,
+                        "image_url": line.product_id.image_url,
+                    }
+                    for line in order.order_line
+                ],
+            }
+            for order in orders
+        ]
+        res["data"] = details
+        res["count"] = len(orders)
+        return res
+
+    @restapi.method(
+        [(["/create_order"], ["POST"])],
+        auth="user",
+        input_param=Datamodel("cart.datamodel.in"),
+        tags=["Procurement"],
+    )
+    def create_order(self, payload):
+        items = []
+        partner_id = request.env.user.partner_id.id
+        for line in payload.items:
+            items.append(
+                (
+                    0,
+                    0,
+                    {
+                        "product_id": line.product_id,
+                        "price_unit": line.price_unit,
+                        "product_uom_qty": line.quantity,
+                        "discount": line.discount,
+                    },
+                )
+            )
+        payload = {
+            "partner_id": partner_id,
+            "order_line": items,
+            "team_id": request.env.ref("sales_team.salesteam_website_sales").id,
+        }
+        order = request.env["sale.order"].with_user(1).create(payload)
+
+        return {
+            "name": order.name,
+            "amount_total": order.amount_total,
+            "state": order.state,
+            "delivery_status": order.delivery_status,
+            "customer": order.partner_id.name,
+            "date_order": order.date_order,
+            "items": [
+                {
+                    "product_id": line.product_id.id,
+                    "description": line.name,
+                    "quantity": line.product_uom_qty,
+                    "price_unit": line.price_unit,
+                    "subtotal": line.price_subtotal,
+                    "image_url": line.product_id.image_url,
+                }
+                for line in order.order_line
+            ],
+        }
